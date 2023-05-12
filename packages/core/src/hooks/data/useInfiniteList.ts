@@ -2,6 +2,7 @@ import {
     useInfiniteQuery,
     UseInfiniteQueryOptions,
     InfiniteQueryObserverResult,
+    InfiniteData,
 } from "@tanstack/react-query";
 import {
     CrudFilters,
@@ -9,24 +10,29 @@ import {
     BaseRecord,
     HttpError,
     CrudSorting,
-    MetaDataQuery,
+    MetaQuery,
     SuccessErrorNotification,
     LiveModeProps,
     GetListResponse,
+    Prettify,
 } from "../../interfaces";
 import {
     useResource,
-    useCheckError,
     useHandleNotification,
     useResourceSubscription,
     useTranslate,
     useDataProvider,
+    useOnError,
+    useMeta,
 } from "@hooks";
 import {
     queryKeys,
     pickDataProvider,
     getNextPageParam,
     getPreviousPageParam,
+    pickNotDeprecated,
+    useActiveAuthProvider,
+    handlePaginationParams,
 } from "@definitions/helpers";
 
 export interface UseInfiniteListConfig {
@@ -36,29 +42,64 @@ export interface UseInfiniteListConfig {
     filters?: CrudFilters;
 }
 
-export type UseInfiniteListProps<TData, TError> = {
+type BaseInfiniteListProps = {
+    /**
+     *  Metadata query for `dataProvider`
+     */
+    meta?: MetaQuery;
+    /**
+     *  Metadata query for `dataProvider`
+     *  @deprecated `metaData` is deprecated with refine@4, refine will pass `meta` instead, however, we still support `metaData` for backward compatibility.
+     */
+    metaData?: MetaQuery;
+    /**
+     * Configuration for pagination, sorting and filtering
+     * @type [`useInfiniteListConfig`](/docs/api-reference/core/hooks/data/useInfiniteList/#config-parameters)
+     * @deprecated `config` property is deprecated. Use `pagination`, `hasPagination`, `sorters` and `filters` instead.
+     */
+    config?: UseInfiniteListConfig;
+    /**
+     * Pagination properties
+     */
+    pagination?: Pagination;
+    /**
+     * Whether to use server-side pagination or not
+     * @deprecated `hasPagination` property is deprecated. Use `pagination.mode` instead.
+     */
+    hasPagination?: boolean;
+    /**
+     * Sorter parameters
+     */
+    sorters?: CrudSorting;
+    /**
+     * Filter parameters
+     */
+    filters?: CrudFilters;
+    /**
+     * If there is more than one `dataProvider`, you should use the `dataProviderName` that you will use
+     */
+    dataProviderName?: string;
+};
+
+export type UseInfiniteListProps<TQueryFnData, TError, TData> = {
     /**
      * Resource name for API data interactions
      */
     resource: string;
     /**
-     * Configuration for pagination, sorting and filtering
-     * @type [`useInfiniteListConfig`](/docs/api-reference/core/hooks/data/useInfiniteList/#config-parameters)
+     * Tanstack Query's [useInfiniteQuery](https://tanstack.com/query/v4/docs/react/reference/useInfiniteQuery) options
      */
-    config?: UseInfiniteListConfig;
-    /**
-     * react-query's [useInfiniteQuery](https://tanstack.com/query/v4/docs/react/reference/useInfiniteQuery) options,
-     */
-    queryOptions?: UseInfiniteQueryOptions<GetListResponse<TData>, TError>;
-    /**
-     *  Metadata query for `dataProvider`
-     */
-    metaData?: MetaDataQuery;
-    /**
-     * If there is more than one `dataProvider`, you should use the `dataProviderName` that you will use.
-     */
-    dataProviderName?: string;
-} & SuccessErrorNotification &
+    queryOptions?: UseInfiniteQueryOptions<
+        GetListResponse<TQueryFnData>,
+        TError,
+        GetListResponse<TData>
+    >;
+} & BaseInfiniteListProps &
+    SuccessErrorNotification<
+        InfiniteData<GetListResponse<TData>>,
+        TError,
+        Prettify<BaseInfiniteListProps>
+    > &
     LiveModeProps;
 
 /**
@@ -68,55 +109,103 @@ export type UseInfiniteListProps<TData, TError> = {
  *
  * @see {@link https://refine.dev/docs/core/hooks/data/useInfiniteList} for more details.
  *
- * @typeParam TData - Result data of the query extends {@link https://refine.dev/docs/core/interfaceReferences#baserecord `BaseRecord`}
- * @typeParam TError - Custom error object that extends {@link https://refine.dev/docs/core/interfaceReferences#httperror `HttpError`}
+ * @typeParam TQueryFnData - Result data returned by the query function. Extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#baserecord `BaseRecord`}
+ * @typeParam TError - Custom error object that extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#httperror `HttpError`}
+ * @typeParam TData - Result data returned by the `select` function. Extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#baserecord `BaseRecord`}. Defaults to `TQueryFnData`
  *
  */
+
 export const useInfiniteList = <
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
+    TData extends BaseRecord = TQueryFnData,
 >({
     resource,
     config,
+    filters,
+    hasPagination,
+    pagination,
+    sorters,
     queryOptions,
     successNotification,
     errorNotification,
+    meta,
     metaData,
     liveMode,
     onLiveEvent,
     liveParams,
     dataProviderName,
-}: UseInfiniteListProps<TData, TError>): InfiniteQueryObserverResult<
-    GetListResponse<TData>,
-    TError
-> => {
+}: UseInfiniteListProps<
+    TQueryFnData,
+    TError,
+    TData
+>): InfiniteQueryObserverResult<GetListResponse<TData>, TError> => {
     const { resources } = useResource();
     const dataProvider = useDataProvider();
-    const queryKey = queryKeys(
-        resource,
-        pickDataProvider(resource, dataProviderName, resources),
-        metaData,
-    );
-    const { getList } = dataProvider(
-        pickDataProvider(resource, dataProviderName, resources),
-    );
-
     const translate = useTranslate();
-    const { mutate: checkError } = useCheckError();
+    const authProvider = useActiveAuthProvider();
+    const { mutate: checkError } = useOnError({
+        v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+    });
     const handleNotification = useHandleNotification();
+    const getMeta = useMeta();
+
+    const pickedDataProvider = pickDataProvider(
+        resource,
+        dataProviderName,
+        resources,
+    );
+    const preferredMeta = pickNotDeprecated(meta, metaData);
+    const prefferedFilters = pickNotDeprecated(filters, config?.filters);
+    const prefferedSorters = pickNotDeprecated(sorters, config?.sort);
+    const prefferedHasPagination = pickNotDeprecated(
+        hasPagination,
+        config?.hasPagination,
+    );
+    const prefferedPagination = handlePaginationParams({
+        pagination,
+        configPagination: config?.pagination,
+        hasPagination: prefferedHasPagination,
+    });
+    const isServerPagination = prefferedPagination.mode === "server";
+    const notificationValues = {
+        meta: preferredMeta,
+        metaData: preferredMeta,
+        filters: prefferedFilters,
+        hasPagination: isServerPagination,
+        pagination: prefferedPagination,
+        sorters: prefferedSorters,
+        config: {
+            ...config,
+            sort: prefferedSorters,
+        },
+    };
 
     const isEnabled =
         queryOptions?.enabled === undefined || queryOptions?.enabled === true;
+
+    const queryKey = queryKeys(
+        resource,
+        pickedDataProvider,
+        preferredMeta,
+        preferredMeta,
+    );
+
+    const combinedMeta = getMeta({ meta: preferredMeta });
+
+    const { getList } = dataProvider(pickedDataProvider);
 
     useResourceSubscription({
         resource,
         types: ["*"],
         params: {
-            metaData,
-            pagination: config?.pagination,
-            hasPagination: config?.hasPagination,
-            sort: config?.sort,
-            filters: config?.filters,
+            meta: combinedMeta,
+            metaData: combinedMeta,
+            pagination: prefferedPagination,
+            hasPagination: isServerPagination,
+            sort: prefferedSorters,
+            sorters: prefferedSorters,
+            filters: prefferedFilters,
             subscriptionType: "useList",
             ...liveParams,
         },
@@ -126,22 +215,47 @@ export const useInfiniteList = <
         onLiveEvent,
     });
 
-    const queryResponse = useInfiniteQuery<GetListResponse<TData>, TError>(
-        queryKey.list(config),
+    const queryResponse = useInfiniteQuery<
+        GetListResponse<TQueryFnData>,
+        TError,
+        GetListResponse<TData>
+    >(
+        queryKey.list({
+            filters: prefferedFilters,
+            hasPagination: isServerPagination,
+            ...(isServerPagination && {
+                pagination: prefferedPagination,
+            }),
+            ...(sorters && {
+                sorters,
+            }),
+            ...(config?.sort && {
+                sort: config?.sort,
+            }),
+        }),
         ({ queryKey, pageParam, signal }) => {
-            const { hasPagination, ...restConfig } = config || {};
-            const pagination = {
-                ...config?.pagination,
+            const paginationProperties = {
+                ...prefferedPagination,
                 current: pageParam,
             };
 
-            return getList<TData>({
+            return getList<TQueryFnData>({
                 resource,
-                ...restConfig,
-                pagination,
-                hasPagination,
+                pagination: paginationProperties,
+                hasPagination: isServerPagination,
+                filters: prefferedFilters,
+                sort: prefferedSorters,
+                sorters: prefferedSorters,
+                meta: {
+                    ...combinedMeta,
+                    queryContext: {
+                        queryKey,
+                        pageParam,
+                        signal,
+                    },
+                },
                 metaData: {
-                    ...metaData,
+                    ...combinedMeta,
                     queryContext: {
                         queryKey,
                         pageParam,
@@ -152,7 +266,7 @@ export const useInfiniteList = <
                 return {
                     data,
                     total,
-                    pagination,
+                    pagination: paginationProperties,
                     ...rest,
                 };
             });
@@ -168,7 +282,7 @@ export const useInfiniteList = <
                     typeof successNotification === "function"
                         ? successNotification(
                               data,
-                              { metaData, config },
+                              notificationValues,
                               resource,
                           )
                         : successNotification;
@@ -181,7 +295,7 @@ export const useInfiniteList = <
 
                 const notificationConfig =
                     typeof errorNotification === "function"
-                        ? errorNotification(err, { metaData, config }, resource)
+                        ? errorNotification(err, notificationValues, resource)
                         : errorNotification;
 
                 handleNotification(notificationConfig, {

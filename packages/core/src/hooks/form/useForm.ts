@@ -1,5 +1,6 @@
 import React, { Dispatch, SetStateAction } from "react";
 import { QueryObserverResult, UseQueryOptions } from "@tanstack/react-query";
+import warnOnce from "warn-once";
 
 import {
     useResourceWithRoute,
@@ -11,6 +12,7 @@ import {
     useMutationMode,
     useOne,
     useRefineContext,
+    useMeta,
 } from "@hooks";
 
 import {
@@ -22,12 +24,13 @@ import {
     ResourceRouterParams,
     RedirectAction,
     SuccessErrorNotification,
-    MetaDataQuery,
     UpdateResponse,
     MutationMode,
     BaseKey,
     IQueryKeys,
     FormAction,
+    IResourceItem,
+    MetaQuery,
 } from "../../interfaces";
 import {
     UpdateParams,
@@ -36,6 +39,11 @@ import {
 } from "../data/useUpdate";
 import { UseCreateProps, UseCreateReturnType } from "../data/useCreate";
 import { redirectPage } from "@definitions/helpers";
+import { useRouterType } from "@contexts/router-picker";
+import { useParsed } from "@hooks/router/use-parsed";
+import { pickResource } from "@definitions/helpers/pick-resource";
+import { useResource } from "../resource/useResource";
+import { pickNotDeprecated } from "@definitions/helpers";
 
 export type ActionParams = {
     /**
@@ -46,9 +54,12 @@ export type ActionParams = {
 };
 
 type ActionFormProps<
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
 > = {
     /**
      * Resource name for API data interactions
@@ -69,7 +80,12 @@ type ActionFormProps<
     /**
      * Metadata query for dataProvider
      */
-    metaData?: MetaDataQuery;
+    meta?: MetaQuery;
+    /**
+     * Metadata query for dataProvider
+     * @deprecated `metaData` is deprecated with refine@4, refine will pass `meta` instead, however, we still support `metaData` for backward compatibility.
+     */
+    metaData?: MetaQuery;
     /**
      * [Determines when mutations are executed](/advanced-tutorials/mutation-mode.md)
      * @default `"pessimistic"*`
@@ -79,7 +95,7 @@ type ActionFormProps<
      * Called when a mutation is successful
      */
     onMutationSuccess?: (
-        data: CreateResponse<TData> | UpdateResponse<TData>,
+        data: CreateResponse<TResponse> | UpdateResponse<TResponse>,
         variables: TVariables,
         context: any,
     ) => void;
@@ -87,7 +103,7 @@ type ActionFormProps<
      * Called when a mutation encounters an error
      */
     onMutationError?: (
-        error: TError,
+        error: TResponseError,
         variables: TVariables,
         context: any,
     ) => void;
@@ -109,52 +125,75 @@ type ActionFormProps<
     /**
      * react-query's [useQuery](https://tanstack.com/query/v4/docs/reference/useQuery) options of useOne hook used while in edit mode.
      */
-    queryOptions?: UseQueryOptions<GetOneResponse<TData>, HttpError>;
+    queryOptions?: UseQueryOptions<
+        GetOneResponse<TQueryFnData>,
+        TError,
+        GetOneResponse<TData>
+    >;
     /**
      * react-query's [useMutation](https://tanstack.com/query/v4/docs/reference/useMutation) options of useCreate hook used while submitting in create and clone modes.
      */
     createMutationOptions?: UseCreateProps<
-        TData,
-        TError,
+        TResponse,
+        TResponseError,
         TVariables
     >["mutationOptions"];
     /**
      * react-query's [useMutation](https://tanstack.com/query/v4/docs/reference/useMutation) options of useUpdate hook used while submitting in edit mode.
      */
     updateMutationOptions?: UseUpdateProps<
-        TData,
-        TError,
+        TResponse,
+        TResponseError,
         TVariables
     >["mutationOptions"];
-} & SuccessErrorNotification &
+} & SuccessErrorNotification<
+    UpdateResponse<TResponse> | CreateResponse<TResponse>,
+    TResponseError,
+    { id: BaseKey; values: TVariables } | TVariables
+> &
     ActionParams &
     LiveModeProps;
 
 export type UseFormProps<
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
-> = ActionFormProps<TData, TError, TVariables> & ActionParams & LiveModeProps;
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
+> = ActionFormProps<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
+> &
+    ActionParams &
+    LiveModeProps;
 
 export type UseFormReturnType<
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
 > = {
     id?: BaseKey;
     setId: Dispatch<SetStateAction<BaseKey | undefined>>;
-
     queryResult?: QueryObserverResult<GetOneResponse<TData>>;
     mutationResult:
-        | UseUpdateReturnType<TData, TError, TVariables>
-        | UseCreateReturnType<TData, TError, TVariables>;
+        | UseUpdateReturnType<TResponse, TResponseError, TVariables>
+        | UseCreateReturnType<TResponse, TResponseError, TVariables>;
     formLoading: boolean;
     onFinish: (
         values: TVariables,
-    ) => Promise<CreateResponse<TData> | UpdateResponse<TData> | void>;
+    ) => Promise<CreateResponse<TResponse> | UpdateResponse<TResponse> | void>;
     redirect: (
         redirect: RedirectAction,
         idFromFunction?: BaseKey | undefined,
+        routeParams?: Record<string, string | number>,
     ) => void;
 };
 
@@ -163,16 +202,21 @@ export type UseFormReturnType<
  *
  * @see {@link https://refine.dev/docs/api-references/hooks/form/useForm} for more details.
  *
- * @typeParam TData - Result data of the query extends {@link https://refine.dev/docs/api-references/interfaceReferences#baserecord `BaseRecord`}
- * @typeParam TError - Custom error object that extends {@link https://refine.dev/docs/api-references/interfaceReferences#httperror `HttpError`}
+ * @typeParam TQueryFnData - Result data returned by the query function. Extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#baserecord `BaseRecord`}
+ * @typeParam TError - Custom error object that extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#httperror `HttpError`}
  * @typeParam TVariables - Values for params. default `{}`
- *
+ * @typeParam TData - Result data returned by the `select` function. Extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#baserecord `BaseRecord`}. Defaults to `TQueryFnData`
+ * @typeParam TResponse - Result data returned by the mutation function. Extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#baserecord `BaseRecord`}. Defaults to `TData`
+ * @typeParam TResponseError - Custom error object that extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#httperror `HttpError`}. Defaults to `TError`
  *
  */
 export const useForm = <
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
 >({
     resource: resourceFromProps,
     action: actionFromProps,
@@ -182,6 +226,7 @@ export const useForm = <
     redirect: redirectFromProps,
     successNotification,
     errorNotification,
+    meta,
     metaData,
     mutationMode: mutationModeProp,
     liveMode,
@@ -193,41 +238,132 @@ export const useForm = <
     queryOptions,
     createMutationOptions,
     updateMutationOptions,
-}: UseFormProps<TData, TError, TVariables> = {}): UseFormReturnType<
-    TData,
+}: UseFormProps<
+    TQueryFnData,
     TError,
-    TVariables
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
+> = {}): UseFormReturnType<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
 > => {
     const { options } = useRefineContext();
+    const { resources } = useResource();
+    const routerType = useRouterType();
+    const {
+        resource: resourceFromRouter,
+        id: idFromRouter,
+        action: actionFromRouter,
+    } = useParsed();
     const { useParams } = useRouterContext();
     const {
-        resource: resourceFromRoute,
-        action: actionFromRoute,
-        id: idFromParams,
+        resource: legacyResourceFromRoute,
+        action: legacyActionFromRoute,
+        id: legacyIdFromParams,
     } = useParams<ResourceRouterParams>();
+    const getMeta = useMeta();
 
+    const newResourceNameFromRouter =
+        typeof resourceFromRouter === "string"
+            ? resourceFromRouter
+            : resourceFromRouter?.name;
+
+    /** We only accept `id` from URL params if `resource` is not explicitly passed. */
+    /** This is done to avoid sending wrong requests for custom `resource` and an async `id` */
     const defaultId =
-        !resourceFromProps || resourceFromProps === resourceFromRoute
-            ? idFromProps ?? idFromParams
+        !resourceFromProps ||
+        resourceFromProps ===
+            (routerType === "legacy"
+                ? legacyResourceFromRoute
+                : newResourceNameFromRouter)
+            ? idFromProps ??
+              (routerType === "legacy" ? legacyIdFromParams : idFromRouter)
             : idFromProps;
 
     // id state is needed to determine selected record in a context for example useModal
     const [id, setId] = React.useState<BaseKey | undefined>(defaultId);
 
+    /**
+     * In some cases, `id` from the router params is not available at the first render.
+     *
+     * (e.g. when using `Next.js` and client-side-rendering, `router` is not ready to use at the first render)
+     *
+     * We're watching for `defaultId` changes and setting `id` state if it's not equal to `defaultId`.
+     */
     React.useEffect(() => {
-        if (defaultId !== id) {
-            setId(idFromProps);
-        }
-    }, [idFromProps]);
+        setId(defaultId);
+    }, [defaultId]);
 
-    const resourceName = resourceFromProps ?? resourceFromRoute;
+    /** `resourceName` fallback value depends on the router type */
+    const resourceName =
+        resourceFromProps ??
+        (routerType === "legacy"
+            ? legacyResourceFromRoute
+            : newResourceNameFromRouter);
+    /** `action` fallback value depends on the router type */
+    /**
+     * In earlier versions, we've trivially inferred the action type as `create` in `show` types.
+     * This is probably done to cover cases with modals and drawers.
+     *
+     * This is not right, as we should not do trivial inference of the action type.
+     * Users should explicitly pass the action type when needed.
+     */
+    const fallbackAction =
+        routerType === "legacy" ? legacyActionFromRoute : actionFromRouter;
     const action =
         actionFromProps ??
-        (actionFromRoute === "show" ? "create" : actionFromRoute) ??
-        "create";
+        (fallbackAction === "edit" || fallbackAction === "clone"
+            ? fallbackAction
+            : "create");
 
     const resourceWithRoute = useResourceWithRoute();
-    const resource = resourceWithRoute(resourceName);
+    let resource: IResourceItem | undefined;
+
+    if (routerType === "legacy") {
+        if (resourceName) {
+            resource = resourceWithRoute(resourceName);
+        }
+    } else {
+        /** If `resource` is provided by the user, then try to pick the resource of create a dummy one */
+        if (resourceFromProps) {
+            const picked = pickResource(resourceFromProps, resources);
+            if (picked) {
+                resource = picked;
+            } else {
+                resource = {
+                    name: resourceFromProps,
+                    route: resourceFromProps,
+                };
+            }
+        } else {
+            /** If `resource` is not provided, check the resource from the router params */
+            if (typeof resourceFromRouter === "string") {
+                const picked = pickResource(resourceFromRouter, resources);
+                if (picked) {
+                    resource = picked;
+                } else {
+                    resource = {
+                        name: resourceFromRouter,
+                        route: resourceFromRouter,
+                    };
+                }
+            } else {
+                /** If `resource` is passed as an IResourceItem, use it or `resource` is undefined and cannot be inferred. */
+                resource = resourceFromRouter;
+            }
+        }
+    }
+
+    const combinedMeta = getMeta({
+        resource,
+        meta: pickNotDeprecated(meta, metaData),
+    });
 
     const { mutationMode: mutationModeContext } = useMutationMode();
     const mutationMode = mutationModeProp ?? mutationModeContext;
@@ -236,7 +372,19 @@ export const useForm = <
     const isEdit = action === "edit";
     const isClone = action === "clone";
 
-    const redirect = redirectPage({
+    warnOnce(
+        (isClone || isEdit) &&
+            Boolean(resourceFromProps) &&
+            !Boolean(idFromProps),
+        `[useForm]: action: "${action}", resource: "${resourceName}", id: ${id} \n\n` +
+            `If you don't use the \`setId\` method to set the \`id\`, you should pass the \`id\` prop to \`useForm\`. Otherwise, \`useForm\` will not be able to infer the \`id\` from the current URL. \n\n` +
+            `See https://refine.dev/docs/api-reference/core/hooks/useForm/#resource`,
+    );
+
+    /**
+     * Designated `redirect` route
+     */
+    const designatedRedirectAction = redirectPage({
         redirectFromProps,
         action,
         redirectOptions: options.redirect,
@@ -244,8 +392,8 @@ export const useForm = <
 
     const enableQuery = id !== undefined && (isEdit || isClone);
 
-    const queryResult = useOne<TData>({
-        resource: resource.name,
+    const queryResult = useOne<TQueryFnData, TError, TData>({
+        resource: resource?.name,
         id: id ?? "",
         queryOptions: {
             enabled: enableQuery,
@@ -254,19 +402,28 @@ export const useForm = <
         liveMode,
         onLiveEvent,
         liveParams,
-        metaData,
+        meta: combinedMeta,
+        metaData: combinedMeta,
         dataProviderName,
     });
 
     const { isFetching: isFetchingQuery } = queryResult;
 
-    const mutationResultCreate = useCreate<TData, TError, TVariables>({
+    const mutationResultCreate = useCreate<
+        TResponse,
+        TResponseError,
+        TVariables
+    >({
         mutationOptions: createMutationOptions,
     });
     const { mutate: mutateCreate, isLoading: isLoadingCreate } =
         mutationResultCreate;
 
-    const mutationResultUpdate = useUpdate<TData, TError, TVariables>({
+    const mutationResultUpdate = useUpdate<
+        TResponse,
+        TResponseError,
+        TVariables
+    >({
         mutationOptions: updateMutationOptions,
     });
     const { mutate: mutateUpdate, isLoading: isLoadingUpdate } =
@@ -281,9 +438,10 @@ export const useForm = <
 
         const onSuccess = (id?: BaseKey) => {
             handleSubmitWithRedirect({
-                redirect,
+                redirect: designatedRedirectAction,
                 resource,
                 id,
+                meta: metaData,
             });
         };
 
@@ -293,47 +451,55 @@ export const useForm = <
             });
         }
 
-        return new Promise<CreateResponse<TData> | void>((resolve, reject) => {
-            if (mutationMode !== "pessimistic") {
-                resolve();
-            }
-            return mutateCreate(
-                {
-                    values,
-                    resource: resource.name,
-                    successNotification,
-                    errorNotification,
-                    metaData,
-                    dataProviderName,
-                    invalidates,
-                },
-                {
-                    onSuccess: (data, _, context) => {
-                        if (onMutationSuccess) {
-                            onMutationSuccess(data, values, context);
-                        }
+        return new Promise<CreateResponse<TResponse> | void>(
+            (resolve, reject) => {
+                if (mutationMode !== "pessimistic") {
+                    resolve();
+                }
 
-                        const responseId = data?.data?.id;
+                if (!resource) return;
 
-                        onSuccess(responseId);
-
-                        resolve(data);
+                return mutateCreate(
+                    {
+                        values,
+                        resource: resource.name,
+                        successNotification,
+                        errorNotification,
+                        meta: combinedMeta,
+                        metaData: combinedMeta,
+                        dataProviderName,
+                        invalidates,
                     },
-                    onError: (error: TError, _, context) => {
-                        if (onMutationError) {
-                            return onMutationError(error, values, context);
-                        }
-                        reject();
+                    {
+                        onSuccess: (data, _, context) => {
+                            if (onMutationSuccess) {
+                                onMutationSuccess(data, values, context);
+                            }
+
+                            const responseId = data?.data?.id;
+
+                            onSuccess(responseId);
+
+                            resolve(data);
+                        },
+                        onError: (error: TResponseError, _, context) => {
+                            if (onMutationError) {
+                                return onMutationError(error, values, context);
+                            }
+                            reject();
+                        },
                     },
-                },
-            );
-        });
+                );
+            },
+        );
     };
 
     const onFinishUpdate = async (values: TVariables) => {
         setWarnWhen(false);
 
-        const variables: UpdateParams<TVariables> = {
+        if (!resource) return;
+
+        const variables: UpdateParams<TResponse, TResponseError, TVariables> = {
             id: id ?? "",
             values,
             resource: resource.name,
@@ -341,18 +507,18 @@ export const useForm = <
             undoableTimeout,
             successNotification,
             errorNotification,
-            metaData,
+            meta: combinedMeta,
+            metaData: combinedMeta,
             dataProviderName,
             invalidates,
         };
 
         const onSuccess = () => {
-            // If it is in modal mode set it to undefined. Otherwise set it to current id from route.
-            setId(defaultId);
             handleSubmitWithRedirect({
-                redirect,
+                redirect: designatedRedirectAction,
                 resource,
                 id,
+                meta: metaData,
             });
         };
 
@@ -364,32 +530,34 @@ export const useForm = <
         }
 
         // setTimeout is required to make onSuccess e.g. callbacks to work if component unmounts i.e. on route change
-        return new Promise<UpdateResponse<TData> | void>((resolve, reject) => {
-            if (mutationMode !== "pessimistic") {
-                resolve();
-            }
-            return setTimeout(() => {
-                mutateUpdate(variables, {
-                    onSuccess: (data, _, context) => {
-                        if (onMutationSuccess) {
-                            onMutationSuccess(data, values, context);
-                        }
+        return new Promise<UpdateResponse<TResponse> | void>(
+            (resolve, reject) => {
+                if (mutationMode !== "pessimistic") {
+                    resolve();
+                }
+                return setTimeout(() => {
+                    mutateUpdate(variables, {
+                        onSuccess: (data, _, context) => {
+                            if (onMutationSuccess) {
+                                onMutationSuccess(data, values, context);
+                            }
 
-                        if (mutationMode === "pessimistic") {
-                            onSuccess();
-                        }
+                            if (mutationMode === "pessimistic") {
+                                onSuccess();
+                            }
 
-                        resolve(data);
-                    },
-                    onError: (error: TError, _, context) => {
-                        if (onMutationError) {
-                            return onMutationError(error, values, context);
-                        }
-                        reject();
-                    },
+                            resolve(data);
+                        },
+                        onError: (error: TResponseError, _, context) => {
+                            if (onMutationError) {
+                                return onMutationError(error, values, context);
+                            }
+                            reject();
+                        },
+                    });
                 });
-            });
-        });
+            },
+        );
     };
 
     const createResult = {
@@ -421,6 +589,7 @@ export const useForm = <
                         : "edit",
                 resource,
                 id: idFromFunction ?? id,
+                meta: metaData,
             });
         },
     };

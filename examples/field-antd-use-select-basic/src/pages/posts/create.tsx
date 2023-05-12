@@ -1,14 +1,9 @@
 import React from "react";
-import { IResourceComponentsProps } from "@pankod/refine-core";
+import { IResourceComponentsProps } from "@refinedev/core";
 
-import {
-    Create,
-    Form,
-    Input,
-    Select,
-    useForm,
-    useSelect,
-} from "@pankod/refine-antd";
+import { Create, useForm, useSelect } from "@refinedev/antd";
+
+import { Form, Input, Select } from "antd";
 
 import MDEditor from "@uiw/react-md-editor";
 
@@ -32,6 +27,10 @@ export const PostCreate: React.FC<IResourceComponentsProps> = () => {
                 value,
             },
         ],
+    });
+
+    const { selectProps: tagSelectProps } = useSelect<ICategory>({
+        resource: "tags",
     });
 
     return (
@@ -58,6 +57,21 @@ export const PostCreate: React.FC<IResourceComponentsProps> = () => {
                     ]}
                 >
                     <Select {...categorySelectProps} />
+                </Form.Item>
+                <Form.Item
+                    label="Tags"
+                    name={["tags"]}
+                    rules={[
+                        {
+                            required: true,
+                        },
+                    ]}
+                >
+                    <Select
+                        {...tagSelectProps}
+                        onBlur={() => tagSelectProps?.onSearch?.("")}
+                        mode="multiple"
+                    />
                 </Form.Item>
                 <Form.Item
                     label="Status"

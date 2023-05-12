@@ -1,19 +1,18 @@
-import { IResourceComponentsProps } from "@pankod/refine-core";
+import { IResourceComponentsProps } from "@refinedev/core";
 
 import {
     List,
-    Table,
     useTable,
-    Space,
     EditButton,
-    DeleteButton,
     DateField,
     getDefaultSortOrder,
-} from "@pankod/refine-antd";
+} from "@refinedev/antd";
+
+import { Table } from "antd";
 
 import { ICategory } from "interfaces";
 
-export const CategoriesList: React.FC<IResourceComponentsProps> = () => {
+export const CategoryList: React.FC<IResourceComponentsProps> = () => {
     const { tableProps, sorter } = useTable<ICategory>({
         initialSorter: [
             {
@@ -42,18 +41,11 @@ export const CategoriesList: React.FC<IResourceComponentsProps> = () => {
                     title="Actions"
                     dataIndex="actions"
                     render={(_, record) => (
-                        <Space>
-                            <EditButton
-                                size="small"
-                                hideText
-                                recordItemId={record.id}
-                            />
-                            <DeleteButton
-                                size="small"
-                                hideText
-                                recordItemId={record.id}
-                            />
-                        </Space>
+                        <EditButton
+                            size="small"
+                            hideText
+                            recordItemId={record.id}
+                        />
                     )}
                 />
             </Table>

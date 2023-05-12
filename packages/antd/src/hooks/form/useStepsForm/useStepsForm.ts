@@ -8,11 +8,11 @@ import {
     HttpError,
     UseFormProps as UseFormPropsCore,
     BaseRecord,
-} from "@pankod/refine-core";
+} from "@refinedev/core";
 
 import { useForm, UseFormProps, UseFormReturnType } from "../useForm";
 
-export type UseStepsFormFromSFReturnType<TData, TVariables> = {
+export type UseStepsFormFromSFReturnType<TResponse, TVariables> = {
     current: number;
     gotoStep: (step: number) => void;
     stepsProps: {
@@ -26,22 +26,49 @@ export type UseStepsFormFromSFReturnType<TData, TVariables> = {
     initialValues: {};
     formResult: undefined;
     form: FormInstance<TVariables>;
-    submit: (values?: TVariables) => Promise<TData>;
+    submit: (values?: TVariables) => Promise<TResponse>;
 };
 
 export type UseStepsFormReturnType<
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
-> = UseFormReturnType<TData, TError, TVariables> &
-    UseStepsFormFromSFReturnType<TData, TVariables>;
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
+> = UseFormReturnType<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
+> &
+    UseStepsFormFromSFReturnType<TResponse, TVariables>;
 
 export type UseStepsFormProps<
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
-> = UseFormPropsCore<TData, TError, TVariables> &
-    UseFormProps<TData, TError, TVariables> &
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
+> = UseFormPropsCore<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
+> &
+    UseFormProps<
+        TQueryFnData,
+        TError,
+        TVariables,
+        TData,
+        TResponse,
+        TResponseError
+    > &
     UseStepsFormConfig;
 
 /**
@@ -56,16 +83,42 @@ export type UseStepsFormProps<
  *
  */
 export const useStepsForm = <
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
 >(
-    props: UseStepsFormProps<TData, TError, TVariables> = {},
-): UseStepsFormReturnType<TData, TError, TVariables> => {
-    const useFormProps = useForm<TData, TError, TVariables>({ ...props });
+    props: UseStepsFormProps<
+        TQueryFnData,
+        TError,
+        TVariables,
+        TData,
+        TResponse,
+        TResponseError
+    > = {},
+): UseStepsFormReturnType<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
+> => {
+    const useFormProps = useForm<
+        TQueryFnData,
+        TError,
+        TVariables,
+        TData,
+        TResponse,
+        TResponseError
+    >({
+        ...props,
+    });
     const { form, formProps } = useFormProps;
 
-    const stepsPropsSunflower = useStepsFormSF<TData, TVariables>({
+    const stepsPropsSunflower = useStepsFormSF<TResponse, TVariables>({
         isBackValidate: false,
         form: form,
         submit: (values: any) => {

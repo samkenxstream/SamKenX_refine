@@ -1,22 +1,22 @@
 import React from "react";
 import { Box, Card, Group, Stack, Title } from "@mantine/core";
 import {
-    ResourceRouterParams,
     useRefineContext,
-    useResourceWithRoute,
+    useResource,
     userFriendlyResourceName,
-    useRouterContext,
+    useRouterType,
     useTranslate,
-} from "@pankod/refine-core";
+} from "@refinedev/core";
 
-import { CreateButton, Breadcrumb } from "@components";
+import { CreateButton, Breadcrumb, CreateButtonProps } from "@components";
 import { ListProps } from "../types";
+import { RefinePageHeaderClassNames } from "@refinedev/ui-types";
 
 export const List: React.FC<ListProps> = (props) => {
     const {
         canCreate,
         children,
-        createButtonProps,
+        createButtonProps: createButtonPropsFromProps,
         resource: resourceFromProps,
         wrapperProps,
         contentProps,
@@ -27,31 +27,38 @@ export const List: React.FC<ListProps> = (props) => {
         title,
     } = props;
     const translate = useTranslate();
+    const { options: { breadcrumb: globalBreadcrumb } = {} } =
+        useRefineContext();
 
-    const { useParams } = useRouterContext();
+    const routerType = useRouterType();
 
-    const { resource: routeResourceName } = useParams<ResourceRouterParams>();
-
-    const resourceWithRoute = useResourceWithRoute();
-
-    const resource = resourceWithRoute(resourceFromProps ?? routeResourceName);
+    const { resource } = useResource(resourceFromProps);
 
     const isCreateButtonVisible =
-        canCreate ?? (resource.canCreate || createButtonProps);
+        canCreate ??
+        ((resource?.canCreate ?? !!resource?.create) ||
+            createButtonPropsFromProps);
 
-    const defaultHeaderButtons = isCreateButtonVisible ? (
-        <CreateButton
-            size="sm"
-            resourceNameOrRouteName={resource.route}
-            {...createButtonProps}
-        />
-    ) : null;
-
-    const { options } = useRefineContext();
     const breadcrumb =
         typeof breadcrumbFromProps === "undefined"
-            ? options?.breadcrumb
+            ? globalBreadcrumb
             : breadcrumbFromProps;
+
+    const createButtonProps: CreateButtonProps | undefined =
+        isCreateButtonVisible
+            ? ({
+                  size: "sm",
+                  resource:
+                      routerType === "legacy"
+                          ? resource?.route
+                          : resource?.identifier ?? resource?.name,
+                  ...createButtonPropsFromProps,
+              } as const)
+            : undefined;
+
+    const defaultHeaderButtons = isCreateButtonVisible ? (
+        <CreateButton {...createButtonProps} />
+    ) : null;
 
     const breadcrumbComponent =
         typeof breadcrumb !== "undefined" ? (
@@ -64,6 +71,7 @@ export const List: React.FC<ListProps> = (props) => {
         ? typeof headerButtonsFromProps === "function"
             ? headerButtonsFromProps({
                   defaultButtons: defaultHeaderButtons,
+                  createButtonProps,
               })
             : headerButtonsFromProps
         : defaultHeaderButtons;
@@ -74,11 +82,18 @@ export const List: React.FC<ListProps> = (props) => {
                 <Stack spacing="xs">
                     {breadcrumbComponent}
                     {title ?? (
-                        <Title order={3} transform="capitalize">
+                        <Title
+                            order={3}
+                            transform="capitalize"
+                            className={RefinePageHeaderClassNames.Title}
+                        >
                             {translate(
-                                `${resource.name}.titles.list`,
+                                `${resource?.name}.titles.list`,
                                 userFriendlyResourceName(
-                                    resource.label ?? resource.name,
+                                    resource?.meta?.label ??
+                                        resource?.options?.label ??
+                                        resource?.label ??
+                                        resource?.name,
                                     "plural",
                                 ),
                             )}

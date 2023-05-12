@@ -1,6 +1,7 @@
 import { readFileSync, existsSync, readJSON, pathExists } from "fs-extra";
-import globby from "globby";
 import execa from "execa";
+import globby from "globby";
+import path from "path";
 import preferredPM from "preferred-pm";
 import spinner from "@utils/spinner";
 
@@ -41,7 +42,7 @@ export const getInstalledRefinePackages = async () => {
 
         const dependencies = JSON.parse(execution.stdout)?.dependencies || {};
         const refineDependencies = Object.keys(dependencies).filter(
-            (dependency) => dependency.startsWith("@pankod/refine"),
+            (dependency) => dependency.startsWith("@refinedev"),
         );
 
         const normalize: {
@@ -64,32 +65,48 @@ export const getInstalledRefinePackages = async () => {
 };
 
 export const getInstalledRefinePackagesFromNodeModules = async () => {
+    const REFINE_PACKAGES = ["core"];
+
     try {
-        const packageDirsFromModules = await globby(
-            "node_modules/@pankod/refine-*",
+        const packagesFromGlobbySearch = await globby(
+            "node_modules/@refinedev/*",
             {
                 onlyDirectories: true,
             },
         );
 
+        const packageDirsFromModules = REFINE_PACKAGES.flatMap((pkg) => {
+            try {
+                const pkgPath = require.resolve(
+                    path.join("@refinedev", pkg, "package.json"),
+                );
+
+                return [path.dirname(pkgPath)];
+            } catch (err) {
+                return [];
+            }
+        });
+
         const refinePackages: Array<{ name: string; path: string }> = [];
 
         await Promise.all(
-            packageDirsFromModules.map(async (packageDir) => {
-                const hasPackageJson = await pathExists(
-                    `${packageDir}/package.json`,
-                );
-                if (hasPackageJson) {
-                    const packageJson = await readJSON(
+            [...packageDirsFromModules, ...packagesFromGlobbySearch].map(
+                async (packageDir) => {
+                    const hasPackageJson = await pathExists(
                         `${packageDir}/package.json`,
                     );
+                    if (hasPackageJson) {
+                        const packageJson = await readJSON(
+                            `${packageDir}/package.json`,
+                        );
 
-                    refinePackages.push({
-                        name: packageJson.name,
-                        path: packageDir,
-                    });
-                }
-            }),
+                        refinePackages.push({
+                            name: packageJson.name,
+                            path: packageDir,
+                        });
+                    }
+                },
+            ),
         );
 
         return refinePackages;

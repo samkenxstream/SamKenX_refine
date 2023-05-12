@@ -26,16 +26,10 @@ interface IPost {
     category: { id: number };
 }
 
-import {
-    Edit,
-    Form,
-    Input,
-    Select,
-    useForm,
-    useSelect,
-} from "@pankod/refine-antd";
+import { Edit, useForm, useSelect } from "@refinedev/antd";
+import { Form, Input, Select } from "antd";
 
-const PostEdit: React.FC<IResourceComponentsProps> = () => {
+const PostEdit: React.FC = () => {
     const { formProps, saveButtonProps, queryResult } = useForm<IPost>({
         warnWhenUnsavedChanges: true,
     });
@@ -112,7 +106,9 @@ render(
                 list: () => (
                     <div>
                         <p>This page is empty.</p>
-                        <EditButton recordItemId="123">Edit Item 123</EditButton>
+                        <EditButton recordItemId="123">
+                            Edit Item 123
+                        </EditButton>
                     </div>
                 ),
                 edit: PostEdit,
@@ -148,7 +144,7 @@ const customDataProvider = {
 };
 
 // visible-block-start
-import { Edit } from "@pankod/refine-antd";
+import { Edit } from "@refinedev/antd";
 
 const PostEdit: React.FC = () => {
     return (
@@ -191,7 +187,7 @@ Clicking on the save button will submit your form.
 const { EditButton } = RefineAntd;
 
 // visible-block-start
-import { Edit } from "@pankod/refine-antd";
+import { Edit } from "@refinedev/antd";
 
 const PostEdit: React.FC = () => {
     return (
@@ -246,17 +242,44 @@ const customDataProvider = {
 };
 
 const authProvider = {
-    login: () => Promise.resolve(),
-    logout: () => Promise.resolve(),
-    checkAuth: () => Promise.resolve(),
-    checkError: () => Promise.resolve(),
-    getPermissions: () => Promise.resolve("admin"),
-    getUserIdentity: () => Promise.resolve(),
+    login: () => {
+        return {
+            success: true,
+            redirectTo: "/",
+        };
+    },
+    register: () => {
+        return {
+            success: true,
+        };
+    },
+    forgotPassword: () => {
+        return {
+            success: true,
+        };
+    },
+    updatePassword: () => {
+        return {
+            success: true,
+        };
+    },
+    logout: () => {
+        return {
+            success: true,
+            redirectTo: "/",
+        };
+    },
+    check: () => ({
+        authenticated: true,
+    }),
+    onError: () => ({}),
+    getPermissions: () => null,
+    getIdentity: () => null,
 };
 
 // visible-block-start
-import { Edit } from "@pankod/refine-antd";
-import { usePermissions } from "@pankod/refine-core";
+import { Edit } from "@refinedev/antd";
+import { usePermissions } from "@refinedev/core";
 
 const PostEdit: React.FC = () => {
     const { data: permissionsData } = usePermissions();
@@ -285,7 +308,9 @@ render(
                 list: () => (
                     <div>
                         <p>This page is empty.</p>
-                        <EditButton recordItemId="123">Edit Item 123</EditButton>
+                        <EditButton recordItemId="123">
+                            Edit Item 123
+                        </EditButton>
                     </div>
                 ),
                 edit: PostEdit,
@@ -295,22 +320,20 @@ render(
 );
 ```
 
-[Refer to the `usePermission` documentation for detailed usage. &#8594](/api-reference/core/hooks/auth/usePermissions.md)
+[Refer to the `usePermission` documentation for detailed usage. &#8594](/api-reference/core/hooks/authentication/usePermissions.md)
 
 ### `resource`
 
-`<Edit>` component reads the `resource` information from the route by default. This default behavior will not work on custom pages. If you want to use the `<Edit>` component in a custom page, you can use the `resource` property.
-
-[Refer to the custom pages documentation for detailed usage. &#8594](/advanced-tutorials/custom-pages.md)
+`<Edit>` component reads the `resource` information from the route by default. If you want to use a custom resource for the `<Edit>` component, you can use the `resource` prop.
 
 ```tsx live disableScroll previewHeight=280px url=http://localhost:3000/custom/2
 setInitialRoutes(["/custom/2"]);
 
+import { Refine } from "@refinedev/core";
+import routerProvider from "@refinedev/react-router-v6/legacy";
+import dataProvider from "@refinedev/simple-rest";
 // visible-block-start
-import { Refine } from "@pankod/refine-core";
-import { Edit } from "@pankod/refine-antd";
-import routerProvider from "@pankod/refine-react-router-v6";
-import dataProvider from "@pankod/refine-simple-rest";
+import { Edit } from "@refinedev/antd";
 
 const CustomPage: React.FC = () => {
     return (
@@ -320,11 +343,12 @@ const CustomPage: React.FC = () => {
         </Edit>
     );
 };
+// visible-block-end
 
 const App: React.FC = () => {
     return (
-        <Refine
-            routerProvider={{
+        <RefineAntdDemo
+            legacyRouterProvider={{
                 ...routerProvider,
                 // highlight-start
                 routes: [
@@ -340,7 +364,6 @@ const App: React.FC = () => {
         />
     );
 };
-// visible-block-end
 
 render(<App />);
 ```
@@ -353,7 +376,8 @@ The `<Edit>` component reads the `id` information from the route by default. `re
 const { EditButton } = RefineAntd;
 
 // visible-block-start
-import { Edit, useModalForm, Modal, Button } from "@pankod/refine-antd";
+import { Edit, useModalForm } from "@refinedev/antd";
+import { Modal, Button } from "antd";
 
 const PostEdit: React.FC = () => {
     const { modalProps, id, show } = useModalForm({
@@ -421,16 +445,10 @@ interface IPost {
     category: { id: number };
 }
 
-import {
-    Edit,
-    Form,
-    Input,
-    Select,
-    useForm,
-    useSelect,
-} from "@pankod/refine-antd";
+import { Edit, useForm, useSelect } from "@refinedev/antd";
+import { Form, Input, Select } from "antd";
 
-const PostEdit: React.FC<IResourceComponentsProps> = () => {
+const PostEdit: React.FC = () => {
     const { formProps, saveButtonProps, queryResult } = useForm<IPost>({
         warnWhenUnsavedChanges: true,
     });
@@ -527,10 +545,10 @@ render(
 If not specified, Refine will use the default data provider. If you have multiple data providers and want to use a different one, you can use the `dataProviderName` property.
 
 ```tsx
-import { Refine } from "@pankod/refine-core";
-import { Edit } from "@pankod/refine-antd";
-import routerProvider from "@pankod/refine-react-router-v6";
-import dataProvider from "@pankod/refine-simple-rest";
+import { Refine } from "@refinedev/core";
+import dataProvider from "@refinedev/simple-rest";
+
+import { Edit } from "@refinedev/antd";
 
 // highlight-start
 const PostEdit = () => {
@@ -541,15 +559,15 @@ const PostEdit = () => {
 export const App: React.FC = () => {
     return (
         <Refine
-            routerProvider={routerProvider}
             // highlight-start
             dataProvider={{
                 default: dataProvider("https://api.fake-rest.refine.dev/"),
                 other: dataProvider("https://other-api.fake-rest.refine.dev/"),
             }}
             // highlight-end
-            resources={[{ name: "posts", edit: PostEdit }]}
-        />
+        >
+            {/* ... */}
+        </Refine>
     );
 };
 ```
@@ -562,12 +580,14 @@ To customize the back button or to disable it, you can use the `goBack` property
 const { EditButton } = RefineAntd;
 
 // visible-block-start
-import { Edit, Icons } from "@pankod/refine-antd";
+import { Edit } from "@refinedev/antd";
+import { Button } from "antd";
 
 const PostEdit: React.FC = () => {
+    const BackButton = () => <Button>←</Button>;
     return (
         /* highlight-next-line */
-        <Edit goBack={<Icons.SmileOutlined />}>
+        <Edit goBack={<BackButton />}>
             <p>Rest of your page here</p>
         </Edit>
     );
@@ -583,7 +603,9 @@ render(
                 list: () => (
                     <div>
                         <p>This page is empty.</p>
-                        <EditButton recordItemId="123">Edit Item 123</EditButton>
+                        <EditButton recordItemId="123">
+                            Edit Item 123
+                        </EditButton>
                     </div>
                 ),
                 edit: PostEdit,
@@ -601,7 +623,7 @@ To toggle the loading state of the `<Edit/>` component, you can use the `isLoadi
 const { EditButton } = RefineAntd;
 
 // visible-block-start
-import { Edit } from "@pankod/refine-antd";
+import { Edit } from "@refinedev/antd";
 
 const PostEdit: React.FC = () => {
     return (
@@ -634,7 +656,7 @@ render(
 
 ### `breadcrumb`
 
-To customize or disable the breadcrumb, you can use the `breadcrumb` property. By default it uses the `Breadcrumb` component from `@pankod/refine-antd` package.
+To customize or disable the breadcrumb, you can use the `breadcrumb` property. By default it uses the `Breadcrumb` component from `@refinedev/antd` package.
 
 [Refer to the `Breadcrumb` documentation for detailed usage. &#8594](/api-reference/antd/components/breadcrumb.md)
 
@@ -646,7 +668,7 @@ This feature can be managed globally via the `<Refine>` component's [options](/d
 const { EditButton } = RefineAntd;
 
 // visible-block-start
-import { Edit, Breadcrumb } from "@pankod/refine-antd";
+import { Edit, Breadcrumb } from "@refinedev/antd";
 
 const PostEdit: React.FC = () => {
     return (
@@ -691,13 +713,13 @@ render(
 
 ### `wrapperProps`
 
-If you want to customize the wrapper of the `<Edit/>` component, you can use the `wrapperProps` property. For `@pankod/refine-antd` wrapper elements are simple `<div/>`s and `wrapperProps` can get every attribute that `<div/>` can get.
+If you want to customize the wrapper of the `<Edit/>` component, you can use the `wrapperProps` property. For `@refinedev/antd` wrapper elements are simple `<div/>`s and `wrapperProps` can get every attribute that `<div/>` can get.
 
 ```tsx live disableScroll previewHeight=280px url=http://localhost:3000/posts/edit/2
 const { EditButton } = RefineAntd;
 
 // visible-block-start
-import { Edit } from "@pankod/refine-antd";
+import { Edit } from "@refinedev/antd";
 
 const PostEdit: React.FC = () => {
     return (
@@ -746,7 +768,7 @@ If you want to customize the header of the `<Edit/>` component, you can use the 
 const { EditButton } = RefineAntd;
 
 // visible-block-start
-import { Edit } from "@pankod/refine-antd";
+import { Edit } from "@refinedev/antd";
 
 const PostEdit: React.FC = () => {
     return (
@@ -796,7 +818,7 @@ If you want to customize the content of the `<Edit/>` component, you can use the
 const { EditButton } = RefineAntd;
 
 // visible-block-start
-import { Edit } from "@pankod/refine-antd";
+import { Edit } from "@refinedev/antd";
 
 const PostEdit: React.FC = () => {
     return (
@@ -837,13 +859,22 @@ render(
 
 ### `headerButtons`
 
-You can customize the buttons at the header by using the `headerButtons` property. It accepts `React.ReactNode` or a render function `({ defaultButtons }) => React.ReactNode` which you can use to keep the existing buttons and add your own.
+By default, the `<Edit/>` component has a [`<ListButton>`][list-button] and a [`<RefreshButton>`][refresh-button] at the header.
+
+You can customize the buttons at the header by using the `headerButtons` property. It accepts `React.ReactNode` or a render function `({ defaultButtons, refreshButtonProps, listButtonProps }) => React.ReactNode` which you can use to keep the existing buttons and add your own.
+
+:::caution
+
+If "list" resource is not defined, the [`<ListButton>`][list-button] will not render and `listButtonProps` will be `undefined`.
+
+:::
 
 ```tsx live disableScroll previewHeight=280px url=http://localhost:3000/posts/edit/2
 const { EditButton } = RefineAntd;
 
 // visible-block-start
-import { Edit, Button } from "@pankod/refine-antd";
+import { Edit } from "@refinedev/antd";
+import { Button } from "antd";
 
 const PostEdit: React.FC = () => {
     return (
@@ -853,6 +884,61 @@ const PostEdit: React.FC = () => {
                 <>
                     {defaultButtons}
                     <Button type="primary">Custom Button</Button>
+                </>
+            )}
+            // highlight-end
+        >
+            <p>Rest of your page here</p>
+        </Edit>
+    );
+};
+// visible-block-end
+
+render(
+    <RefineAntdDemo
+        initialRoutes={["/posts/edit/2"]}
+        resources={[
+            {
+                name: "posts",
+                list: () => (
+                    <div>
+                        <p>This page is empty.</p>
+                        <EditButton />
+                    </div>
+                ),
+                edit: PostEdit,
+            },
+        ]}
+    />,
+);
+```
+
+Or, instead of using the `defaultButtons`, you can create your own buttons. If you want, you can use `refreshButtonProps` and `listButtonProps` to utilize the default values of the `<ListButton>`[list-button] and `<RefreshButton>`[refresh-button] components.
+
+```tsx live disableScroll previewHeight=280px url=http://localhost:3000/posts/edit/2
+const { EditButton } = RefineAntd;
+
+// visible-block-start
+import { Edit, ListButton, RefreshButton } from "@refinedev/antd";
+import { Button } from "antd";
+
+const PostEdit: React.FC = () => {
+    return (
+        <Edit
+            // highlight-start
+            headerButtons={({ refreshButtonProps, listButtonProps }) => (
+                <>
+                    <Button type="primary">Custom Button</Button>
+                    <RefreshButton
+                        {...refreshButtonProps}
+                        meta={{ foo: "bar" }}
+                    />
+                    {listButtonProps && (
+                        <ListButton
+                            {...listButtonProps}
+                            meta={{ foo: "bar" }}
+                        />
+                    )}
                 </>
             )}
             // highlight-end
@@ -892,7 +978,8 @@ You can customize the wrapper element of the buttons at the header by using the 
 const { EditButton } = RefineAntd;
 
 // visible-block-start
-import { Edit, Button } from "@pankod/refine-antd";
+import { Edit } from "@refinedev/antd";
+import { Button } from "antd";
 
 const PostEdit: React.FC = () => {
     return (
@@ -934,13 +1021,22 @@ render(
 
 ### `footerButtons`
 
-You can customize the buttons at the footer by using the `footerButtons` property. It accepts `React.ReactNode` or a render function `({ defaultButtons }) => React.ReactNode` which you can use to keep the existing buttons and add your own.
+By default, the `<Edit/>` component has a [`<SaveButton>`][save-button] and a [`<DeleteButton>`][delete-button] at the footer.
+
+You can customize the buttons at the footer by using the `footerButtons` property. It accepts `React.ReactNode` or a render function `({ defaultButtons, saveButtonProps, deleteButtonProps }) => React.ReactNode` which you can use to keep the existing buttons and add your own.
+
+:::caution
+
+If [`canDelete`](#candelete-and-deletebuttonprops) is `false`, the [`<DeleteButton>`][delete-button] will not render and `deleteButtonProps` will be `undefined`.
+
+:::
 
 ```tsx live disableScroll previewHeight=280px url=http://localhost:3000/posts/edit/2
 const { EditButton } = RefineAntd;
 
 // visible-block-start
-import { Edit, Button } from "@pankod/refine-antd";
+import { Edit } from "@refinedev/antd";
+import { Button } from "antd";
 
 const PostEdit: React.FC = () => {
     return (
@@ -950,6 +1046,55 @@ const PostEdit: React.FC = () => {
                 <>
                     {defaultButtons}
                     <Button type="primary">Custom Button</Button>
+                </>
+            )}
+            // highlight-end
+        >
+            <p>Rest of your page here</p>
+        </Edit>
+    );
+};
+// visible-block-end
+
+render(
+    <RefineAntdDemo
+        initialRoutes={["/posts/edit"]}
+        resources={[
+            {
+                name: "posts",
+                list: () => (
+                    <div>
+                        <p>This page is empty.</p>
+                        <EditButton />
+                    </div>
+                ),
+                edit: PostEdit,
+            },
+        ]}
+    />,
+);
+```
+
+Or, instead of using the `defaultButtons`, you can create your own buttons. If you want, you can use `saveButtonProps` and `deleteButtonProps` to utilize the default values of the [`<SaveButton>`][save-button] and [`<DeleteButton>`][delete-button] components.
+
+```tsx live disableScroll previewHeight=280px url=http://localhost:3000/posts/edit/2
+const { EditButton } = RefineAntd;
+
+// visible-block-start
+import { Edit, SaveButton, DeleteButton } from "@refinedev/antd";
+import { Button } from "antd";
+
+const PostEdit: React.FC = () => {
+    return (
+        <Edit
+            // highlight-start
+            footerButtons={({ saveButtonProps, deleteButtonProps }) => (
+                <>
+                    <Button type="primary">Custom Button</Button>
+                    <SaveButton {...saveButtonProps} hideText />
+                    {deleteButtonProps && (
+                        <DeleteButton {...deleteButtonProps} hideText />
+                    )}
                 </>
             )}
             // highlight-end
@@ -989,7 +1134,8 @@ You can customize the wrapper element of the buttons at the footer by using the 
 const { EditButton } = RefineAntd;
 
 // visible-block-start
-import { Edit, Button } from "@pankod/refine-antd";
+import { Edit } from "@refinedev/antd";
+import { Button } from "antd";
 
 const PostEdit: React.FC = () => {
     return (
@@ -1036,7 +1182,7 @@ render(
 
 ### Properties
 
-<PropsTable module="@pankod/refine-antd/Edit" 
+<PropsTable module="@refinedev/antd/Edit" 
 contentProps-type="[`CardProps`](https://ant.design/components/card/#API)"
 headerProps-type="[`PageHeaderProps`](https://procomponents.ant.design/en-US/components/page-header)" 
 headerButtons-default="[`ListButton`](https://refine.dev/docs/api-reference/antd/components/buttons/list-button/) and [`RefreshButton`](https://refine.dev/docs/api-reference/antd/components/buttons/refresh-button/)"
@@ -1053,3 +1199,7 @@ goBack-type="`ReactNode`"
 > `*`: These properties have default values in `RefineContext` and can also be set on the **<[Refine](/api-reference/core/components/refine-config.md)>** component.
 
 [breadcrumb-component]: /api-reference/antd/components/breadcrumb.md
+[list-button]: /docs/api-reference/antd/components/buttons/list-button/
+[refresh-button]: /docs/api-reference/antd/components/buttons/refresh-button/
+[save-button]: /docs/api-reference/antd/components/buttons/save-button/
+[delete-button]: /docs/api-reference/antd/components/buttons/delete-button/

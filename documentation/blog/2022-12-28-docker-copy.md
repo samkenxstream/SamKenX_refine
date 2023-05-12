@@ -3,7 +3,7 @@ title: How to Use Docker Copy Command
 description: We'll discuss how to copy files in Docker using the docker copy command. 
 slug: docker-copy
 authors: muhammad_khabbab
-tags: [docker]
+tags: [docker, dev-tools]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-12-28-docker-copy/social.png
 hide_table_of_contents: false
 ---
@@ -109,7 +109,10 @@ You can also use the `docker cp` command to copy files between two containers. J
 
 ---
 
-<PromotionBanner title="Building a side project?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/diagram.png" />
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
 

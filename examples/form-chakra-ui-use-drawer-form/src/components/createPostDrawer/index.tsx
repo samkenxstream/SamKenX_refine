@@ -1,5 +1,6 @@
+import { Create } from "@refinedev/chakra-ui";
+
 import {
-    Create,
     Drawer,
     DrawerBody,
     DrawerCloseButton,
@@ -11,13 +12,14 @@ import {
     FormLabel,
     FormErrorMessage,
     Select,
-} from "@pankod/refine-chakra-ui";
-import { useSelect } from "@pankod/refine-core";
-import { UseModalFormReturnType } from "@pankod/refine-react-hook-form";
+} from "@chakra-ui/react";
 
-import { ICategory } from "../../interfaces";
+import { useSelect } from "@refinedev/core";
+import { UseModalFormReturnType } from "@refinedev/react-hook-form";
 
-export const CreatePostDrawer: React.FC<UseModalFormReturnType> = ({
+import { IPost, ICategory } from "../../interfaces";
+
+export const CreatePostDrawer: React.FC<UseModalFormReturnType<IPost>> = ({
     saveButtonProps,
     modal: { visible, close },
     register,
@@ -39,7 +41,6 @@ export const CreatePostDrawer: React.FC<UseModalFormReturnType> = ({
 
                 <DrawerBody>
                     <Create
-                        headerButtons={false}
                         title={false}
                         goBack={null}
                         saveButtonProps={saveButtonProps}

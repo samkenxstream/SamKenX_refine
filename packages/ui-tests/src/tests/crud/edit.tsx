@@ -1,12 +1,9 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
-import {
-    RefineCrudEditProps,
-    RefineButtonTestIds,
-} from "@pankod/refine-ui-types";
-import { AccessControlProvider } from "@pankod/refine-core";
+import { RefineCrudEditProps, RefineButtonTestIds } from "@refinedev/ui-types";
+import { AccessControlProvider } from "@refinedev/core";
 
-import { act, ITestWrapperProps, render, TestWrapper } from "@test";
+import { ITestWrapperProps, render, TestWrapper } from "@test";
 
 const renderEdit = (
     edit: React.ReactNode,
@@ -32,10 +29,10 @@ const renderEdit = (
 
 export const crudEditTests = function (
     Edit: React.ComponentType<
-        RefineCrudEditProps<any, any, any, any, any, any, any, {}>
+        RefineCrudEditProps<any, any, any, any, any, any, any, {}, any, any>
     >,
 ): void {
-    describe("[@pankod/refine-ui-tests] Common Tests / CRUD Edit", () => {
+    describe("[@refinedev/ui-tests] Common Tests / CRUD Edit", () => {
         beforeAll(() => {
             jest.spyOn(console, "warn").mockImplementation(jest.fn());
         });
@@ -47,7 +44,14 @@ export const crudEditTests = function (
         });
 
         it("should render default list button successfuly", async () => {
-            const { queryByTestId } = renderEdit(<Edit />);
+            const { queryByTestId } = renderEdit(
+                <Edit
+                    headerButtons={({ defaultButtons, listButtonProps }) => {
+                        expect(listButtonProps).toBeDefined();
+                        return <>{defaultButtons}</>;
+                    }}
+                />,
+            );
 
             expect(
                 queryByTestId(RefineButtonTestIds.ListButton),
@@ -55,7 +59,20 @@ export const crudEditTests = function (
         });
 
         it("should render default save and delete buttons successfuly", async () => {
-            const { container, getByText } = renderEdit(<Edit canDelete />);
+            const { container, getByText } = renderEdit(
+                <Edit
+                    canDelete
+                    footerButtons={({
+                        defaultButtons,
+                        saveButtonProps,
+                        deleteButtonProps,
+                    }) => {
+                        expect(saveButtonProps).toBeDefined();
+                        expect(deleteButtonProps).toBeDefined();
+                        return <>{defaultButtons}</>;
+                    }}
+                />,
+            );
 
             expect(container.querySelector("button")).toBeTruthy();
             getByText("Save");
@@ -84,6 +101,13 @@ export const crudEditTests = function (
             getByText("Edit Post");
         });
 
+        it("should not render title when is false", async () => {
+            const { queryByText } = renderEdit(<Edit title={false} />);
+
+            const text = queryByText("Edit Post");
+            expect(text).not.toBeInTheDocument();
+        });
+
         it("should render custom title successfuly", async () => {
             const { getByText } = renderEdit(<Edit title="Custom Title" />);
 
@@ -98,7 +122,12 @@ export const crudEditTests = function (
 
         it("should render delete button ", async () => {
             const { getByText, queryByTestId } = renderEdit(
-                <Edit />,
+                <Edit
+                    footerButtons={({ defaultButtons, deleteButtonProps }) => {
+                        expect(deleteButtonProps).toBeDefined();
+                        return <>{defaultButtons}</>;
+                    }}
+                />,
                 undefined,
                 {
                     resources: [{ name: "posts", canDelete: true }],

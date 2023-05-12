@@ -3,7 +3,7 @@ title: Svelte vs React Comparison
 description: We will compare the optimal performance of React and Svelte
 slug: svelte-vs-react
 authors: chidume_nnamdi
-tags: [react, svelte]
+tags: [comparison,svelte,react]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-12-08-svelte-vs-react/social.png
 hide_table_of_contents: false
 ---
@@ -26,7 +26,10 @@ React has become one of the most popular JavaScript libraries for building user 
 
 ---
 
-<PromotionBanner title="Stop wasting your time copy/pasting your CRUD code all over your application!" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/generic_banner.png" />
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
 

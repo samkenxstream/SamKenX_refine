@@ -1,23 +1,13 @@
 import React from "react";
-import { IResourceComponentsProps } from "@pankod/refine-core";
+import { IResourceComponentsProps } from "@refinedev/core";
 
-import {
-    Create,
-    Form,
-    Input,
-    Select,
-    Button,
-    SaveButton,
-    useSelect,
-    useStepsForm,
-    Steps,
-} from "@pankod/refine-antd";
+import { Create, SaveButton, useSelect, useStepsForm } from "@refinedev/antd";
+
+import { Form, Input, Select, Button, Steps } from "antd";
 
 import MDEditor from "@uiw/react-md-editor";
 
 import { IPost, ICategory } from "interfaces";
-
-const { Step } = Steps;
 
 export const PostCreate: React.FC<IResourceComponentsProps> = () => {
     const { current, gotoStep, stepsProps, formProps, saveButtonProps } =
@@ -121,10 +111,10 @@ export const PostCreate: React.FC<IResourceComponentsProps> = () => {
                 </>
             }
         >
-            <Steps {...stepsProps}>
-                <Step title="About Post" />
-                <Step title="Content" />
-            </Steps>
+            <Steps
+                {...stepsProps}
+                items={[{ title: "About Post" }, { title: "Content" }]}
+            />
 
             <Form {...formProps} layout="vertical" style={{ marginTop: 30 }}>
                 {formList[current]}

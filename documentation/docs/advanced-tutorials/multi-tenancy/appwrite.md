@@ -1,6 +1,7 @@
 ---
 id: appwrite
 title: Appwrite
+sidebar_label: Appwrite
 ---
 
 ## What is Multitenancy?
@@ -20,44 +21,50 @@ This guide has been prepared to assume you know the basics of **refine**. If you
 ## Setup
 
 ```bash
-npm install @pankod/refine-appwrite
+npm install @refinedev/appwrite
 ```
 
 :::caution
-To make this example more visual, we used the [`@pankod/refine-antd`](https://github.com/refinedev/refine/tree/master/packages/refine-antd) package. If you are using Refine headless, you need to provide the components, hooks, or helpers imported from the [`@pankod/refine-antd`](https://github.com/refinedev/refine/tree/master/packages/refine-antd) package.
+To make this example more visual, we used the [`@refinedev/antd`](https://github.com/refinedev/refine/tree/master/packages/refine-antd) package. If you are using Refine headless, you need to provide the components, hooks, or helpers imported from the [`@refinedev/antd`](https://github.com/refinedev/refine/tree/master/packages/refine-antd) package.
 :::
 
 ## Usage
 
 ```tsx
-import { Refine } from "@pankod/refine-core";
+import { Refine } from "@refinedev/core";
 import {
-    Layout,
-    ReadyPage,
+    ThemedLayoutV2,
     notificationProvider,
     ErrorComponent,
-} from "@pankod/refine-antd";
-import { dataProvider } from "@pankod/refine-appwrite";
-import routerProvider from "@pankod/refine-react-router-v6";
+    RefineThemes,
+} from "@refinedev/antd";
+import { dataProvider } from "@refinedev/appwrite";
+import routerProvider from "@refinedev/react-router-v6";
 
-import "@pankod/refine-antd/dist/reset.css";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+
+import { ConfigProvider } from "antd";
+import "@refinedev/antd/dist/reset.css";
 
 import { appwriteClient } from "utility";
 import { authProvider } from "./authProvider";
 
 const App: React.FC = () => {
     return (
-        <Refine
-            //highlight-start
-            dataProvider={dataProvider(appwriteClient)}
-            authProvider={authProvider}
-            //highlight-end
-            routerProvider={routerProvider}
-            Layout={Layout}
-            ReadyPage={ReadyPage}
-            notificationProvider={notificationProvider}
-            catchAll={<ErrorComponent />}
-        />
+        <BrowserRouter>
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    //highlight-start
+                    dataProvider={dataProvider(appwriteClient)}
+                    authProvider={authProvider}
+                    //highlight-end
+                    routerProvider={routerProvider}
+                    notificationProvider={notificationProvider}
+                >
+                    <ThemedLayoutV2>{/* ... */}</ThemedLayoutV2>
+                </Refine>
+            </ConfigProvider>
+        </BrowserRouter>
     );
 };
 ```
@@ -82,111 +89,176 @@ We need three collections for our Cake House application. Let's create these col
 
 `stores`
 
--   Title: text
+-   title: text
 
 `products`
 
--   Title: text
--   Description: text
--   Image: text
--   StoreId: text
+-   title: text
+-   description: text
+-   image: text
+-   storeId: text
 
 `orders`
 
--   ProductId: text
--   Customer Name: text
--   Customer Address: text
--   Status: text
--   Quantitiy: numeric
--   StoreId: text
+-   productId: text
+-   customerName: text
+-   customerAddress: text
+-   status: text
+-   quantity: numeric
+-   storeId: text
 
 Now that we have completed the setup and our collections, we can now log in with the **refine** and start the listing processes.
 
-## Store Context
+## Create Resources and Routes
 
-To view the products and orders of two different stores separately, we need to filter by `storeId`. We will use the `storeId` information in more than one place. For example, when creating a store-specific order.
+To view the products and orders of two different stores separately, we need to filter by `storeId`. We will use the `storeId` information in more than one place. For example, when creating a store-specific order. We will also add this as a prefix to the routes. (example.com/:tenant/products)
 
-For this reason, we will create a [React Context](https://en.reactjs.org/docs/context.html) and keep the `storeId` state information in it and send it to the relevant **refine** components.
+```tsx title="src/App.tsx"
+function App() {
+    // highlight-start
+    // When `domain.com` is entered, we set the default tenant to redirect `domain.com/name`.
+    const tenant = "refine";
+    // highlight-end
 
-```tsx
-import { createContext, useState } from "react";
+    return (
+        <BrowserRouter>
+            <GitHubBanner />
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    routerProvider={routerProvider}
+                    liveProvider={liveProvider(appwriteClient, {
+                        databaseId: "multi-tenancy",
+                    })}
+                    dataProvider={dataProvider(appwriteClient, {
+                        databaseId: "multi-tenancy",
+                    })}
+                    authProvider={authProvider}
+                    options={{
+                        liveMode: "auto",
+                        syncWithLocation: true,
+                        warnWhenUnsavedChanges: true,
+                    }}
+                    // highlight-start
+                    // The path definition for `list`, `create`, `show`, `edit` pages is as follows and variables can be used as in `react-router`. 
+                    resources={[
+                        {
+                            name: "products",
+                            list: "/:tenant/products",
+                            show: "/:tenant/products/show/:id",
+                            // Compose with the `meta` object.
+                            meta: {
+                                tenant,
+                            },
+                        },
+                        {
+                            name: "orders",
+                            list: "/:tenant/orders",
+                            create: "/:tenant/orders/create",
+                            edit: "/:tenant/orders/edit/:id",
+                            meta: {
+                                tenant,
+                            },
+                        },
+                        // highlight-end
+                    ]}
+                    notificationProvider={notificationProvider}
+                >
+                    <Routes>
+                        {/* ... */}
+                        <Route
+                            index
+                            element={
+                                <NavigateToResource resource="products" />
+                            }
+                        />
 
-export const StoreContext = createContext<any[]>([]);
+                        {/* highlight-start */}
+                        {/* prefix `resources` paths. */}
+                        <Route path="/:tenant">
+                        {/* highlight-end */}
+                            <Route path="products">
+                                <Route index element={<ProductList />} />
+                                <Route
+                                    path="show/:id"
+                                    element={<ProductShow />}
+                                />
+                            </Route>
 
-export const StoreProvider = (props: any) => {
-    const [store, setStore] = useState("61cdb05132609");
-
-    return <StoreContext.Provider value={[store, setStore]} {...props} />;
-};
+                            <Route path="orders">
+                                <Route index element={<OrderList />} />
+                                <Route
+                                    path="create"
+                                    element={<OrderCreate />}
+                                />
+                                <Route
+                                    path="edit/:id"
+                                    element={<OrderEdit />}
+                                />
+                            </Route>
+                        </Route>
+                    </Routes>
+                    <UnsavedChangesNotifier />
+                </Refine>
+            </ConfigProvider>
+        </BrowserRouter>
+    );
+}
 ```
 
-```tsx title="App.tsx"
-import { Refine } from "@pankod/refine-core";
-import { Layout, ReadyPage, notificationProvider, ErrorComponent } from "@pankod/refine-antd";
-import { dataProvider } from "@pankod/refine-appwrite";
-import routerProvider from "@pankod/refine-react-router-v6";
+## Using the `tenant` at the other components
 
-import "@pankod/refine-antd/dist/reset.css";
+You may want to get the `tenant` within the project. This is easily get with the [`useParsed`](/docs/api-reference/core/hooks/navigation/useParsed/) hook.
 
-import { appwriteClient } from "utility";
-import { authProvider } from "./authProvider";
+```tsx
+import { useParsed } from "@refinedev/core";
 
-import { StoreProvider } from "context/store";
+const { params } = useParsed<{ tenant: string }>();
 
-const App: React.FC = () => {
-    return (
-          //highlight-start
-        <StoreProvider>
-            <Refine
-                dataProvider={dataProvider(appwriteClient)}
-                authProvider={authProvider}
-                routerProvider={routerProvider}
-                Layout={Layout}
-                ReadyPage={ReadyPage}
-                notificationProvider={notificationProvider}
-                catchAll={<ErrorComponent />}
-            />
-        <StoreProvider>
-         //highlight-end
-    );
-};
+console.log(params?.tenant); // { tenant: "refine" }
 ```
 
 ## Shop Select to Sider Component
 
-We will create a select component in the Sider Menu where the user will select the stores. Let's create our select component first, then let's see how we can define it in the **refine** Sider.
+We will create a select component in the `Header` where the user will select the stores. Let's create our select component first, then let's see how we can define it in the **refine** `Header` component.
 
 ```tsx title="scr/components/select/StoreSelect.tsx"
-import { useContext } from "react";
-import { Select, useSelect } from "@pankod/refine-antd";
+import { useSelect } from "@refinedev/antd";
+import { useGetToPath, useGo, useParsed } from "@refinedev/core";
+import { Select } from "antd";
 
-import { StoreContext } from "context/store";
 import { IStore } from "interfaces";
 
-
-export const StoreSelect: React.FC = ({ onSelect }) => {
-    //highlight-start
-    const [store, setStore] = useContext(StoreContext);
-    //highlight-end
+export const StoreSelect: React.FC = () => {
+    // highlight-start
+    const getToPath = useGetToPath();
+    const go = useGo();
+    const { resource, action, params } = useParsed<{ tenant: string }>();
+    // highlight-end
 
     const { selectProps: storeSelectProps } = useSelect<IStore>({
-        resource: "61cd62db95f92",
+        resource: "stores",
         optionLabel: "title",
         optionValue: "id",
     });
 
-    //highlight-start
-    const handleChange = (selectedValue: string) => {
-        setStore(selectedValue);
-    };
-    //highlight-end
-
     return (
         <Select
-            defaultValue={store}
-            style={{ width: 130 }}
-            onChange={handleChange}
-            onSelect={() => false)}
+            defaultValue={params?.tenant}
+            style={{ width: 120 }}
+            // highlight-start
+            onChange={(tenant) =>
+                go({
+                    to: getToPath({
+                        resource,
+                        action: action || "list",
+                        meta: {
+                            tenant,
+                        },
+                    }),
+                })
+            }
+            // highlight-end
+            onSelect={() => false}
         >
             {storeSelectProps.options?.map(({ value, label }) => (
                 <Select.Option key={value} value={value}>
@@ -198,112 +270,72 @@ export const StoreSelect: React.FC = ({ onSelect }) => {
 };
 ```
 
-Here we have created a select component. Then we fetch the store id and title we created in the Appwrite database with `useSelect`. Now we can place the store information we have in the state we created in the Store Context.
+Here we have created a select component. Then we fetch the store id and title we created in the Appwrite database with `useSelect`.
 
-Let's define the select component in the **refine** Sider Menu. First, we need to customize the default Sider.
+Let's define the select component in the **refine** `Header`.
 
-[Check out how you can customize Sider Menu →](https://refine.dev/docs/examples/customization/customSider/)
+[Check out how you can customize `Header` →](/docs/api-reference/antd/components/antd-themed-layout/#header)
 
 <details>
 <summary>Show Code</summary>
 <p>
 
-```tsx title="src/components/sider/CustomSider.tsx"
-import React, { useState } from "react";
-import {
-    useTitle,
-    useMenu,
-    ITreeMenu,
-    CanAccess,
-    useRouterContext,
-} from "@pankod/refine-core";
-import { AntdLayout, Menu, Grid, Icons } from "@pankod/refine-antd";
-import { antLayoutSider, antLayoutSiderMobile } from "./styles";
+```tsx title="src/components/header/index.tsx"
+import React from "react";
+import { Layout as AntdLayout, Typography, Avatar, Space, theme } from "antd";
+import { useActiveAuthProvider, useGetIdentity } from "@refinedev/core";
+import { RefineThemedLayoutV2HeaderProps } from "@refinedev/antd";
+// highlight-next-line
+import { StoreSelect } from "../select";
 
-import { StoreSelect } from "components/select";
+const { Text } = Typography;
+const { useToken } = theme;
 
-export const CustomSider: React.FC = () => {
-    const [collapsed, setCollapsed] = useState<boolean>(false);
-    const { Link } = useRouterContext();
-    const Title = useTitle();
-    const { SubMenu } = Menu;
-    const { menuItems, selectedKey } = useMenu();
-    const breakpoint = Grid.useBreakpoint();
+export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = () => {
+    const { token } = useToken();
 
-    const isMobile =
-        typeof breakpoint.lg === "undefined" ? false : !breakpoint.lg;
+    const authProvider = useActiveAuthProvider();
+    const { data: user } = useGetIdentity({
+        v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+    });
 
-    const renderTreeView = (tree: ITreeMenu[], selectedKey: string) => {
-        return tree.map((item: ITreeMenu) => {
-            const { icon, label, route, name, children, parentName } = item;
+    const shouldRenderHeader = user && (user.name || user.avatar);
 
-            if (children.length > 0) {
-                return (
-                    <SubMenu
-                        key={name}
-                        icon={icon ?? <Icons.UnorderedListOutlined />}
-                        title={label}
-                    >
-                        {renderTreeView(children, selectedKey)}
-                    </SubMenu>
-                );
-            }
-            const isSelected = route === selectedKey;
-            const isRoute = !(
-                parentName !== undefined && children.length === 0
-            );
-            return (
-                <CanAccess
-                    key={route}
-                    resource={name.toLowerCase()}
-                    action="list"
-                >
-                    <Menu.Item
-                        key={route}
-                        style={{
-                            fontWeight: isSelected ? "bold" : "normal",
-                        }}
-                        icon={
-                            icon ?? (isRoute && <Icons.UnorderedListOutlined />)
-                        }
-                    >
-                        <Link to={route}>{label}</Link>
-                        {!collapsed && isSelected && (
-                            <div className="ant-menu-tree-arrow" />
-                        )}
-                    </Menu.Item>
-                </CanAccess>
-            );
-        });
-    };
+    if (!shouldRenderHeader) {
+        return null;
+    }
 
     return (
-        <AntdLayout.Sider
-            collapsible
-            collapsedWidth={isMobile ? 0 : 80}
-            collapsed={collapsed}
-            breakpoint="lg"
-            onCollapse={(collapsed: boolean): void => setCollapsed(collapsed)}
-            style={isMobile ? antLayoutSiderMobile : antLayoutSider}
+        <AntdLayout.Header
+            style={{
+                backgroundColor: token.colorBgElevated,
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                padding: "0px 24px",
+                height: "64px",
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
+            }}
         >
-            <Title collapsed={collapsed} />
-            <Menu
-                selectedKeys={[selectedKey]}
-                mode="inline"
-                onClick={() => {
-                    if (!breakpoint.lg) {
-                        setCollapsed(true);
-                    }
+            <Space
+                style={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "space-between",
                 }}
             >
-                //highlight-start
-                <Menu.Item key={"/"} icon={<Icons.AppstoreAddOutlined />}>
-                    <StoreSelect />
-                </Menu.Item>
-                //highlight-end
-                {renderTreeView(menuItems, selectedKey)}
-            </Menu>
-        </AntdLayout.Sider>
+                { /* highlight-next-line */}
+                <StoreSelect />
+                <Space size="middle">
+                    {user?.name && <Text strong>{user.name}</Text>}
+                    {user?.avatar && (
+                        <Avatar src={user?.avatar} alt={user?.name} />
+                    )}
+                </Space>
+            </Space>
+        </AntdLayout.Header>
     );
 };
 ```
@@ -311,23 +343,28 @@ export const CustomSider: React.FC = () => {
 </p>
 </details>
 
-|             <img src="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/guides-and-concepts/multi-tenant/appwrite/sider.png" alt="sider" />              |
+|             <img src="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/guides-and-concepts/multi-tenant/appwrite/header.jpg" alt="sider" />             |
 | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| _As you can see, you can now choose the store you want and create products and orders specifically for the store we have chosen according to the `storeId` information._ |
+| _As you can see, you can create a store-specific product and order by selecting `tenant` in the `Header` component and choosing according to the `storeId` information._ |
 
 ## Product List Page
 
-Now we can list the products of the selected store according to the `storeId` information by filtering it. We can do this filtering by using the `permanetFilter` property within the **refine**'s `useSimpleList` hook.
+Now we can list the products of the selected store according to the `storeId` information by filtering it. We can do this filtering by using the `filters.permanent` property within the **refine**'s `useSimpleList` hook.
 
-We separate the products of different stores by using the `permanentFilter` with the `storeId` we get from the Store Context. So we can control more than single content in one application.
+We separate the products of different stores by using the `filters.permanent` with the `storeId` we get from the Store Context. So we can control more than single content in one application.
 
 ```tsx
+import { useParsed } from "@refinedev/core";
+
 //highlight-start
-const [store] = useContext(StoreContext);
+const { params } = useParsed<{ tenant?: string }>();
 //highlight-end
+
 const { listProps } = useSimpleList<IProduct>({
     //highlight-start
-    permanentFilter: [{ field: "storeId", operator: "eq", value: store }],
+    filters: {
+        permanent: [{ field: "storeId", operator: "eq", value: params?.tenant }],
+    },
     //highlight-end
 });
 ```
@@ -337,28 +374,66 @@ const { listProps } = useSimpleList<IProduct>({
 <p>
 
 ```tsx title="src/pages/ProductList.tsx"
-import { useContext } from "react";
-import { IResourceComponentsProps } from "@pankod/refine-core";
+import {
+    IResourceComponentsProps,
+    HttpError,
+    useParsed,
+} from "@refinedev/core";
+
 import {
     useSimpleList,
-    AntdList,
     useModalForm,
-    useDrawerForm,
     CreateButton,
     List,
-} from "@pankod/refine";
+} from "@refinedev/antd";
+import { List as AntdList } from "antd";
 
 import { IProduct } from "interfaces";
-import { ProductItem } from "components/product";
-import { StoreContext } from "context/store";
+import { ProductItem, EditProduct, CreateProduct } from "components/product";
 
 export const ProductList: React.FC<IResourceComponentsProps> = () => {
-    //highlight-start
-    const [store] = useContext(StoreContext);
+    const { params } = useParsed<{ tenant?: string }>();
     const { listProps } = useSimpleList<IProduct>({
-        permanentFilter: [{ field: "storeId", operator: "eq", value: store }],
+        // highlight-start
+        filters: {
+            permanent: [
+                {
+                    field: "storeId",
+                    operator: "eq",
+                    value: params?.tenant,
+                },
+            ],
+        },
+        // highlight-end
     });
-    //highlight-end
+
+    const {
+        modalProps: createModalProps,
+        formProps: createFormProps,
+        show: createShow,
+    } = useModalForm<IProduct, HttpError, IProduct>({
+        resource: "products",
+        action: "create",
+        redirect: false,
+    });
+
+    const {
+        modalProps: editModalProps,
+        formProps: editFormProps,
+        show: editShow,
+    } = useModalForm<IProduct, HttpError>({
+        action: "edit",
+        queryOptions: {
+            select: ({ data }) => {
+                return {
+                    data: {
+                        ...data,
+                        image: data.image ? JSON.parse(data.image) : undefined,
+                    },
+                };
+            },
+        },
+    });
 
     return (
         <>
@@ -380,6 +455,14 @@ export const ProductList: React.FC<IResourceComponentsProps> = () => {
                     )}
                 />
             </List>
+            <EditProduct
+                modalProps={editModalProps}
+                formProps={editFormProps}
+            />
+            <CreateProduct
+                modalProps={createModalProps}
+                formProps={createFormProps}
+            />
         </>
     );
 };
@@ -394,9 +477,37 @@ export const ProductList: React.FC<IResourceComponentsProps> = () => {
         <div class="control orange"></div>
         <div class="control green"></div>
     </div>
-    <img src="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/guides-and-concepts/multi-tenant/appwrite/store-filter.gif" alt="Store Filter" />
+    <img src="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/guides-and-concepts/multi-tenant/appwrite/tenant-filter.gif" alt="Store Filter" />
 </div>
 <br/>
+
+:::tip
+
+In this example, we used the `filter.permanent` object to filter the data, as Appwrite does not support multitenancy. However, you can do this from a single point by swizzle the data provider in your own RestApi.
+
+You can check out the [swizzle data provider guide](/docs/packages/documentation/cli/#swizzle) for more information.
+
+The `resource.meta` object is passed as `meta` to **all methods** in the data providers. For this you have to swizzle the data provider. 
+
+```tsx title="src/dataProvider.ts"
+//...
+export const dataProvider = (): Required<DataProvider> => {
+    //...
+    return {
+        getList: async ({ resource, pagination, filters, sorters, meta }) => {
+            // ...
+            console.log(meta.tenant); // { tenant: "refine" }
+        },
+        getOne: async ({ resource, id, meta }) => {
+            // ...
+            console.log(meta.tenant); // { tenant: "refine" }
+        }
+        // ...
+    }
+}
+```
+
+:::
 
 ## Product Create Page
 
@@ -405,8 +516,9 @@ Now let's see how we can create store-specific products. Which store we choose i
 By overriding the `onFinish` method of the `form` and sending the selected `storeId`, we specify which store it will be the product of.
 
 ```tsx
-//highlight-start
-const [store] = useContext(StoreContext);
+// highlight-start
+import { useParsed } from "@refinedev/core";
+const { params } = useParsed<{ tenant?: string }>();
 // highlight-end
 
 <Form
@@ -417,7 +529,7 @@ const [store] = useContext(StoreContext);
         return (
             formProps.onFinish?.({
                 ...values,
-                storeId: store,
+                storeId: params?.tenant,
             })
         );
     }}
@@ -430,135 +542,103 @@ const [store] = useContext(StoreContext);
 <summary>Show Code</summary>
 <p>
 
-```tsx title="CreateProduct"
-import { useContext } from "react";
-import {
-    Create,
-    Drawer,
-    DrawerProps,
-    Form,
-    FormProps,
-    Input,
-    ButtonProps,
-    Upload,
-    Grid,
-    RcFile,
-} from "@pankod/refine-antd";
+```tsx title="src/components/product/create.tsx"
+import { Form, FormProps, Input, Upload, ModalProps, Modal } from "antd";
+import { Permission, Role } from "@refinedev/appwrite";
+import { useParsed } from "@refinedev/core";
+import { RcFile } from "antd/lib/upload/interface";
 
-import { appwriteClient, normalizeFile } from "utility";
-import { StoreContext } from "context/store";
+import { normalizeFile, storage } from "utility";
 
 type CreateProductProps = {
-    drawerProps: DrawerProps;
+    modalProps: ModalProps;
     formProps: FormProps;
-    saveButtonProps: ButtonProps;
 };
 
 export const CreateProduct: React.FC<CreateProductProps> = ({
-    drawerProps,
+    modalProps,
     formProps,
-    saveButtonProps,
 }) => {
-    const breakpoint = Grid.useBreakpoint();
-    //highlight-start
-    const [store, setStore] = useContext(StoreContext);
-    // highlight-end
-
+    // highlight-next-line
+    const { params } = useParsed<{ tenant?: string }>();
     return (
-        <Drawer
-            {...drawerProps}
-            width={breakpoint.sm ? "500px" : "100%"}
-            bodyStyle={{ padding: 0 }}
-        >
-            <Create saveButtonProps={saveButtonProps}>
-                <Form
-                    {...formProps}
-                    layout="vertical"
-                    initialValues={{
-                        isActive: true,
-                    }}
-                    //highlight-start
-                    onFinish={(values) => {
-                        return formProps.onFinish?.({
-                            ...values,
-                            storeId: store,
-                            image: JSON.stringify(values.image),
-                        });
-                    }}
-                    //highlight-end
+        <Modal {...modalProps}>
+            <Form
+                {...formProps}
+                layout="vertical"
+                initialValues={{
+                    isActive: true,
+                }}
+                // highlight-start
+                onFinish={(values) =>
+                    formProps.onFinish?.({
+                        ...values,
+                        storeId: params?.tenant,
+                        image: JSON.stringify(values.image),
+                    })
+                }
+                // highlight-end
+            >
+                <Form.Item
+                    label="Title"
+                    name="title"
+                    rules={[
+                        {
+                            required: true,
+                        },
+                    ]}
                 >
+                    <Input />
+                </Form.Item>
+                <Form.Item label="Description" name="description">
+                    <Input />
+                </Form.Item>
+
+                <Form.Item label="Images">
                     <Form.Item
-                        label="Title"
-                        name="title"
-                        rules={[
-                            {
-                                required: true,
-                            },
-                        ]}
+                        name="image"
+                        valuePropName="fileList"
+                        normalize={normalizeFile}
+                        noStyle
                     >
-                        <Input />
-                    </Form.Item>
-                    <Form.Item label="Description" name="description">
-                        <Input />
-                    </Form.Item>
+                        <Upload.Dragger
+                            name="file"
+                            listType="picture"
+                            multiple
+                            customRequest={async ({
+                                file,
+                                onError,
+                                onSuccess,
+                            }) => {
+                                try {
+                                    const rcFile = file as RcFile;
 
-                    <Form.Item label="Images">
-                        <Form.Item
-                            name="image"
-                            valuePropName="fileList"
-                            normalize={normalizeFile}
-                            noStyle
-                            rules={[
-                                {
-                                    required: true,
-                                },
-                            ]}
+                                    const { $id } = await storage.createFile(
+                                        "default",
+                                        rcFile.name,
+                                        rcFile,
+                                        [Permission.read(Role.any())],
+                                    );
+
+                                    const url = storage.getFileView(
+                                        "default",
+                                        $id,
+                                    );
+
+                                    onSuccess?.({ url }, new XMLHttpRequest());
+                                } catch (error) {
+                                    onError?.(new Error("Upload Error"));
+                                }
+                            }}
                         >
-                            <Upload.Dragger
-                                name="file"
-                                listType="picture"
-                                multiple
-                                customRequest={async ({
-                                    file,
-                                    onError,
-                                    onSuccess,
-                                }) => {
-                                    try {
-                                        const rcFile = file as RcFile;
-
-                                        const { $id } =
-                                            await appwriteClient.storage.createFile(
-                                                "default",
-                                                rcFile.name,
-                                                rcFile,
-                                                ["role:all"],
-                                                ["role:all"],
-                                            );
-
-                                        const url =
-                                            appwriteClient.storage.getFileView(
-                                                "default",
-                                                $id,
-                                            );
-
-                                        onSuccess?.(
-                                            { url },
-                                            new XMLHttpRequest(),
-                                        );
-                                    } catch (error) {
-                                        onError?.(new Error("Upload Error"));
-                                    }
-                                }}
-                            >
-                                <p className="ant-upload-text">
-                                    Drag &amp; drop a file in this area
-                                </p>
-                            </Upload.Dragger>
-                        </Form.Item>
+                            <p className="ant-upload-text">
+                                Drag &amp; drop a file in this area
+                            </p>
+                        </Upload.Dragger>
                     </Form.Item>
-                </Form>
-            </Create>
-        </Drawer>
+                </Form.Item>
+            </Form>
+        </Modal>
     );
 };
 ```
@@ -572,7 +652,7 @@ export const CreateProduct: React.FC<CreateProductProps> = ({
         <div class="control orange"></div>
         <div class="control green"></div>
     </div>
-    <img src="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/guides-and-concepts/multi-tenant/appwrite/create.gif" alt="create" />
+    <img src="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/guides-and-concepts/multi-tenant/appwrite/create-product.gif" alt="create" />
 </div>
 <br/>
 
@@ -585,17 +665,23 @@ export const CreateProduct: React.FC<CreateProductProps> = ({
 Appwrite Realtime API support is out-of-the-box supported by **refine**, just add two lines to make your App Realtime.
 
 ```tsx
-import { Refine } from "@pankod/refine-core";
+import { Refine, Authenticated } from "@refinedev/core";
 import {
-    Layout,
-    ReadyPage,
+    ThemedLayoutV2,
     notificationProvider,
     ErrorComponent,
-} from "@pankod/refine-antd";
-import { dataProvider, liveProvider } from "@pankod/refine-appwrite";
-import routerProvider from "@pankod/refine-react-router-v6";
+    RefineThemes,
+} from "@refinedev/antd";
+import { dataProvider, liveProvider } from "@refinedev/appwrite";
+import routerProvider, {
+    CatchAllNavigate,
+    NavigateToResource,
+} from "@refinedev/react-router-v6";
 
-import "@pankod/refine-antd/dist/reset.css";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+
+import { ConfigProvider } from "antd";
+import "@refinedev/antd/dist/reset.css";
 
 import { appwriteClient } from "utility";
 import { authProvider } from "./authProvider";
@@ -609,32 +695,64 @@ import { StoreProvider } from "context/store";
 function App() {
     return (
         <StoreProvider>
-            <Refine
-                routerProvider={routerProvider}
-                //highlight-start
-                liveProvider={liveProvider(appwriteClient)}
-                options={{ liveMode: "auto" }}
-                //highlight-end
-                dataProvider={dataProvider(appwriteClient)}
-                authProvider={authProvider}
-                LoginPage={Login}
-                Sider={CustomSider}
-                resources={[
-                    {
-                        name: "61cb01b17ef57",
-                        list: ProductList,
-                        show: ProductShow,
-                        options: {
-                            label: "Products",
-                            route: "products",
-                        },
-                    },
-                ]}
-                Layout={Layout}
-                ReadyPage={ReadyPage}
-                notificationProvider={notificationProvider}
-                catchAll={<ErrorComponent />}
-            />
+            <BrowserRouter>
+                <ConfigProvider theme={RefineThemes.Blue}>
+                    <Refine
+                        routerProvider={routerProvider}
+                        //highlight-start
+                        liveProvider={liveProvider(appwriteClient)}
+                        options={{ liveMode: "auto" }}
+                        //highlight-end
+                        dataProvider={dataProvider(appwriteClient)}
+                        authProvider={authProvider}
+                        notificationProvider={notificationProvider}
+                        resources={[
+                            {
+                                name: "61cb01b17ef57",
+                                list: "/products",
+                                show: "/products/show:id",
+                                meta: {
+                                    label: "Products",
+                                },
+                            },
+                        ]}
+                    >
+                        <Routes>
+                            <Route
+                                element={
+                                    <Authenticated
+                                        fallback={
+                                            <CatchAllNavigate to="/login" />
+                                        }
+                                    >
+                                        <ThemedLayoutV2 Sider={CustomSider}>
+                                            <Outlet />
+                                        </ThemedLayoutV2>
+                                    </Authenticated>
+                                }
+                            >
+                                <Route path="products">
+                                    <Route index element={<ProductList />} />
+                                    <Route
+                                        path="show:id"
+                                        element={<ProductShow />}
+                                    />
+                                </Route>
+                            </Route>
+                            <Route
+                                element={
+                                    <Authenticated fallback={<Outlet />}>
+                                        <NavigateToResource />
+                                    </Authenticated>
+                                }
+                            >
+                                <Route path="/login" element={<Login />} />
+                            </Route>
+                            <Route path="*" element={<ErrorComponent />} />
+                        </Routes>
+                    </Refine>
+                </ConfigProvider>
+            </BrowserRouter>
         </StoreProvider>
     );
 }
@@ -644,7 +762,7 @@ export default App;
 
 ## Conclusion
 
-In this guide and in our example app, we talked about how we can build Multitenancy apps with **refine**. Developing a Multitenancy application with **refine** is quite simple. By creating a context and with the hooks that **refine** provides, you can quickly and easily produce similar applications in this logic.
+In this guide and in our example app, we talked about how we can build multitenancy apps with **refine**. Developing a multitenancy application is quite simple with the flexible route infrastructure of `refine`.
 
 ## Example
 

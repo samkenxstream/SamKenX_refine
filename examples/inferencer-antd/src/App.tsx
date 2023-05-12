@@ -1,63 +1,138 @@
-import { Refine } from "@pankod/refine-core";
+import { GitHubBanner, Refine } from "@refinedev/core";
 import {
     notificationProvider,
-    Layout,
+    ThemedLayoutV2,
     ErrorComponent,
-} from "@pankod/refine-antd";
-import { AntdInferencer } from "@pankod/refine-inferencer/antd";
-import dataProvider from "@pankod/refine-simple-rest";
-import routerProvider from "@pankod/refine-react-router-v6";
-import "@pankod/refine-antd/dist/reset.css";
+    RefineThemes,
+} from "@refinedev/antd";
+import { AntdInferencer } from "@refinedev/inferencer/antd";
+import dataProvider from "@refinedev/simple-rest";
+import routerProvider, {
+    NavigateToResource,
+    UnsavedChangesNotifier,
+} from "@refinedev/react-router-v6";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { ConfigProvider } from "antd";
+import "@refinedev/antd/dist/reset.css";
 
 const API_URL = "https://api.fake-rest.refine.dev";
 
 const App: React.FC = () => {
     return (
-        <Refine
-            routerProvider={{
-                ...routerProvider,
-                /**
-                 * By default refine uses the first route with `list` property as the initial route.
-                 * If you want to change the initial route, you can bind the `initialRoute` property to the `RouterComponent` property.
-                 *
-                 * Example:
-                 *
-                 *  RouterComponent: routerProvider.RouterComponent.bind({
-                 *     initialRoute: "/posts",
-                 *  }),
-                 */
-            }}
-            dataProvider={dataProvider(API_URL)}
-            resources={[
-                {
-                    name: "samples",
-                    list: AntdInferencer,
-                    edit: AntdInferencer,
-                    show: AntdInferencer,
-                    create: AntdInferencer,
-                    canDelete: true,
-                },
-                {
-                    name: "categories",
-                    list: AntdInferencer,
-                    edit: AntdInferencer,
-                    show: AntdInferencer,
-                    create: AntdInferencer,
-                    canDelete: true,
-                },
-                {
-                    name: "users",
-                    list: AntdInferencer,
-                    edit: AntdInferencer,
-                    show: AntdInferencer,
-                    create: AntdInferencer,
-                    canDelete: true,
-                },
-            ]}
-            notificationProvider={notificationProvider}
-            Layout={Layout}
-            catchAll={<ErrorComponent />}
-        />
+        <BrowserRouter>
+            <GitHubBanner />
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    routerProvider={routerProvider}
+                    dataProvider={dataProvider(API_URL)}
+                    resources={[
+                        {
+                            name: "samples",
+                            list: "/samples",
+                            create: "/samples/create",
+                            edit: "/samples/edit/:id",
+                            show: "/samples/show/:id",
+                            meta: {
+                                canDelete: true,
+                            },
+                        },
+                        {
+                            name: "categories",
+                            list: "/categories",
+                            create: "/categories/create",
+                            edit: "/categories/edit/:id",
+                            show: "/categories/show/:id",
+                            meta: {
+                                canDelete: true,
+                            },
+                        },
+                        {
+                            name: "users",
+                            list: "/users",
+                            create: "/users/create",
+                            edit: "/users/edit/:id",
+                            show: "/users/show/:id",
+                            meta: {
+                                canDelete: true,
+                            },
+                        },
+                    ]}
+                    notificationProvider={notificationProvider}
+                    options={{
+                        syncWithLocation: true,
+                        warnWhenUnsavedChanges: true,
+                    }}
+                >
+                    <Routes>
+                        <Route
+                            element={
+                                <ThemedLayoutV2>
+                                    <Outlet />
+                                </ThemedLayoutV2>
+                            }
+                        >
+                            <Route
+                                index
+                                element={
+                                    <NavigateToResource resource="samples" />
+                                }
+                            />
+
+                            <Route path="samples">
+                                <Route index element={<AntdInferencer />} />
+                                <Route
+                                    path="create"
+                                    element={<AntdInferencer />}
+                                />
+                                <Route
+                                    path="edit/:id"
+                                    element={<AntdInferencer />}
+                                />
+                                <Route
+                                    path="show/:id"
+                                    element={<AntdInferencer />}
+                                />
+                            </Route>
+
+                            <Route path="categories">
+                                <Route index element={<AntdInferencer />} />
+                                <Route
+                                    path="create"
+                                    element={<AntdInferencer />}
+                                />
+                                <Route
+                                    path="edit/:id"
+                                    element={<AntdInferencer />}
+                                />
+                                <Route
+                                    path="show/:id"
+                                    element={<AntdInferencer />}
+                                />
+                            </Route>
+
+                            <Route path="users">
+                                <Route index element={<AntdInferencer />} />
+                                <Route
+                                    path="create"
+                                    element={<AntdInferencer />}
+                                />
+                                <Route
+                                    path="edit/:id"
+                                    element={<AntdInferencer />}
+                                />
+                                <Route
+                                    path="show/:id"
+                                    element={<AntdInferencer />}
+                                />
+                            </Route>
+
+                            <Route path="*" element={<ErrorComponent />} />
+                        </Route>
+                    </Routes>
+                    <UnsavedChangesNotifier />
+                </Refine>
+            </ConfigProvider>
+        </BrowserRouter>
     );
 };
 

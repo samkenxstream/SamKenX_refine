@@ -1,16 +1,20 @@
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback } from "react";
 import { UseFormConfig } from "sunflower-antd";
 import { FormInstance, FormProps, DrawerProps, ButtonProps } from "antd";
 import {
-    useMutationMode,
     useTranslate,
     useWarnAboutChange,
     UseFormProps as UseFormPropsCore,
     HttpError,
     LiveModeProps,
     BaseRecord,
+    FormWithSyncWithLocationParams,
     BaseKey,
-} from "@pankod/refine-core";
+    useResource,
+    useParsed,
+    useGo,
+    useModal,
+} from "@refinedev/core";
 
 import { useForm, UseFormProps, UseFormReturnType } from "../useForm";
 import { DeleteButtonProps } from "../../../components";
@@ -20,19 +24,51 @@ export interface UseDrawerFormConfig extends UseFormConfig {
 }
 
 export type UseDrawerFormProps<
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
-> = UseFormPropsCore<TData, TError, TVariables> &
-    UseFormProps<TData, TError, TVariables> &
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
+> = UseFormPropsCore<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
+> &
+    UseFormProps<
+        TQueryFnData,
+        TError,
+        TVariables,
+        TData,
+        TResponse,
+        TResponseError
+    > &
     UseDrawerFormConfig &
-    LiveModeProps;
+    LiveModeProps &
+    FormWithSyncWithLocationParams & {
+        defaultVisible?: boolean;
+        autoSubmitClose?: boolean;
+        autoResetForm?: boolean;
+    };
 
 export type UseDrawerFormReturnType<
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
-> = UseFormReturnType<TData, TError, TVariables> & {
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
+> = UseFormReturnType<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
+> & {
     formProps: FormProps<TVariables> & {
         form: FormInstance<TVariables>;
     };
@@ -57,56 +93,133 @@ export type UseDrawerFormReturnType<
  */
 
 export const useDrawerForm = <
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
 >({
-    mutationMode: mutationModeProp,
+    syncWithLocation,
+    defaultVisible = false,
+    autoSubmitClose = true,
+    autoResetForm = true,
     ...rest
-}: UseDrawerFormProps<TData, TError, TVariables>): UseDrawerFormReturnType<
-    TData,
+}: UseDrawerFormProps<
+    TQueryFnData,
     TError,
-    TVariables
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
+>): UseDrawerFormReturnType<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
 > => {
-    const useFormProps = useForm<TData, TError, TVariables>({
-        ...rest,
-        mutationMode: mutationModeProp,
+    const { visible, show, close } = useModal({
+        defaultVisible,
     });
 
-    const { form, formProps, formLoading, mutationResult, id, setId } =
-        useFormProps;
+    const useFormProps = useForm<
+        TQueryFnData,
+        TError,
+        TVariables,
+        TData,
+        TResponse,
+        TResponseError
+    >({
+        ...rest,
+    });
+    const [initiallySynced, setInitiallySynced] = React.useState(false);
+    const { form, formProps, formLoading, id, setId, onFinish } = useFormProps;
+
+    const { resource, action: actionFromParams } = useResource(rest.resource);
+
+    const parsed = useParsed();
+    const go = useGo();
+
+    const action = rest.action ?? actionFromParams ?? "";
+
+    const syncingId = !(
+        typeof syncWithLocation === "object" &&
+        syncWithLocation?.syncId === false
+    );
+
+    const syncWithLocationKey =
+        typeof syncWithLocation === "object" && "key" in syncWithLocation
+            ? syncWithLocation.key
+            : resource && action && syncWithLocation
+            ? `drawer-${resource?.identifier ?? resource?.name}-${action}`
+            : undefined;
+
+    React.useEffect(() => {
+        if (initiallySynced === false && syncWithLocationKey) {
+            const openStatus = parsed?.params?.[syncWithLocationKey]?.open;
+            if (typeof openStatus === "boolean") {
+                openStatus ? show() : close();
+            } else if (typeof openStatus === "string") {
+                if (openStatus === "true") {
+                    show();
+                }
+            }
+
+            if (syncingId) {
+                const idFromParams = parsed?.params?.[syncWithLocationKey]?.id;
+                if (idFromParams) {
+                    setId?.(idFromParams);
+                }
+            }
+
+            setInitiallySynced(true);
+        }
+    }, [syncWithLocationKey, parsed, syncingId, setId, initiallySynced]);
+
+    React.useEffect(() => {
+        if (initiallySynced === true) {
+            if (visible && syncWithLocationKey) {
+                go({
+                    query: {
+                        [syncWithLocationKey]: {
+                            ...parsed?.params?.[syncWithLocationKey],
+                            open: true,
+                            ...(syncingId && id && { id }),
+                        },
+                    },
+                    options: { keepQuery: true },
+                    type: "replace",
+                });
+            } else if (syncWithLocationKey && !visible) {
+                go({
+                    query: {
+                        [syncWithLocationKey]: undefined,
+                    },
+                    options: { keepQuery: true },
+                    type: "replace",
+                });
+            }
+        }
+    }, [
+        id,
+        visible,
+        show,
+        close,
+        syncWithLocationKey,
+        syncingId,
+        initiallySynced,
+    ]);
 
     const translate = useTranslate();
 
     const { warnWhen, setWarnWhen } = useWarnAboutChange();
 
-    const [open, setOpen] = useState(false);
-
-    const { mutationMode: mutationModeContext } = useMutationMode();
-    const mutationMode = mutationModeProp ?? mutationModeContext;
-
-    const {
-        isLoading: isLoadingMutation,
-        isSuccess: isSuccessMutation,
-        reset: resetMutation,
-    } = mutationResult ?? {};
-
-    useEffect(() => {
-        if (open && mutationMode === "pessimistic") {
-            if (isSuccessMutation && !isLoadingMutation) {
-                setOpen(false);
-                resetMutation?.();
-            }
-        }
-    }, [isSuccessMutation, isLoadingMutation]);
-
     const saveButtonProps = {
         disabled: formLoading,
         onClick: () => {
-            form?.submit();
-            if (!(mutationMode === "pessimistic")) {
-                setOpen(false);
-            }
+            form.submit();
         },
         loading: formLoading,
     };
@@ -115,7 +228,7 @@ export const useDrawerForm = <
         recordItemId: id,
         onSuccess: () => {
             setId?.(undefined);
-            setOpen(false);
+            close();
         },
     };
 
@@ -135,15 +248,24 @@ export const useDrawerForm = <
             }
         }
 
-        setOpen(false);
+        close();
         setId?.(undefined);
     }, [warnWhen]);
 
-    const handleShow = useCallback((id?: BaseKey) => {
-        setId?.(id);
-
-        setOpen(true);
-    }, []);
+    const handleShow = useCallback(
+        (showId?: BaseKey) => {
+            if (typeof showId !== "undefined") {
+                setId?.(showId);
+            }
+            const needsIdToOpen = action === "edit" || action === "clone";
+            const hasId =
+                typeof showId !== "undefined" || typeof id !== "undefined";
+            if (needsIdToOpen ? hasId : true) {
+                show();
+            }
+        },
+        [id],
+    );
 
     return {
         ...useFormProps,
@@ -154,13 +276,22 @@ export const useDrawerForm = <
             ...useFormProps.formProps,
             onValuesChange: formProps?.onValuesChange,
             onKeyUp: formProps?.onKeyUp,
-            onFinish: formProps.onFinish,
+            onFinish: async (values) => {
+                await onFinish(values);
+
+                if (autoSubmitClose) {
+                    close();
+                }
+
+                if (autoResetForm) {
+                    form.resetFields();
+                }
+            },
         },
         drawerProps: {
             width: "500px",
             onClose: handleClose,
-            open,
-            visible: open,
+            open: visible,
             forceRender: true,
         },
         saveButtonProps,

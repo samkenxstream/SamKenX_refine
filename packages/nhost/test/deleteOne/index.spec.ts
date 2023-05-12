@@ -10,17 +10,32 @@ describe("deleteOne", () => {
         });
     });
 
-    it("correct response with metaData", async () => {
+    it("correct response with meta", async () => {
         const { data } = await dataProvider(nhost).deleteOne({
             resource: "posts",
             id: "92bbb942-a5a7-4cd9-8232-d7aa544a0c40",
-            metaData: {
+            meta: {
                 fields: ["id", "title"],
             },
         });
 
         expect(data.id).toEqual("92bbb942-a5a7-4cd9-8232-d7aa544a0c40");
         expect(data.title).toEqual("Etiam tincidunt ex ut auctor faucibus");
+    });
+
+    it("correct response with meta and Int idType", async () => {
+        const { data } = await dataProvider(nhost, {
+            idType: "Int",
+        }).deleteOne({
+            resource: "users",
+            id: 1,
+            meta: {
+                fields: ["id", "name"],
+            },
+        });
+
+        expect(data.id).toEqual(1);
+        expect(data.name).toEqual("Refine Dev");
     });
 
     it("correct response without metaData", async () => {

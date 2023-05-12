@@ -3,7 +3,7 @@ title: React Hook Form vs Formik - Comparing the most popular React form librari
 description: This article will compare React Hook Form and Formik by highlighting their strengths and weaknesses.
 slug: react-hook-form-vs-formik
 authors: joseph_mawa
-tags: [react-hook-form, formik,forms]
+tags: [react-hook-form, comparison]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2023-01-30-compare-form-libraries/social.png
 hide_table_of_contents: false
 ---
@@ -90,7 +90,7 @@ The example above is a basic illustration of React Hook Form. Do check out the R
 - It validates form fields out of the box.
 - It is in active maintenance.
 - It has an active community.
-- You can integrate React Hook Form with UI libraries like Material UI and [refine](https://refine.dev/). With refine, you can use the [@pankod/refine-react-hook-form](https://github.com/refinedev/refine/tree/master/packages/react-hook-form) adapter. You can handle forms using [`useForm`](https://refine.dev/docs/packages/documentation/react-hook-form/useForm/) hook in your refine CRUD apps with React Hook Form.
+- You can integrate React Hook Form with UI libraries like Material UI and [refine](https://refine.dev/). With refine, you can use the [@refinedev/react-hook-form](https://github.com/refinedev/refine/tree/master/packages/react-hook-form) adapter. You can handle forms using [`useForm`](https://refine.dev/docs/packages/documentation/react-hook-form/useForm/) hook in your refine CRUD apps with React Hook Form.
 - [Refer to article on using React Hook Form dynamic form fields with refine](https://refine.dev/blog/dynamic-forms-in-react-hook-form/).
 
 #### Cons of React Hook Form library
@@ -99,7 +99,10 @@ The example above is a basic illustration of React Hook Form. Do check out the R
 
 ---
 
-<PromotionBanner title="Not confident with your frontend skills?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/diagram.png" />
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
 

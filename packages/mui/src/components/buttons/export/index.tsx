@@ -1,6 +1,9 @@
 import React from "react";
-import { useTranslate } from "@pankod/refine-core";
-import { RefineButtonTestIds } from "@pankod/refine-ui-types";
+import { useTranslate } from "@refinedev/core";
+import {
+    RefineButtonClassNames,
+    RefineButtonTestIds,
+} from "@refinedev/ui-types";
 import { LoadingButton } from "@mui/lab";
 import { ImportExportOutlined } from "@mui/icons-material";
 
@@ -31,6 +34,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
             loadingPosition={hideText ? "center" : "start"}
             sx={{ minWidth: 0, ...sx }}
             data-testid={RefineButtonTestIds.ExportButton}
+            className={RefineButtonClassNames.ExportButton}
             {...restProps}
         >
             {hideText ? (

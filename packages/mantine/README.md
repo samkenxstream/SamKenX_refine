@@ -41,8 +41,8 @@
 [![Awesome](https://github.com/refinedev/awesome-refine/raw/main/images/badge.svg)](https://github.com/refinedev/awesome-refine)
 [![Maintainability](https://api.codeclimate.com/v1/badges/99a65a191bdd26f4601c/maintainability)](https://codeclimate.com/github/pankod/refine/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/99a65a191bdd26f4601c/test_coverage)](https://codeclimate.com/github/pankod/refine/test_coverage)
-[![npm version](https://img.shields.io/npm/v/@pankod/refine-core.svg)](https://www.npmjs.com/package/@pankod/refine-core)
-[![npm](https://img.shields.io/npm/dm/@pankod/refine-core)](https://www.npmjs.com/package/@pankod/refine-core)
+[![npm version](https://img.shields.io/npm/v/@refinedev/core.svg)](https://www.npmjs.com/package/@refinedev/core)
+[![npm](https://img.shields.io/npm/dm/@refinedev/core)](https://www.npmjs.com/package/@refinedev/core)
 [![](https://img.shields.io/github/commit-activity/m/refinedev/refine)](https://github.com/refinedev/refine/commits/next)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
@@ -156,69 +156,98 @@ Your **refine** application will be accessible at [http://localhost:3000](http:/
 
 
 
-<a href="http://localhost:3000">![Welcome on board](https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/mantine_welcome.png)</a>
+<a href="http://localhost:3000">![Welcome on board](https://refine.ams3.cdn.digitaloceanspaces.com/website%2Fstatic%2Fimg%2Fwelcome.png))</a>
 
 <br/>
 
-Let's consume a public `fake REST API` and add two resources (*posts*, *categories*) to our project. Replace the contents of `src/App.tsx` with the following code:
+Let's consume a public `fake REST API` and add two resources (*blog_posts*, *categories*) to our project. Replace the contents of `src/App.tsx` with the following code:
 
 ```tsx title="src/App.tsx"
-import React from 'react';
-import { Refine } from '@pankod/refine-core';
+import { Refine } from '@refinedev/core';
+import routerBindings, {
+    NavigateToResource,
+    UnsavedChangesNotifier,
+} from '@refinedev/react-router-v6';
+import dataProvider from '@refinedev/simple-rest';
 import {
-    NotificationsProvider,
     notificationProvider,
-    MantineProvider,
-    Global,
-    Layout,
     LightTheme,
-    ReadyPage,
     ErrorComponent,
-} from '@pankod/refine-mantine';
+    ThemedLayout,
+} from '@refinedev/mantine';
+import { NotificationsProvider } from '@mantine/notifications';
+import { MantineProvider, Global } from '@mantine/core';
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { MantineInferencer } from '@refinedev/inferencer/mantine';
 
-import {
-    MantineListInferencer,
-    MantineShowInferencer,
-    MantineCreateInferencer,
-    MantineEditInferencer,
-} from '@pankod/refine-inferencer/mantine';
-
-import dataProvider from '@pankod/refine-simple-rest';
-import routerProvider from '@pankod/refine-react-router-v6';
-
-function App() {
+const App = () => {
     return (
         <MantineProvider theme={LightTheme} withNormalizeCSS withGlobalStyles>
             <Global styles={{ body: { WebkitFontSmoothing: 'auto' } }} />
             <NotificationsProvider position="top-right">
-                <Refine
-                    dataProvider={dataProvider(
-                        'https://api.fake-rest.refine.dev'
-                    )}
-                    notificationProvider={notificationProvider}
-                    Layout={Layout}
-                    ReadyPage={ReadyPage}
-                    catchAll={<ErrorComponent />}
-                    routerProvider={routerProvider}
-                    resources={[
-                        {
-                            name: 'samples',
-                            list: MantineListInferencer,
-                            show: MantineShowInferencer,
-                            create: MantineCreateInferencer,
-                            edit: MantineEditInferencer,
-                        },
-                        {
-                            name: 'tags',
-                            list: MantineListInferencer,
-                            show: MantineShowInferencer,
-                        },
-                    ]}
-                />
+                <BrowserRouter>
+                    <Refine
+                        routerProvider={routerBindings}
+                        dataProvider={dataProvider(
+                            'https://api.fake-rest.refine.dev'
+                        )}
+                        notificationProvider={notificationProvider}
+                        resources={[
+                            {
+                                name: 'blog_posts',
+                                list: '/blog-posts',
+                                show: '/blog-posts/show/:id',
+                                create: '/blog-posts/create',
+                                edit: '/blog-posts/edit/:id',
+                            },
+                        ]}
+                        options={{
+                            syncWithLocation: true,
+                            warnWhenUnsavedChanges: true,
+                        }}
+                    >
+                        <Routes>
+                            <Route
+                                element={
+                                    <ThemedLayout>
+                                        <Outlet />
+                                    </ThemedLayout>
+                                }
+                            >
+                                <Route
+                                    index
+                                    element={
+                                        <NavigateToResource resource="blog_posts" />
+                                    }
+                                />
+                                <Route path="blog-posts">
+                                    <Route
+                                        index
+                                        element={<MantineInferencer />}
+                                    />
+                                    <Route
+                                        path="show/:id"
+                                        element={<MantineInferencer />}
+                                    />
+                                    <Route
+                                        path="edit/:id"
+                                        element={<MantineInferencer />}
+                                    />
+                                    <Route
+                                        path="create"
+                                        element={<MantineInferencer />}
+                                    />
+                                </Route>
+                                <Route path="*" element={<ErrorComponent />} />
+                            </Route>
+                        </Routes>
+                        <UnsavedChangesNotifier />
+                    </Refine>
+                </BrowserRouter>
             </NotificationsProvider>
         </MantineProvider>
     );
-}
+};
 
 export default App;
 ```
@@ -231,9 +260,9 @@ export default App;
 
 
 
-Now, you should see the output as a table populated with `post` & `category` data:
+Now, you should see the output as a table populated with `blog_post` & `category` data:
 
-![First example result](https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/mantine_first_page.png?raw=true)
+![First example result](https://refine.ams3.cdn.digitaloceanspaces.com/website%2Fstatic%2Fimg%2Fmantine-quick-start.png)
 
 <br/>
 

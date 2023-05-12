@@ -1,23 +1,26 @@
 ---
 id: useForm
 title: useForm
+sidebar_label: useForm
 source: packages/antd/src/hooks/form/useForm.ts
 ---
 
 ```tsx live shared
 import {
-    Table as AntdTable,
-    Edit as AntdEdit,
     Create as AntdCreate,
     List as AntdList,
-    Form as AntdForm,
-    Input as AntdInput,
     useForm as useAntdForm,
     useTable as useAntdTable,
-    Space as AntdSpace,
     EditButton as AntdEditButton,
     CloneButton as AntdCloneButton,
-} from "@pankod/refine-antd";
+} from "@refinedev/antd";
+import {
+    Table as AntdTable,
+    Edit as AntdEdit,
+    Form as AntdForm,
+    Input as AntdInput,
+    Space as AntdSpace,
+} from "antd";
 
 interface IPost {
     id: number;
@@ -123,7 +126,7 @@ const PostCreate = () => {
 };
 ```
 
-`useForm` is used to manage forms. It returns the necessary properties and methods to control the [Antd Form](https://ant.design/components/form/). Also, it has been developed by using [`useForm`](/docs/api-reference/core/hooks/useForm/) imported from [@pankod/refine-core](https://github.com/refinedev/refine/tree/next/packages/core) package.
+`useForm` is used to manage forms. It returns the necessary properties and methods to control the [Antd Form](https://ant.design/components/form/). Also, it has been developed by using [`useForm`](/docs/api-reference/core/hooks/useForm/) imported from [@refinedev/core](https://github.com/refinedev/refine/tree/next/packages/core) package.
 
 <GeneralConceptsLink />
 
@@ -135,7 +138,8 @@ We'll show the basic usage of `useForm` by adding an editing form.
 
 ```tsx title="pages/posts/edit.tsx"
 // highlight-next-line
-import { Edit, Form, Input, useForm, Select } from "@pankod/refine-antd";
+import { Edit, useForm } from "@refinedev/antd";
+import { Form, Input, Select } from "antd";
 
 export const PostEdit: React.FC = () => {
     // highlight-next-line
@@ -200,11 +204,7 @@ If you want to show a form in a modal or drawer where necessary route params mig
 `useForm` can handle `edit`, `create` and `clone` actions.
 
 :::tip
-By default, it determines the `action` from route.
-
--   If the route is `/posts/create` thus the hook will be called with `action: "create"`.
--   If the route is `/posts/edit/1`, the hook will be called with `action: "edit"`.
--   If the route is `/posts/clone/1`, the hook will be called with `action: "clone"`. To display form, uses `create` component from resource.
+By default, it determines the `action` from route. The action is inferred by matching the resource's action path with the current route.
 
 It can be overridden by passing the `action` prop where it isn't possible to determine the action from the route (e.g. when using form in a modal or using a custom route).
 :::
@@ -229,9 +229,9 @@ setInitialRoutes(["/posts/create"]);
 
 // visible-block-start
 import React from "react";
-import { IResourceComponentsProps } from "@pankod/refine-core";
 
-import { Create, Form, Input, useForm } from "@pankod/refine-antd";
+import { Create, useForm } from "@refinedev/antd";
+import { Form, Input } from "antd";
 
 interface IPost {
     id: number;
@@ -239,7 +239,7 @@ interface IPost {
     content: string;
 }
 
-const PostCreatePage: React.FC<IResourceComponentsProps> = () => {
+const PostCreatePage: React.FC = () => {
     const { formProps, saveButtonProps } = useForm<IPost>();
 
     return (
@@ -302,9 +302,9 @@ setInitialRoutes(["/posts/edit/123"]);
 
 // visible-block-start
 import React from "react";
-import { IResourceComponentsProps } from "@pankod/refine-core";
 
-import { Edit, Form, Input, useForm } from "@pankod/refine-antd";
+import { Edit, useForm } from "@refinedev/antd";
+import { Form, Input } from "antd";
 
 interface IPost {
     id: number;
@@ -312,7 +312,7 @@ interface IPost {
     content: string;
 }
 
-const PostEditPage: React.FC<IResourceComponentsProps> = () => {
+const PostEditPage: React.FC = () => {
     const { formProps, saveButtonProps } = useForm<IPost>();
 
     return (
@@ -375,16 +375,9 @@ setInitialRoutes(["/posts/clone/123"]);
 
 // visible-block-start
 import React from "react";
-import { IResourceComponentsProps } from "@pankod/refine-core";
 
-import {
-    Create,
-    Form,
-    Input,
-    useForm,
-    Space,
-    Switch,
-} from "@pankod/refine-antd";
+import { Create, useForm } from "@refinedev/antd";
+import { Form, Input, Space, Switch } from "antd";
 
 interface IPost {
     id: number;
@@ -392,7 +385,7 @@ interface IPost {
     content: string;
 }
 
-const PostCreatePage: React.FC<IResourceComponentsProps> = () => {
+const PostCreatePage: React.FC = () => {
     const { formProps, saveButtonProps } = useForm<IPost>();
 
     return (
@@ -459,6 +452,36 @@ useForm({
     resource: "categories",
 });
 ```
+
+:::caution
+
+If the `resource` is passed, the `id` from the current URL will be ignored because it may belong to a different resource. To retrieve the `id` value from the current URL, use the `useParsed` hook and pass the `id` value to the `useForm` hook.
+
+```tsx
+import { useForm } from "@refinedev/antd";
+import { useParsed } from "@refinedev/core";
+
+const { id } = useParsed();
+
+useForm({
+    resource: "custom-resource",
+    id,
+});
+```
+
+Or you can use the `setId` function to set the `id` value.
+
+```tsx
+import { useForm } from "@refinedev/antd";
+
+const { setId } = useForm({
+    resource: "custom-resource",
+});
+
+setId("123");
+```
+
+:::
 
 ### `id`
 
@@ -613,18 +636,21 @@ useForm({
 }
 ```
 
-### `metaData`
+### `meta`
 
-[`metaData`](/docs/api-reference/general-concepts/#metadata) is used following two purposes:
+`meta` is a special property that can be used to pass additional information to data provider methods for the following purposes:
 
--   To pass additional information to data provider methods.
--   Generate GraphQL queries using plain JavaScript Objects (JSON). Please refer [GraphQL](/docs/advanced-tutorials/data-provider/graphql/#edit-page) for more information.
+-   Customizing the data provider methods for specific use cases.
+-   Generating GraphQL queries using plain JavaScript Objects (JSON).
+-   Providing additional parameters to the redirection path after the form is submitted.
 
-In the following example, we pass the `headers` property in the `metaData` object to the `create` method. With similar logic, you can pass any properties to specifically handle the data provider methods.
+[Refer to the `meta` section of the General Concepts documentation for more information &#8594](/docs/api-reference/general-concepts/#meta)
+
+In the following example, we pass the `headers` property in the `meta` object to the `create` method. With similar logic, you can pass any properties to specifically handle the data provider methods.
 
 ```tsx
 useForm({
-    metaData: {
+    meta: {
         headers: { "x-meta-data": "true" },
     },
 });
@@ -632,8 +658,8 @@ useForm({
 const myDataProvider = {
     //...
     // highlight-start
-    create: async ({ resource, variables, metaData }) => {
-        const headers = metaData?.headers ?? {};
+    create: async ({ resource, variables, meta }) => {
+        const headers = meta?.headers ?? {};
         // highlight-end
         const url = `${apiUrl}/${resource}`;
 
@@ -858,7 +884,8 @@ It is useful when you want to `invalidate` other resources don't have relation w
 
 ```tsx
 import React from "react";
-import { Create, Form, Input, useForm } from "@pankod/refine-antd";
+import { Create, useForm } from "@refinedev/antd";
+import { Form, Input } from "antd";
 
 const PostEdit = () => {
     const invalidate = useInvalidate();
@@ -886,7 +913,8 @@ For example, Let's send the values we received from the user in two separate inp
 
 ```tsx title="pages/user/create.tsx"
 import React from "react";
-import { Create, Form, Input, useForm } from "@pankod/refine-antd";
+import { Create, useForm } from "@refinedev/antd";
+import { Form, Input } from "antd";
 
 export const UserCreate: React.FC = () => {
     // highlight-next-line
@@ -920,11 +948,22 @@ export const UserCreate: React.FC = () => {
 
 ### Properties
 
-<PropsTable module="@pankod/refine-antd/useForm"/>
+<PropsTable module="@refinedev/antd/useForm"/>
 
 > `*`: These props have default values in `RefineContext` and can also be set on **<[Refine](/api-reference/core/components/refine-config.md)>** component. `useForm` will use what is passed to `<Refine>` as default but a local value will override it.
 
 <br/>
+
+### Type Parameters
+
+| Property       | Desription                                                                                                                                                          | Type                       | Default                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------- |
+| TQueryFnData   | Result data returned by the query function. Extends [`BaseRecord`][baserecord]                                                                                      | [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
+| TError         | Custom error object that extends [`HttpError`][httperror]                                                                                                           | [`HttpError`][httperror]   | [`HttpError`][httperror]   |
+| TVariables     | Values for params.                                                                                                                                                  | `{}`                       |                            |
+| TData          | Result data returned by the `select` function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TQueryFnData` will be used as the default value. | [`BaseRecord`][baserecord] | `TQueryFnData`             |
+| TResponse      | Result data returned by the mutation function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TData` will be used as the default value.        | [`BaseRecord`][baserecord] | `TData`                    |
+| TResponseError | Custom error object that extends [`HttpError`][httperror]. If not specified, the value of `TError` will be used as the default value.                               | [`HttpError`][httperror]   | `TError`                   |
 
 ### Return values
 
@@ -940,14 +979,6 @@ export const UserCreate: React.FC = () => {
 | formLoading     | Loading state of form request                           | `boolean`                                                                                                                                                          |
 | id              | Record id for `clone` and `create` action               | [`BaseKey`](/api-reference/core/interfaces.md#basekey)                                                                                                             |
 | setId           | `id` setter                                             | `Dispatch<SetStateAction<` `string` \| `number` \| `undefined>>`                                                                                                   |
-
-### Type Parameters
-
-| Property   | Desription                                                       | Default                    |
-| ---------- | ---------------------------------------------------------------- | -------------------------- |
-| TData      | Result data of the query that extends [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
-| TError     | Custom error object that extends [`HttpError`][httperror]        | [`HttpError`][httperror]   |
-| TVariables | Values for params.                                               | `{}`                       |
 
 ## Example
 

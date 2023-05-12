@@ -4,7 +4,6 @@ title: File
 swizzle: true
 ---
 
-
 This field is used to display files and it uses the [`<Link>`](https://mui.com/material-ui/react-link/#main-content) component of [`<Typography>`](https://mui.com/material-ui/react-typography/#main-content) from Material UI.
 
 :::info-tip Swizzle
@@ -19,12 +18,11 @@ Let's see how we can use `<FileField>` with the example in the edit page.
 // visible-block-start
 import {
     useDataGrid,
-    DataGrid,
-    GridColumns,
     List,
     // highlight-next-line
     FileField,
-} from "@pankod/refine-mui";
+} from "@refinedev/mui";
+import { DataGrid, GridColumns } from "@mui/x-data-grid";
 
 const columns: GridColumns = [
     { field: "id", headerName: "ID", type: "number" },
@@ -35,7 +33,11 @@ const columns: GridColumns = [
         renderCell: function render({ row }) {
             // highlight-start
             return (
-                <FileField src={row.image[0].url} />
+                <FileField
+                    src={row.image[0].url}
+                    target="_blank"
+                    rel="noopener"
+                />
             );
             // highlight-end
         },
@@ -85,7 +87,7 @@ If you don't use `title` prop it will use `src` as `title`
 
 ### Properties
 
-<PropsTable module="@pankod/refine-mui/FileField"/>
+<PropsTable module="@refinedev/mui/FileField"/>
 
 :::tip External Props
 It also accepts all props of Material UI [Link](https://mui.com/material-ui/react-link/#main-content).

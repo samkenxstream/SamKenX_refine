@@ -2,14 +2,17 @@ import { BoxProps, StackProps } from "@chakra-ui/react";
 import {
     CreateButtonProps,
     DeleteButtonProps,
+    EditButtonProps,
+    RefreshButtonProps,
+    ListButtonProps,
     SaveButtonProps,
-} from "@components/buttons";
+} from "../buttons/types";
 import {
     RefineCrudCreateProps,
     RefineCrudEditProps,
     RefineCrudListProps,
     RefineCrudShowProps,
-} from "@pankod/refine-ui-types";
+} from "@refinedev/ui-types";
 
 export type CreateProps = RefineCrudCreateProps<
     SaveButtonProps,
@@ -27,7 +30,10 @@ export type EditProps = RefineCrudEditProps<
     BoxProps,
     BoxProps,
     BoxProps,
-    BoxProps
+    BoxProps,
+    {},
+    RefreshButtonProps,
+    ListButtonProps
 >;
 
 export type ListProps = RefineCrudListProps<
@@ -43,5 +49,10 @@ export type ShowProps = RefineCrudShowProps<
     BoxProps,
     BoxProps,
     BoxProps,
-    BoxProps
+    BoxProps,
+    {},
+    EditButtonProps,
+    DeleteButtonProps,
+    RefreshButtonProps,
+    ListButtonProps
 >;

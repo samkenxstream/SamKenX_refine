@@ -5,8 +5,13 @@ import {
     useCan,
     useResource,
     useRouterContext,
-} from "@pankod/refine-core";
-import { RefineButtonTestIds } from "@pankod/refine-ui-types";
+    useRouterType,
+    useLink,
+} from "@refinedev/core";
+import {
+    RefineButtonClassNames,
+    RefineButtonTestIds,
+} from "@refinedev/ui-types";
 import { ActionIcon, Anchor, Button } from "@mantine/core";
 import { IconSquarePlus } from "@tabler/icons";
 
@@ -14,29 +19,33 @@ import { mapButtonVariantToActionIconVariant } from "@definitions/button";
 import { CreateButtonProps } from "../types";
 
 export const CreateButton: React.FC<CreateButtonProps> = ({
+    resource: resourceNameFromProps,
     resourceNameOrRouteName,
     hideText = false,
     accessControl,
-    ignoreAccessControlProvider = false,
     svgIconProps,
+    meta,
     children,
     onClick,
     ...rest
 }) => {
-    const accessControlEnabled =
-        accessControl?.enabled ?? !ignoreAccessControlProvider;
+    const accessControlEnabled = accessControl?.enabled ?? true;
     const hideIfUnauthorized = accessControl?.hideIfUnauthorized ?? false;
-    const { resource, resourceName } = useResource({
-        resourceNameOrRouteName,
-    });
+    const translate = useTranslate();
+    const routerType = useRouterType();
+    const Link = useLink();
+    const { Link: LegacyLink } = useRouterContext();
 
-    const { Link } = useRouterContext();
+    const ActiveLink = routerType === "legacy" ? LegacyLink : Link;
+
     const { createUrl: generateCreateUrl } = useNavigation();
 
-    const translate = useTranslate();
+    const { resource } = useResource(
+        resourceNameFromProps ?? resourceNameOrRouteName,
+    );
 
     const { data } = useCan({
-        resource: resourceName,
+        resource: resource?.name,
         action: "create",
         queryOptions: {
             enabled: accessControlEnabled,
@@ -56,7 +65,7 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
             );
     };
 
-    const createUrl = generateCreateUrl(resource.route!);
+    const createUrl = resource ? generateCreateUrl(resource, meta) : "";
 
     const { variant, styles, ...commonProps } = rest;
 
@@ -66,7 +75,7 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
 
     return (
         <Anchor
-            component={Link}
+            component={ActiveLink as any}
             to={createUrl}
             replace={false}
             onClick={(e: React.PointerEvent<HTMLButtonElement>) => {
@@ -84,13 +93,15 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
                 <ActionIcon
                     title={disabledTitle()}
                     disabled={data?.can === false}
+                    color="primary"
                     {...(variant
                         ? {
                               variant:
                                   mapButtonVariantToActionIconVariant(variant),
                           }
-                        : { variant: "default" })}
+                        : { variant: "filled" })}
                     data-testid={RefineButtonTestIds.CreateButton}
+                    className={RefineButtonClassNames.CreateButton}
                     {...commonProps}
                 >
                     <IconSquarePlus size={18} {...svgIconProps} />
@@ -101,7 +112,9 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
                     leftIcon={<IconSquarePlus size={18} {...svgIconProps} />}
                     title={disabledTitle()}
                     data-testid={RefineButtonTestIds.CreateButton}
-                    variant="default"
+                    className={RefineButtonClassNames.CreateButton}
+                    color="primary"
+                    variant="filled"
                     {...rest}
                 >
                     {children ?? translate("buttons.create", "Create")}

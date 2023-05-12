@@ -8,10 +8,12 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-
+    concurrency:
+      group: ${{ github.ref }}-stable-release
+      cancel-in-progress: true
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [18.x]
 
     outputs:
       published: ${{ steps.changesets.outputs.published }}
@@ -22,7 +24,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v1
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           registry-url: https://registry.npmjs.org/
@@ -36,12 +38,12 @@ jobs:
       - name: Install Dependencies & Build
         run: |
           npm ci
-          npm run bootstrap
-          npm run lerna run build -- --scope @pankod/refine-codemod
-      - name: Lint
-        run: npm run lint
+          npm run bootstrap:all
+          npm run build:all
+      #- name: Lint
+      #  run: npm run lint
       - name: Test
-        run: npm test
+        run: npm run test:all
       - name: Prepare Stable version changesets
         if: "!contains(github.event.head_commit.message, 'ci(changesets): version packages')"
         run: |
@@ -85,11 +87,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PANKOD_BOT_TOKEN }}
   documentation-gh:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.ref }}-stable-documentation
+      cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: "18.x"
       - name: Add key to allow access to repository
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
@@ -106,7 +111,8 @@ jobs:
       - name: Build packages
         run: |
           npm ci
-          npm run bootstrap
+          npm run bootstrap:all
+          npm run build:all
           cd documentation
           npm ci
       - name: Release to GitHub Pages

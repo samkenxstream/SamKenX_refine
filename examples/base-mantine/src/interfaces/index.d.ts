@@ -1,4 +1,9 @@
-import type { Column } from "@pankod/refine-react-table";
+import { Column } from "@tanstack/react-table";
+
+export interface ITag {
+    id: number;
+    title: string;
+}
 
 export interface ICategory {
     id: number;
@@ -11,6 +16,7 @@ export interface IPost {
     content: string;
     status: "published" | "draft" | "rejected";
     category: { id: number };
+    tags: number[];
 }
 
 export interface ColumnButtonProps {

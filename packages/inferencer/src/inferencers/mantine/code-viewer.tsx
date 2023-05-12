@@ -1,11 +1,5 @@
 import React from "react";
-import {
-    Affix,
-    Button,
-    Modal,
-    Group,
-    ActionIcon,
-} from "@pankod/refine-mantine";
+import { Affix, Button, Modal, Group, ActionIcon } from "@mantine/core";
 import {
     IconCode,
     IconMessageCircle,
@@ -18,6 +12,9 @@ import { prettierFormat } from "@/utilities";
 import { CreateInferencerConfig } from "@/types";
 import { CodeHighlight } from "@/components";
 
+/**
+ * @deprecated Please use `SharedCodeViewer` instead
+ */
 export const CodeViewerComponent: CreateInferencerConfig["codeViewerComponent"] =
     ({ code: rawCode, loading }) => {
         const code = React.useMemo(() => {

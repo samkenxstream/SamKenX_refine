@@ -25,7 +25,7 @@ The `useCustom` hook expects a `url` and `method` properties. These parameters w
 When properties are changed, the `useCustom` hook will trigger a new request.
 
 ```tsx
-import { useCustom, useApiUrl } from "@pankod/refine-core";
+import { useCustom, useApiUrl } from "@refinedev/core";
 
 interface PostUniqueCheckResponse {
     isAvailable: boolean;
@@ -111,14 +111,14 @@ useCustom({
 });
 ```
 
-### `config.sort`
+### `config.sorters`
 
 It will be passed to the `custom` method from the `dataProvider` as a parameter. It can be used to send the sort query parameters of the request.
 
 ```tsx
 useCustom({
     config: {
-        sort: [
+        sorters: [
             {
                 field: "title",
                 order: "asc",
@@ -146,6 +146,12 @@ useCustom({
 });
 ```
 
+### ~~`config.sort`~~
+
+:::caution Deprecated
+Use `config.sorters` instead.
+:::
+
 ### `queryOptions`
 
 `queryOptions` is used to pass additional options to the `useQuery` hook. It is useful when you want to pass additional options to the `useQuery` hook.
@@ -161,18 +167,20 @@ useCustom({
 });
 ```
 
-### `metaData`
+### `meta`
 
-[`metaData`](/docs/api-reference/general-concepts/#metadata) is used following two purposes:
+`meta` is a special property that can be used to pass additional information to data provider methods for the following purposes:
 
--   To pass additional information to data provider methods.
--   Generate GraphQL queries using plain JavaScript Objects (JSON). Please refer [GraphQL](/docs/advanced-tutorials/data-provider/graphql/#edit-page) for more information.
+-   Customizing the data provider methods for specific use cases.
+-   Generating GraphQL queries using plain JavaScript Objects (JSON).
 
-In the following example, `metaData` is passed to the `custom` method from the `dataProvider` as a parameter.
+[Refer to the `meta` section of the General Concepts documentation for more information &#8594](/docs/api-reference/general-concepts/#meta)
+
+In the following example, `meta` is passed to the `custom` method from the `dataProvider` as a parameter.
 
 ```tsx
 useCustom({
-    metaData: {
+    meta: {
         foo: "bar",
     },
 });
@@ -187,9 +195,9 @@ const myDataProvider = {
         payload,
         query,
         headers,
-        metaData,
+        meta,
     }) => {
-        const foo = metaData?.foo;
+        const foo = meta?.foo;
 
         console.log(foo); // "bar"
 
@@ -217,7 +225,7 @@ After data is fetched successfully, `useCustom` can call `open` function from `N
 
 ```tsx
 useCustom({
-    successNotification: (data, values, resource) => {
+    successNotification: (data, values) => {
         return {
             message: `${data.title} Successfully fetched.`,
             description: "Success with no errors",
@@ -235,7 +243,7 @@ After data fetching is failed, `useCustom` will call `open` function from `Notif
 
 ```tsx
 useCustom({
-    errorNotification: (data, values, resource) => {
+    errorNotification: (data, values) => {
         return {
             message: `Something went wrong when getting ${data.id}`,
             description: "Error",
@@ -245,23 +253,59 @@ useCustom({
 });
 ```
 
+## FAQ
+
+### How to invalidate the custom query?
+
+To invalidate a query, you can use the `invalidateQueries` method from the `useQueryClient` hook provided by the `@tanstack/react-query` library.
+
+```tsx
+import { useQueryClient } from "@tanstack/react-query";
+
+const queryClient = useQueryClient();
+
+queryClient.invalidateQueries(["custom-key"]);
+```
+
+Note that you'll need to know the query key to invalidate the query. If you don't know the query key, you can use the `queryOptions` property of the `useCustom` hook.
+
+```tsx
+import { useCustom } from "@refinedev/core";
+
+useCustom({
+    queryOptions: {
+        queryKey: ["custom-key"],
+    },
+});
+```
+
+:::tip
+
+By default, the query key is generated based on the properties passed to `useCustom` hook, you can see it in the `@tanstack/react-query` devtools panel.
+
+:::
+
 ## API
 
 ### Properties
 
-<PropsTable module="@pankod/refine-core/useCustom" />
+<PropsTable module="@refinedev/core/useCustom" />
 
 ### Type Parameters
 
-| Property | Desription                                                                                     | Type                                                         | Default                                                      |
-| -------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| TData    | Result data of the query. Extends [`BaseRecord`](/api-reference/core/interfaces.md#baserecord) | [`BaseRecord`](/api-reference/core/interfaces.md#baserecord) | [`BaseRecord`](/api-reference/core/interfaces.md#baserecord) |
-| TError   | Custom error object that extends [`HttpError`](/api-reference/core/interfaces.md#httperror)    | [`HttpError`](/api-reference/core/interfaces.md#httperror)   | [`HttpError`](/api-reference/core/interfaces.md#httperror)   |
-| TQuery   | Values for query params.                                                                       | `TQuery`                                                     | unknown                                                      |
-| TPayload | Values for params.                                                                             | `TPayload`                                                   | unknown                                                      |
+| Property     | Desription                                                                                                                                                          | Type                       | Default                    |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------- |
+| TQueryFnData | Result data returned by the query function. Extends [`BaseRecord`][baserecord]                                                                                      | [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
+| TError       | Custom error object that extends [`HttpError`][httperror]                                                                                                           | [`HttpError`][httperror]   | [`HttpError`][httperror]   |
+| TQuery       | Values for query params.                                                                                                                                            | `TQuery`                   | unknown                    |
+| TPayload     | Values for params.                                                                                                                                                  | `TPayload`                 | unknown                    |
+| TData        | Result data returned by the `select` function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TQueryFnData` will be used as the default value. | [`BaseRecord`][baserecord] | `TQueryFnData`             |
 
 ### Return value
 
 | Description                             | Type                                                                                                                |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | Result of the TanStack Query's useQuery | [`QueryObserverResult<CustomResponse<TData>, TError>`](https://tanstack.com/query/v4/docs/react/reference/useQuery) |
+
+[baserecord]: /api-reference/core/interfaces.md#baserecord
+[httperror]: /api-reference/core/interfaces.md#httperror

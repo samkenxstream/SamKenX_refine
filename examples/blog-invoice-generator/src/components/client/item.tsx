@@ -1,16 +1,11 @@
-import { useDelete } from "@pankod/refine-core";
-import {
-    Card,
-    TagField,
-    Typography,
-    Dropdown,
-    Menu,
-    Icons,
-} from "@pankod/refine-antd";
+import { useDelete } from "@refinedev/core";
+import { TagField } from "@refinedev/antd";
+
+import { FormOutlined, DeleteOutlined, MoreOutlined } from "@ant-design/icons";
+import { Card, Typography, Dropdown, MenuProps } from "antd";
 
 import { IClient } from "interfaces";
 
-const { FormOutlined, DeleteOutlined } = Icons;
 const { Title, Text } = Typography;
 
 type ClientItemProps = {
@@ -21,56 +16,34 @@ type ClientItemProps = {
 export const ClientItem: React.FC<ClientItemProps> = ({ item, editShow }) => {
     const { mutate } = useDelete();
 
+    const menuItems: MenuProps["items"] = [
+        {
+            key: "1",
+            style: { fontWeight: 500 },
+            icon: <FormOutlined style={{ color: "green" }} />,
+            onClick: () => editShow(item.id),
+            label: "Edit Client",
+        },
+        {
+            key: "2",
+            style: { fontWeight: 500 },
+            icon: <DeleteOutlined style={{ color: "red" }} />,
+            onClick: () =>
+                mutate({
+                    resource: "clients",
+                    id: item.id,
+                    mutationMode: "undoable",
+                    undoableTimeout: 5000,
+                }),
+            label: "Delete Client",
+        },
+    ];
+
     return (
         <Card style={{ width: 300, height: 300, borderColor: "black" }}>
             <div style={{ position: "absolute", top: "10px", right: "5px" }}>
-                <Dropdown
-                    overlay={
-                        <Menu mode="vertical">
-                            <Menu.Item
-                                key="1"
-                                style={{
-                                    fontWeight: 500,
-                                }}
-                                icon={
-                                    <FormOutlined
-                                        style={{
-                                            color: "green",
-                                        }}
-                                    />
-                                }
-                                onClick={() => editShow(item.id)}
-                            >
-                                Edit Client
-                            </Menu.Item>
-                            <Menu.Item
-                                key="2"
-                                style={{
-                                    fontWeight: 500,
-                                }}
-                                icon={
-                                    <DeleteOutlined
-                                        style={{
-                                            color: "red",
-                                        }}
-                                    />
-                                }
-                                onClick={() =>
-                                    mutate({
-                                        resource: "clients",
-                                        id: item.id,
-                                        mutationMode: "undoable",
-                                        undoableTimeout: 5000,
-                                    })
-                                }
-                            >
-                                Delete Client
-                            </Menu.Item>
-                        </Menu>
-                    }
-                    trigger={["click"]}
-                >
-                    <Icons.MoreOutlined
+                <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
+                    <MoreOutlined
                         style={{
                             fontSize: 24,
                         }}

@@ -1,16 +1,14 @@
-import { useGetLocale, useSetLocale } from "@pankod/refine-core";
+import { useGetLocale, useSetLocale } from "@refinedev/core";
+import { DownOutlined } from "@ant-design/icons";
 import {
-    AntdLayout,
+    Layout as AntdLayout,
     Space,
-    Menu,
     Button,
-    Icons,
     Dropdown,
     Avatar,
-} from "@pankod/refine-antd";
+    MenuProps,
+} from "antd";
 import { useTranslation } from "react-i18next";
-
-const { DownOutlined } = Icons;
 
 export const Header: React.FC = () => {
     const { i18n } = useTranslation();
@@ -19,26 +17,18 @@ export const Header: React.FC = () => {
 
     const currentLocale = locale();
 
-    const menu = (
-        <Menu selectedKeys={currentLocale ? [currentLocale] : []}>
-            {[...(i18n.languages || [])].sort().map((lang: string) => (
-                <Menu.Item
-                    key={lang}
-                    onClick={() => changeLanguage(lang)}
-                    icon={
-                        <span style={{ marginRight: 8 }}>
-                            <Avatar
-                                size={16}
-                                src={`/images/flags/${lang}.svg`}
-                            />
-                        </span>
-                    }
-                >
-                    {lang === "en" ? "English" : "German"}
-                </Menu.Item>
-            ))}
-        </Menu>
-    );
+    const menuItems: MenuProps["items"] = [...(i18n.languages || [])]
+        .sort()
+        .map((lang: string) => ({
+            key: lang,
+            onClick: () => changeLanguage(lang),
+            icon: (
+                <span style={{ marginRight: 8 }}>
+                    <Avatar size={16} src={`/images/flags/${lang}.svg`} />
+                </span>
+            ),
+            label: lang === "en" ? "English" : "German",
+        }));
 
     return (
         <AntdLayout.Header
@@ -49,10 +39,18 @@ export const Header: React.FC = () => {
                 padding: "0px 24px",
                 height: "48px",
                 backgroundColor: "#FFF",
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
             }}
         >
-            <Dropdown overlay={menu}>
-                <Button type="link">
+            <Dropdown
+                menu={{
+                    items: menuItems,
+                    selectedKeys: currentLocale ? [currentLocale] : [],
+                }}
+            >
+                <Button type="text">
                     <Space>
                         <Avatar
                             size={16}

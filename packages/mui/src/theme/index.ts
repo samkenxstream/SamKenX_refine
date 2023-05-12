@@ -1,8 +1,9 @@
-import { createTheme, ThemeOptions } from "@mui/material";
+import { createTheme, Theme, ThemeOptions } from "@mui/material";
 
 import { lightPalette } from "./palette/lightPalette";
 import { darkPalette } from "./palette/darkPalette";
 import { typography } from "./typography";
+import { RefinePalettes } from "./palette";
 
 const commonThemeProperties: ThemeOptions = {
     shape: {
@@ -71,4 +72,17 @@ const DarkTheme = createTheme({
     },
 });
 
-export { LightTheme, DarkTheme };
+const RefineThemes = Object.keys(RefinePalettes).reduce((acc, key) => {
+    const paletteName = key as keyof typeof RefinePalettes;
+
+    return {
+        ...acc,
+        [key]: createTheme({
+            palette: {
+                ...RefinePalettes[paletteName],
+            },
+        }),
+    };
+}, {}) as Record<keyof typeof RefinePalettes, Theme>;
+
+export { LightTheme, DarkTheme, RefineThemes };

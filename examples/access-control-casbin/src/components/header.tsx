@@ -1,4 +1,4 @@
-import { AntdLayout, Radio } from "@pankod/refine-antd";
+import { Layout as AntdLayout, Radio } from "antd";
 
 interface HeaderProps {
     role: string;
@@ -13,6 +13,9 @@ export const Header: React.FC<HeaderProps> = ({ role }) => {
                 alignItems: "center",
                 height: "48px",
                 backgroundColor: "#FFF",
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
             }}
         >
             <Radio.Group

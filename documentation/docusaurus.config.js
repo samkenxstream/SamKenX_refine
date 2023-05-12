@@ -35,7 +35,7 @@ const siteConfig = {
                     showLastUpdateTime: true,
                     versions: {
                         current: {
-                            label: "3.xx.xx",
+                            label: "4.xx.xx",
                         },
                     },
                     lastVersion: "current",
@@ -154,11 +154,6 @@ const siteConfig = {
             },
             items: [
                 { to: "blog", label: "Blog", position: "left" },
-                {
-                    to: "https://s.refine.dev/hackathon",
-                    label: "Hackathon",
-                    position: "left",
-                },
                 {
                     type: "docsVersionDropdown",
                     position: "right",

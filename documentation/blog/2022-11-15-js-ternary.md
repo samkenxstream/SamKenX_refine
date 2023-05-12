@@ -3,7 +3,7 @@ title: How to use JavaScript Ternary Operator?
 description: In this post, we expound on with examples of what the JavaScript ternary operator is, how it works.
 slug: javascript-ternary-operator
 authors: abdullah_numan
-tags: [javascript, javascript-ternary]
+tags: [javascript]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-11-15-js-ternary/social.png
 hide_table_of_contents: false
 ---
@@ -50,7 +50,10 @@ In JavaScript, falsy values include `false`, `0`, `-0`, `0n` `""`, `null`, `unde
 
 ---
 
-<PromotionBanner title="Building a side project?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/generic_banner.png" />
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
 

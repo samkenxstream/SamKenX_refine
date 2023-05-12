@@ -1,5 +1,5 @@
 import React from "react";
-import { useResource } from "@pankod/refine-core";
+import { useResource } from "@refinedev/core";
 
 import {
     CreateInferencer,
@@ -25,7 +25,7 @@ import { prepareLiveCode, componentName, removeHiddenCode } from "@/utilities";
  * Inferencer will handle the data fetching and the infering parts,
  * then it will invoke the `renderer` function to generate the code.
  * The generated code will be used to render the component by `react-live`.
- * Its required to havee`additionalScope` prop when using packages other than `react` and `@pankod/refine-core`.
+ * Its required to havee`additionalScope` prop when using packages other than `react` and `@refinedev/core`.
  *
  * @param config - Inferencer configuration.
  * @param config.type - Infering type.
@@ -56,15 +56,17 @@ export const createInferencer: CreateInferencer = ({
     const Inferencer = ({
         resourceName,
         fieldTransformer,
+        hideCodeViewerInProduction,
+        meta,
         id,
     }: {
         resourceName?: string;
+        hideCodeViewerInProduction?: boolean;
         fieldTransformer?: InferencerComponentProps["fieldTransformer"];
+        meta?: InferencerComponentProps["meta"];
         id?: string | number;
     }) => {
-        const { resource, resources } = useResource({
-            resourceNameOrRouteName: resourceName,
-        });
+        const { resource, resources } = useResource(resourceName);
 
         const { resource: resourceFromURL } = useResource();
 
@@ -73,7 +75,7 @@ export const createInferencer: CreateInferencer = ({
             loading: recordLoading,
             initial: isInitialLoad,
             error: inferError,
-        } = useInferFetch(type, resourceName ?? resource?.name, id);
+        } = useInferFetch(type, resourceName ?? resource?.name, id, meta);
 
         const rawResults: InferField[] = React.useMemo(() => {
             if (record) {
@@ -87,23 +89,27 @@ export const createInferencer: CreateInferencer = ({
                     })
                     .filter(Boolean);
 
-                const transformed = transform(
-                    inferred as InferField[],
-                    resources,
-                    resource,
-                    record,
-                    infer,
-                );
+                if (resource) {
+                    const transformed = transform(
+                        inferred as InferField[],
+                        resources,
+                        resource,
+                        record,
+                        infer,
+                    );
 
-                const customTransformedFields = fieldTransformer
-                    ? transformed.flatMap((field) => {
-                          const result = fieldTransformer(field);
+                    const customTransformedFields = fieldTransformer
+                        ? transformed.flatMap((field) => {
+                              const result = fieldTransformer(field);
 
-                          return result ? [result] : [];
-                      })
-                    : transformed;
+                              return result ? [result] : [];
+                          })
+                        : transformed;
 
-                return customTransformedFields;
+                    return customTransformedFields;
+                }
+
+                return [];
             }
 
             return [];
@@ -117,21 +123,117 @@ export const createInferencer: CreateInferencer = ({
             record,
             fields: rawResults,
             infer,
+            meta,
         });
 
+        const clearedFields = React.useMemo(() => {
+            const cleanFields: InferField[] = [];
+
+            results.forEach((f, idx, arr) => {
+                if (f.resource) {
+                    if (
+                        cleanFields.findIndex(
+                            (el) => el.resource?.name === f.resource?.name,
+                        ) > -1
+                    ) {
+                        return;
+                    }
+                    const duplicates = arr.filter((field, index) => {
+                        if (index !== idx) {
+                            const currentFieldHasResource = f.resource;
+                            const fieldHasResource = field.resource;
+                            const hasAnyIdentifier =
+                                field.resource?.identifier ||
+                                f.resource?.identifier;
+                            const isSameResource = hasAnyIdentifier
+                                ? field.resource?.identifier ===
+                                  f.resource?.identifier
+                                : field.resource?.name === f.resource?.name;
+
+                            return (
+                                currentFieldHasResource &&
+                                fieldHasResource &&
+                                isSameResource
+                            );
+                        } else {
+                            return false;
+                        }
+                    });
+                    if (duplicates.length > 0) {
+                        if (type === "create" || type === "edit") {
+                            let toPush: InferField | undefined = undefined;
+
+                            [f, ...duplicates].find((el) => {
+                                if (
+                                    el.fieldable !== true &&
+                                    toPush === undefined
+                                ) {
+                                    toPush = el;
+                                }
+                            });
+                            if (toPush) {
+                                cleanFields.push(toPush);
+                            } else {
+                                cleanFields.push(f);
+                            }
+                        } else {
+                            let toPush: InferField | undefined = undefined;
+
+                            [f, ...duplicates].find((el) => {
+                                if (
+                                    el.fieldable !== false &&
+                                    toPush === undefined
+                                ) {
+                                    toPush = el;
+                                }
+                            });
+
+                            if (toPush) {
+                                cleanFields.push(toPush);
+                            } else {
+                                cleanFields.push(f);
+                            }
+                        }
+                    } else {
+                        cleanFields.push(f);
+                    }
+                } else {
+                    cleanFields.push(f);
+                }
+            });
+
+            return cleanFields;
+        }, [results, type]);
+
         const code = React.useMemo(() => {
-            if (!recordLoading && !relationLoading && !isInitialLoad) {
+            if (
+                !recordLoading &&
+                !relationLoading &&
+                !isInitialLoad &&
+                resource
+            ) {
                 return renderer({
                     resource,
                     resources,
-                    fields: results,
+                    fields: clearedFields,
                     infer,
-                    isCustomPage: resource.name !== resourceFromURL.name,
+                    meta,
+                    isCustomPage: resource.name !== resourceFromURL?.name,
                     id,
                 });
             }
             return "";
-        }, [resource, resources, results, recordLoading, relationLoading]);
+        }, [
+            resource,
+            resources,
+            clearedFields,
+            recordLoading,
+            relationLoading,
+        ]);
+
+        const hiddenCodeViewer =
+            process.env.NODE_ENV !== "development" &&
+            hideCodeViewerInProduction;
 
         return (
             <>
@@ -151,19 +253,24 @@ export const createInferencer: CreateInferencer = ({
                             code={prepareLiveCode(
                                 code,
                                 componentName(
-                                    resource.label ?? resource.name,
+                                    resource?.meta?.label ??
+                                        resource?.options?.label ??
+                                        resource?.label ??
+                                        resource?.name ??
+                                        "Resource",
                                     type,
                                 ),
                             )}
                             errorComponent={ErrorComponent}
                             additionalScope={additionalScope}
                         />
-                        {CodeViewerComponent && (
+                        {typeof CodeViewerComponent !== "undefined" &&
+                        !hiddenCodeViewer ? (
                             <CodeViewerComponent
                                 code={removeHiddenCode(code)}
                                 loading={recordLoading || relationLoading}
                             />
-                        )}
+                        ) : null}
                     </>
                 )}
             </>
@@ -174,13 +281,23 @@ export const createInferencer: CreateInferencer = ({
         name,
         resource,
         fieldTransformer,
+        meta,
+        hideCodeViewerInProduction,
         id,
     }) => {
+        const { resource: resourceItem } = useResource(resource ?? name);
+
+        const key = `${
+            resourceItem?.identifier ?? resourceItem?.name
+        }-${type}-${id}`;
+
         return (
             <Inferencer
+                hideCodeViewerInProduction={hideCodeViewerInProduction}
                 fieldTransformer={fieldTransformer}
                 resourceName={resource ?? name}
-                key={resource ?? name}
+                meta={meta ?? {}}
+                key={key}
                 id={id}
             />
         );

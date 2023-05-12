@@ -3,7 +3,7 @@ title: A Guide on Material UI AutoComplete in React
 description: We'll discover the Material UI (MUI) AutoComplete component with examples
 slug: material-ui-autocomplete-component
 authors: doro_onome
-tags: [material-ui, react, mui, mui-autocomplete,]
+tags: [material-ui, react]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-10-19-mui-autocomplete/social.png
 hide_table_of_contents: false
 ---
@@ -297,7 +297,10 @@ Here’s the result:
 
 ---
 
-<PromotionBanner title="Is your CRUD app overloaded with technical debt?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/mui_banner.png" />
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
 
@@ -537,7 +540,7 @@ export default function Asynchronous() {
       onClose={() => {
         setOpen(false);
       }}
-      isOptionEqualToValue={(option, value) => option.title === value.title}
+      isOptionEqualToValue={(option, value) => value === undefined || option?.id?.toString() === (value?.id ?? value)?.toString()}
       getOptionLabel={(option) => option.title}
       options={options}
       loading={loading}

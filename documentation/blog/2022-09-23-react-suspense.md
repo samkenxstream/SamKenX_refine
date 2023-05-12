@@ -3,7 +3,7 @@ title: A Quick Start Guide to React Suspense
 description: We will discuss how React Suspense works and common use cases
 slug: react-suspense-guide
 authors: joel_adewole
-tags: [react, react-suspense]
+tags: [react]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-09-23-react-suspense/social.png
 hide_table_of_contents: false
 ---
@@ -98,6 +98,13 @@ startTransition(() => {
 });
 ```
 States updates tagged as non-urgent inside of `startTransition` are interrupted if an urgent update is made while the non-urgent state is still updating. This process continues until no new urgent updates are made.
+
+---
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
+---
 
 ## Use cases of Suspense
 As was discussed in the previous section, it is simple to mistake the React Suspense API for Transition and vice versa. Therefore, it's crucial to know when to use and when to forgot them.

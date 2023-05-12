@@ -1,5 +1,180 @@
 # @pankod/refine-react-hook-form
 
+## 4.4.0
+
+### Minor Changes
+
+-   [#4306](https://github.com/refinedev/refine/pull/4306) [`e6eb4dea627`](https://github.com/refinedev/refine/commit/e6eb4dea6279983d04a9f654ac2cd74915fba075) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - feat: `syncWithLocation.syncId` default to `true` for `useModalForm`.
+
+## 4.3.0
+
+### Minor Changes
+
+-   [#4306](https://github.com/refinedev/refine/pull/4306) [`e6eb4dea627`](https://github.com/refinedev/refine/commit/e6eb4dea6279983d04a9f654ac2cd74915fba075) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - feat: `syncWithLocation.syncId` default to `true` for `useModalForm`.
+
+## 4.2.4
+
+### Patch Changes
+
+-   [#4241](https://github.com/refinedev/refine/pull/4241) [`fbe109b5a8b`](https://github.com/refinedev/refine/commit/fbe109b5a8ba8f5d870eab2d96b7477508bceec0) Thanks [@salihozdemir](https://github.com/salihozdemir)! - Added new generic types to the `useForm` hooks. Now you can pass the query types and the mutation types to the hook.
+
+## 4.2.3
+
+### Patch Changes
+
+-   [#4241](https://github.com/refinedev/refine/pull/4241) [`fbe109b5a8b`](https://github.com/refinedev/refine/commit/fbe109b5a8ba8f5d870eab2d96b7477508bceec0) Thanks [@salihozdemir](https://github.com/salihozdemir)! - Added new generic types to the `useForm` hooks. Now you can pass the query types and the mutation types to the hook.
+
+## 4.2.2
+
+### Patch Changes
+
+-   [#4210](https://github.com/refinedev/refine/pull/4210) [`b992e11e338`](https://github.com/refinedev/refine/commit/b992e11e3387464186d552112460aebbc18d3cc5) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - fixed: The values of the registered fields were set using the `reset()` function. This has been changed to use `getValues()` instead. This fixes an issue where the values of the registered fields' dirty state were not being set correctly.
+
+## 4.2.1
+
+### Patch Changes
+
+-   [#4210](https://github.com/refinedev/refine/pull/4210) [`b992e11e338`](https://github.com/refinedev/refine/commit/b992e11e3387464186d552112460aebbc18d3cc5) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - fixed: The values of the registered fields were set using the `reset()` function. This has been changed to use `getValues()` instead. This fixes an issue where the values of the registered fields' dirty state were not being set correctly.
+
+## 4.2.0
+
+### Minor Changes
+
+-   [#4113](https://github.com/refinedev/refine/pull/4113) [`1c13602e308`](https://github.com/refinedev/refine/commit/1c13602e308ffba93099922c144966f25fb2087d) Thanks [@salihozdemir](https://github.com/salihozdemir)! - Added missing third generic parameter to hooks which are using `useQuery` internally.
+
+    For example:
+
+    ```ts
+    import { useOne, HttpError } from "@refinedev/core";
+
+    const { data } = useOne<{ count: string }, HttpError, { count: number }>({
+        resource: "product-count",
+        queryOptions: {
+            select: (rawData) => {
+                return {
+                    data: {
+                        count: Number(rawData?.data?.count),
+                    },
+                };
+            },
+        },
+    });
+
+    console.log(typeof data?.data.count); // number
+    ```
+
+## 4.1.6
+
+### Patch Changes
+
+-   [#4120](https://github.com/refinedev/refine/pull/4120) [`1f310bd7b69`](https://github.com/refinedev/refine/commit/1f310bd7b6900f534bb57db90d3fc8a6ea4364c9) Thanks [@aliemir](https://github.com/aliemir)! - Fix broken `useModalForm` with `create` actions.
+
+## 4.1.5
+
+### Patch Changes
+
+-   [#4120](https://github.com/refinedev/refine/pull/4120) [`1f310bd7b69`](https://github.com/refinedev/refine/commit/1f310bd7b6900f534bb57db90d3fc8a6ea4364c9) Thanks [@aliemir](https://github.com/aliemir)! - Fix broken `useModalForm` with `create` actions.
+
+## 4.1.4
+
+### Patch Changes
+
+-   [#4114](https://github.com/refinedev/refine/pull/4114) [`afdaed3dd83`](https://github.com/refinedev/refine/commit/afdaed3dd8357d6106ed5a4e524d82cfcceaf7ec) Thanks [@aliemir](https://github.com/aliemir)! - Updated `useModalForm` hook's `modal.show` method to check if there's an `id` present or provided. If there is, it will continue to show the modal. If not, the modal will not show. (Resolves #4062)
+
+## 4.1.3
+
+### Patch Changes
+
+-   [#4114](https://github.com/refinedev/refine/pull/4114) [`afdaed3dd83`](https://github.com/refinedev/refine/commit/afdaed3dd8357d6106ed5a4e524d82cfcceaf7ec) Thanks [@aliemir](https://github.com/aliemir)! - Updated `useModalForm` hook's `modal.show` method to check if there's an `id` present or provided. If there is, it will continue to show the modal. If not, the modal will not show. (Resolves #4062)
+
+## 4.1.2
+
+### Patch Changes
+
+-   [#3909](https://github.com/refinedev/refine/pull/3909) [`631512e91ec`](https://github.com/refinedev/refine/commit/631512e91ecf79f12d735de6b11e4822f01cc6f5) Thanks [@salihozdemir](https://github.com/salihozdemir)! - Fixed a bug that the form values were not filled when the user next to steps.
+
+## 4.1.1
+
+### Patch Changes
+
+-   [#3909](https://github.com/refinedev/refine/pull/3909) [`631512e91ec`](https://github.com/refinedev/refine/commit/631512e91ecf79f12d735de6b11e4822f01cc6f5) Thanks [@salihozdemir](https://github.com/salihozdemir)! - Fixed a bug that the form values were not filled when the user next to steps.
+
+## 4.1.0
+
+### Minor Changes
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    All `react-hook-form` imports re-exported from `@refinedev/react-hook-form` have been removed. You should import them from the `react-hook-form` package directly.
+
+    If the package is not installed, you can install it with your package manager:
+
+    ```bash
+    npm install react-hook-form
+    # or
+    pnpm add react-hook-form
+    # or
+    yarn add react-hook-form
+    ```
+
+    After that, you can import them from `react-hook-form` package directly.
+
+    ```diff
+    - import { useForm, Controller } from "@refinedev/react-hook-form";
+
+    + import { useForm } from "@refinedev/react-hook-form";
+    + import { Controller } from "react-hook-form";
+    ```
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    Updated the components to match the changes in routing system of `@refinedev/core`.
+
+    ## `meta` property in components
+
+    This includes `meta` props in buttons and `Sider` component. `meta` property can be used to pass additional parameters to the navigation paths.
+
+    For a `posts` resource definition like this:
+
+    ```tsx
+    <Refine
+        resources={[
+            {
+                name: "posts",
+                list: "/posts",
+                show: "/:authorId/posts/:id",
+            }
+        ]}
+    >
+    ```
+
+    You can pass `authorId` to the `ShowButton` component like this:
+
+    ```tsx
+    <ShowButton resource="posts" id="1" meta={{ authorId: 123 }}>
+    ```
+
+    This will navigate to `/123/posts/1` path.
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    **Moving to the `@refinedev` scope 🎉🎉**
+
+    Moved to the `@refinedev` scope and updated our packages to use the new scope. From now on, all packages will be published under the `@refinedev` scope with their new names.
+
+    Now, we're also removing the `refine` prefix from all packages. So, the `@pankod/refine-core` package is now `@refinedev/core`, `@pankod/refine-antd` is now `@refinedev/antd`, and so on.
+
+### Patch Changes
+
+## 3.39.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
+## 3.38.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
 ## 3.37.2
 
 ### Patch Changes

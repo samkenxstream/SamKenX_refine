@@ -3,7 +3,7 @@ title: Top 6 Free Online Code Editors and IDEs with Pros and Cons
 description: We'll compare the best online IDEs and code editors for web development. We'll also look at the pros and cons of each.
 slug: 6-best-online-code-editors-comparison
 authors: joseph_mawa
-tags: [online-editor, online-ide, comparison]
+tags: [comparison]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-11-01-online-ide/social.png
 hide_table_of_contents: false
 ---
@@ -141,7 +141,7 @@ Instead of using the starter projects to create a new project on StackBlitz, you
 
 ### Deploy the example project to GitHub
 
-Host the **refine** example project we created on GitHub. You can also use one of the [tutorial examples](https://github.com/refinedev/refine/tree/next/examples/tutorial) if you don't want to deploy the example project.
+Host the **refine** example project we created on GitHub. You can also use one of the [tutorial examples](https://github.com/refinedev/refine/tree/master/examples/tutorial) if you don't want to deploy the example project.
 
 ### How to open a public GitHub repository in StackBlitz?
 
@@ -176,7 +176,10 @@ You can open one of the tutorial examples in StackBlitz by following [this link]
   
 ---
 
-<PromotionBanner title="Small dev teams love this React framework!" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/generic_banner.png" />
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
 

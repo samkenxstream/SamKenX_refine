@@ -9,15 +9,17 @@ import {
     LoadingOverlay,
 } from "@mantine/core";
 import {
-    ResourceRouterParams,
+    useBack,
+    useGo,
     useMutationMode,
     useNavigation,
     useRefineContext,
-    useResourceWithRoute,
+    useResource,
     userFriendlyResourceName,
-    useRouterContext,
+    useRouterType,
+    useToPath,
     useTranslate,
-} from "@pankod/refine-core";
+} from "@refinedev/core";
 import { IconArrowLeft } from "@tabler/icons";
 import {
     DeleteButton,
@@ -25,17 +27,22 @@ import {
     RefreshButton,
     SaveButton,
     Breadcrumb,
+    ListButtonProps,
+    RefreshButtonProps,
+    DeleteButtonProps,
+    SaveButtonProps,
 } from "@components";
 import { EditProps } from "../types";
+import { RefinePageHeaderClassNames } from "@refinedev/ui-types";
 
 export const Edit: React.FC<EditProps> = (props) => {
     const {
         children,
         resource: resourceFromProps,
         recordItemId,
-        deleteButtonProps,
+        deleteButtonProps: deleteButtonPropsFromProps,
         mutationMode: mutationModeFromProps,
-        saveButtonProps,
+        saveButtonProps: saveButtonPropsFromProps,
         canDelete,
         dataProviderName,
         isLoading,
@@ -51,33 +58,40 @@ export const Edit: React.FC<EditProps> = (props) => {
         title,
     } = props;
     const translate = useTranslate();
-
-    const { goBack, list } = useNavigation();
-
-    const resourceWithRoute = useResourceWithRoute();
-
-    const { useParams } = useRouterContext();
-
+    const { options: { breadcrumb: globalBreadcrumb } = {} } =
+        useRefineContext();
     const { mutationMode: mutationModeContext } = useMutationMode();
-
     const mutationMode = mutationModeFromProps ?? mutationModeContext;
 
+    const routerType = useRouterType();
+    const back = useBack();
+    const go = useGo();
+    const { goBack, list: legacyGoList } = useNavigation();
+
     const {
-        resource: routeResourceName,
-        action: routeFromAction,
-        id: idFromRoute,
-    } = useParams<ResourceRouterParams>();
+        resource,
+        action,
+        id: idFromParams,
+    } = useResource(resourceFromProps);
 
-    const resource = resourceWithRoute(resourceFromProps ?? routeResourceName);
+    const goListPath = useToPath({
+        resource,
+        action: "list",
+    });
 
-    const isDeleteButtonVisible =
-        canDelete ?? (resource.canDelete || deleteButtonProps);
+    const id = recordItemId ?? idFromParams;
 
-    const { options } = useRefineContext();
     const breadcrumb =
         typeof breadcrumbFromProps === "undefined"
-            ? options?.breadcrumb
+            ? globalBreadcrumb
             : breadcrumbFromProps;
+
+    const hasList = resource?.list && !recordItemId;
+
+    const isDeleteButtonVisible =
+        canDelete ??
+        ((resource?.meta?.canDelete ?? resource?.canDelete) ||
+            deleteButtonPropsFromProps);
 
     const breadcrumbComponent =
         typeof breadcrumb !== "undefined" ? (
@@ -86,51 +100,81 @@ export const Edit: React.FC<EditProps> = (props) => {
             <Breadcrumb />
         );
 
-    const id = recordItemId ?? idFromRoute;
-
     const loadingOverlayVisible =
-        isLoading ?? saveButtonProps?.disabled ?? false;
+        isLoading ?? saveButtonPropsFromProps?.disabled ?? false;
+
+    const listButtonProps: ListButtonProps | undefined = hasList
+        ? {
+              ...(isLoading ? { disabled: true } : {}),
+              resource:
+                  routerType === "legacy"
+                      ? resource?.route
+                      : resource?.identifier ?? resource?.name,
+          }
+        : undefined;
+
+    const refreshButtonProps: RefreshButtonProps = {
+        ...(isLoading ? { disabled: true } : {}),
+        resource:
+            routerType === "legacy"
+                ? resource?.route
+                : resource?.identifier ?? resource?.name,
+        recordItemId: id,
+        dataProviderName,
+    };
+
+    const deleteButtonProps: DeleteButtonProps | undefined =
+        isDeleteButtonVisible
+            ? ({
+                  ...(isLoading ? { disabled: true } : {}),
+                  resource:
+                      routerType === "legacy"
+                          ? resource?.route
+                          : resource?.identifier ?? resource?.name,
+                  mutationMode,
+                  onSuccess: () => {
+                      if (routerType === "legacy") {
+                          legacyGoList(resource?.route ?? resource?.name ?? "");
+                      } else {
+                          go({ to: goListPath });
+                      }
+                  },
+                  recordItemId: id,
+                  dataProviderName,
+                  ...deleteButtonPropsFromProps,
+              } as const)
+            : undefined;
+
+    const saveButtonProps: SaveButtonProps = {
+        ...(isLoading ? { disabled: true } : {}),
+        ...saveButtonPropsFromProps,
+    };
 
     const defaultHeaderButtons = (
         <>
-            {!recordItemId && (
-                <ListButton
-                    {...(isLoading ? { disabled: true } : {})}
-                    resourceNameOrRouteName={resource.route}
-                />
-            )}
-            <RefreshButton
-                {...(isLoading ? { disabled: true } : {})}
-                resourceNameOrRouteName={resource.route}
-                recordItemId={id}
-                dataProviderName={dataProviderName}
-            />
+            {hasList && <ListButton {...listButtonProps} />}
+            <RefreshButton {...refreshButtonProps} />
         </>
     );
 
     const defaultFooterButtons = (
         <>
-            {isDeleteButtonVisible && (
-                <DeleteButton
-                    {...(isLoading ? { disabled: true } : {})}
-                    mutationMode={mutationMode}
-                    onSuccess={() => {
-                        list(resource.route ?? resource.name);
-                    }}
-                    dataProviderName={dataProviderName}
-                    {...deleteButtonProps}
-                />
-            )}
-            <SaveButton
-                {...(isLoading ? { disabled: true } : {})}
-                {...saveButtonProps}
-            />
+            {isDeleteButtonVisible && <DeleteButton {...deleteButtonProps} />}
+            <SaveButton {...saveButtonProps} />
         </>
     );
 
     const buttonBack =
         goBackFromProps === (false || null) ? null : (
-            <ActionIcon onClick={routeFromAction ? goBack : undefined}>
+            <ActionIcon
+                onClick={
+                    action !== "list" && typeof action !== "undefined"
+                        ? routerType === "legacy"
+                            ? goBack
+                            : back
+                        : undefined
+                }
+            >
                 {typeof goBackFromProps !== "undefined" ? (
                     goBackFromProps
                 ) : (
@@ -143,13 +187,19 @@ export const Edit: React.FC<EditProps> = (props) => {
         ? typeof headerButtonsFromProps === "function"
             ? headerButtonsFromProps({
                   defaultButtons: defaultHeaderButtons,
+                  listButtonProps,
+                  refreshButtonProps,
               })
             : headerButtonsFromProps
         : defaultHeaderButtons;
 
     const footerButtons = footerButtonsFromProps
         ? typeof footerButtonsFromProps === "function"
-            ? footerButtonsFromProps({ defaultButtons: defaultFooterButtons })
+            ? footerButtonsFromProps({
+                  defaultButtons: defaultFooterButtons,
+                  deleteButtonProps,
+                  saveButtonProps,
+              })
             : footerButtonsFromProps
         : defaultFooterButtons;
 
@@ -162,11 +212,18 @@ export const Edit: React.FC<EditProps> = (props) => {
                     <Group spacing="xs">
                         {buttonBack}
                         {title ?? (
-                            <Title order={3} transform="capitalize">
+                            <Title
+                                order={3}
+                                transform="capitalize"
+                                className={RefinePageHeaderClassNames.Title}
+                            >
                                 {translate(
-                                    `${resource.name}.titles.edit`,
+                                    `${resource?.name}.titles.edit`,
                                     `Edit ${userFriendlyResourceName(
-                                        resource.label ?? resource.name,
+                                        resource?.meta?.label ??
+                                            resource?.options?.label ??
+                                            resource?.label ??
+                                            resource?.name,
                                         "singular",
                                     )}`,
                                 )}

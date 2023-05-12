@@ -14,6 +14,15 @@ module.exports = {
         },
         {
             type: "category",
+            label: "Migration Guide 🚀",
+            items: [
+                "migration-guide/3x-to-4x",
+                "migration-guide/auth-provider",
+                "migration-guide/router-provider",
+            ],
+        },
+        {
+            type: "category",
             label: "API Reference",
             link: {
                 type: "generated-index",
@@ -58,17 +67,17 @@ module.exports = {
                                 },
                                 {
                                     type: "category",
-                                    label: "Authorization",
+                                    label: "Authentication",
                                     items: [
-                                        "api-reference/core/hooks/auth/useAuthenticated",
-                                        "api-reference/core/hooks/auth/useCheckError",
-                                        "api-reference/core/hooks/auth/useGetIdentity",
-                                        "api-reference/core/hooks/auth/useLogin",
-                                        "api-reference/core/hooks/auth/useLogout",
-                                        "api-reference/core/hooks/auth/usePermissions",
-                                        "api-reference/core/hooks/auth/useRegister",
-                                        "api-reference/core/hooks/auth/useForgotPassword",
-                                        "api-reference/core/hooks/auth/useUpdatePassword",
+                                        "api-reference/core/hooks/authentication/useIsAuthenticated",
+                                        "api-reference/core/hooks/authentication/useOnError",
+                                        "api-reference/core/hooks/authentication/useGetIdentity",
+                                        "api-reference/core/hooks/authentication/useLogin",
+                                        "api-reference/core/hooks/authentication/useLogout",
+                                        "api-reference/core/hooks/authentication/usePermissions",
+                                        "api-reference/core/hooks/authentication/useRegister",
+                                        "api-reference/core/hooks/authentication/useForgotPassword",
+                                        "api-reference/core/hooks/authentication/useUpdatePassword",
                                     ],
                                 },
                                 {
@@ -145,6 +154,11 @@ module.exports = {
                                     type: "category",
                                     label: "Navigation",
                                     items: [
+                                        "api-reference/core/hooks/navigation/useGo",
+                                        "api-reference/core/hooks/navigation/useParsed",
+                                        "api-reference/core/hooks/navigation/useBack",
+                                        "api-reference/core/hooks/navigation/useLink",
+                                        "api-reference/core/hooks/navigation/useGetToPath",
                                         "api-reference/core/hooks/navigation/useNavigation",
                                     ],
                                 },
@@ -157,17 +171,9 @@ module.exports = {
                                 },
                                 {
                                     type: "category",
-                                    label: "Refine",
-                                    items: [
-                                        "api-reference/core/hooks/refine/useTitle",
-                                    ],
-                                },
-                                {
-                                    type: "category",
                                     label: "Resource",
                                     items: [
                                         "api-reference/core/hooks/resource/useResource",
-                                        "api-reference/core/hooks/resource/useResourceWithRoute",
                                     ],
                                 },
                                 {
@@ -209,7 +215,6 @@ module.exports = {
                             items: [
                                 "api-reference/core/components/auth-page",
                                 "api-reference/core/components/refine-config",
-                                "api-reference/core/components/layout-wrapper",
                                 "api-reference/core/components/inferencer",
                                 {
                                     type: "category",
@@ -299,6 +304,7 @@ module.exports = {
                             label: "Components",
                             items: [
                                 "api-reference/antd/components/antd-auth-page",
+                                "api-reference/antd/components/antd-themed-layout",
                                 "api-reference/antd/components/inferencer",
                                 {
                                     type: "category",
@@ -353,15 +359,7 @@ module.exports = {
                                 },
                             ],
                         },
-                        {
-                            type: "category",
-                            label: "Customization",
-                            items: [
-                                "api-reference/antd/customization/antd-custom-theme",
-                                "api-reference/antd/customization/antd-custom-layout",
-                                "api-reference/antd/customization/antd-custom-sider",
-                            ],
-                        },
+                        "api-reference/antd/theming",
                         "api-reference/antd/migration-guide/v4-to-v5",
                     ],
                 },
@@ -380,6 +378,7 @@ module.exports = {
                             label: "Components",
                             items: [
                                 "api-reference/chakra-ui/components/chakra-auth-page",
+                                "api-reference/chakra-ui/components/chakra-ui-themed-layout",
                                 "api-reference/chakra-ui/components/inferencer",
                                 {
                                     type: "category",
@@ -425,15 +424,7 @@ module.exports = {
                                 },
                             ],
                         },
-                        {
-                            type: "category",
-                            label: "Customization",
-                            items: [
-                                "api-reference/chakra-ui/customization/theme",
-                                "api-reference/chakra-ui/customization/layout",
-                                "api-reference/chakra-ui/customization/sider",
-                            ],
-                        },
+                        "api-reference/chakra-ui/theming",
                     ],
                 },
 
@@ -468,6 +459,7 @@ module.exports = {
                             label: "Components",
                             items: [
                                 "api-reference/mantine/components/mantine-auth-page",
+                                "api-reference/mantine/components/mantine-themed-layout",
                                 "api-reference/mantine/components/inferencer",
                                 {
                                     type: "category",
@@ -513,15 +505,7 @@ module.exports = {
                                 },
                             ],
                         },
-                        {
-                            type: "category",
-                            label: "Customization",
-                            items: [
-                                "api-reference/mantine/customization/theme",
-                                "api-reference/mantine/customization/layout",
-                                "api-reference/mantine/customization/sider",
-                            ],
-                        },
+                        "api-reference/mantine/theming",
                     ],
                 },
 
@@ -547,6 +531,7 @@ module.exports = {
                             label: "Components",
                             items: [
                                 "api-reference/mui/components/mui-auth-page",
+                                "api-reference/mui/components/mui-themed-layout",
                                 "api-reference/mui/components/inferencer",
                                 {
                                     type: "category",
@@ -592,15 +577,7 @@ module.exports = {
                                 },
                             ],
                         },
-                        {
-                            type: "category",
-                            label: "Customization",
-                            items: [
-                                "api-reference/mui/customization/mui-custom-theme",
-                                "api-reference/mui/customization/mui-custom-layout",
-                                "api-reference/mui/customization/mui-custom-sider",
-                            ],
-                        },
+                        "api-reference/mui/theming",
                     ],
                 },
             ],
@@ -625,6 +602,18 @@ module.exports = {
                     },
                     items: [
                         "packages/documentation/cli",
+                        {
+                            type: "category",
+                            label: "Data Providers",
+                            items: [
+                                "packages/documentation/data-providers/appwrite",
+                                "packages/documentation/data-providers/graphql",
+                                "packages/documentation/data-providers/simple-rest",
+                                "packages/documentation/data-providers/strapi-v4",
+                                "packages/documentation/data-providers/supabase",
+                            ],
+                        },
+                        "packages/documentation/inferencer",
                         "packages/documentation/command-palette",
                         "packages/documentation/react-table/index",
                         {
@@ -636,7 +625,21 @@ module.exports = {
                                 "packages/documentation/react-hook-form/useStepsForm",
                             ],
                         },
-                        "packages/documentation/inferencer",
+                        {
+                            type: "category",
+                            label: "Routers",
+                            link: {
+                                type: "generated-index",
+                                title: "Router Providers",
+                                description: `<strong>refine</strong> comes with built-in router packages for Next.js, Remix and React Router v6. You can use them to integrate your app with <strong>refine</strong>. You can find examples and documentation for each router about how to use them with layouts, authentication and resource handling.`,
+                                slug: "/packages/documentation/routers",
+                            },
+                            items: [
+                                "packages/documentation/routers/react-router-v6",
+                                "packages/documentation/routers/nextjs",
+                                "packages/documentation/routers/remix",
+                            ],
+                        },
                     ],
                 },
             ],
@@ -679,6 +682,15 @@ module.exports = {
                     ],
                 },
                 "examples/antd-calendar-example",
+                {
+                    type: "category",
+                    label: "Build Systems",
+                    items: [
+                        "examples/build-systems/turbo",
+                        "examples/build-systems/lerna",
+                        "examples/build-systems/nx",
+                    ],
+                },
                 "examples/command-palette",
                 {
                     type: "category",
@@ -693,6 +705,7 @@ module.exports = {
                     type: "category",
                     label: "Customization",
                     items: [
+                        "examples/customization/customTheme",
                         "examples/customization/customFooter",
                         "examples/customization/customLogin",
                         "examples/customization/customSider",
@@ -825,6 +838,7 @@ module.exports = {
                         "examples/next-js/nextjs",
                         "examples/next-js/nextjs-appdir",
                         "examples/next-js/auth",
+                        "examples/next-js/NextAuth.js",
                     ],
                 },
                 {
@@ -833,14 +847,16 @@ module.exports = {
                     items: ["examples/notification-provider/react-toastify"],
                 },
                 "examples/persistQuery",
-                /*                 {
+                {
                     type: "category",
                     label: "Remix",
                     items: [
                         "examples/remix/remix-antd",
+                        "examples/remix/remix-material-ui",
                         "examples/remix/remix-headless",
+                        "examples/remix/remix-auth",
                     ],
-                }, */
+                },
                 {
                     type: "category",
                     label: "Router Provider",
@@ -902,11 +918,20 @@ module.exports = {
                         },
                     ],
                 },
-                "examples/customTheme",
                 {
                     type: "category",
                     label: "UI",
                     items: ["examples/ui/useModal"],
+                },
+                {
+                    type: "category",
+                    label: "Themes",
+                    items: [
+                        "examples/themes/refine-themes-antd",
+                        "examples/themes/refine-themes-chakra-ui",
+                        "examples/themes/refine-themes-mantine",
+                        "examples/themes/refine-themes-mui",
+                    ],
                 },
                 {
                     type: "category",
@@ -964,16 +989,11 @@ module.exports = {
                     ],
                 },
                 "advanced-tutorials/custom-layout",
-                "advanced-tutorials/custom-pages",
                 {
                     type: "category",
                     label: "Data Provider",
                     items: [
-                        "advanced-tutorials/data-provider/appwrite",
-                        "advanced-tutorials/data-provider/graphql",
                         "advanced-tutorials/data-provider/handling-filters",
-                        "advanced-tutorials/data-provider/strapi-v4",
-                        "advanced-tutorials/data-provider/supabase",
                     ],
                 },
                 {
@@ -1014,14 +1034,6 @@ module.exports = {
                 },
                 {
                     type: "category",
-                    label: "SSR",
-                    items: [
-                        "advanced-tutorials/ssr/remix",
-                        "advanced-tutorials/ssr/nextjs",
-                    ],
-                },
-                {
-                    type: "category",
                     label: "Upload",
                     items: [
                         "advanced-tutorials/upload/base64-upload",
@@ -1051,10 +1063,6 @@ module.exports = {
         {
             type: "doc",
             id: "testing",
-        },
-        {
-            type: "doc",
-            id: "migration-guide",
         },
         {
             type: "doc",

@@ -3,7 +3,7 @@ title: How to create a CRUD app with SvelteKit
 description: We'll build a CRUD Blog app using SvelteKit and Svelte MUI
 slug: sveltekit-crud-app-with-svelte-mui
 authors: ekekenta_clinton
-tags: [svelte, sveltekit, crud-app]
+tags: [svelte, tutorial]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-09-02-sveltekit-crud-app/social.png
 hide_table_of_contents: false
 ---
@@ -35,7 +35,7 @@ Sveltekit helps you build web apps that are fiendishly complicated with all of t
 It uses Vite in combination with a Svelte plugin to deliver a lightning-fast and feature-rich development experience with Hot Module Replacement (HMR), in which changes to your code are instantly reflected in the browser.
 
 ## Prerequisites
-To get the best out of this tutorial, prior knowledge of Svelte is required, and ensure you have Node.JS version 16 or later installed. The code for this tutorial is available on [Github](https://github.com/refinedev/refine/tree/next/examples/blog/sveltekit-crud)
+To get the best out of this tutorial, prior knowledge of Svelte is required, and ensure you have Node.JS version 16 or later installed. The code for this tutorial is available on [Github](https://github.com/refinedev/refine/tree/master/examples/blog/sveltekit-crud)
  
 ## Create Sveltekit Application
 With the above requirements met, let's create a new **Sveltekit application** by running the following commands.
@@ -320,6 +320,13 @@ In the above code snippets, we attached an event handler to change the value of 
 </div>
 
 <br/>
+
+---
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
+---
 
 ## Update Blog
 To update the blog post, we'll create a Sveltekit dynamic route. This route will use the `id` of each blog as a param. Sveltekit implements `file-system-based` routing, which means that your application routes are defined by your directories, and version 3 requires you to have a `+page.svelte` and a `+page.js` or `+page.server` file in each of the directories. 

@@ -1,5 +1,220 @@
 # @pankod/refine-ui-types
 
+## 1.16.0
+
+### Minor Changes
+
+-   [#4303](https://github.com/refinedev/refine/pull/4303) [`0c569f42b4e`](https://github.com/refinedev/refine/commit/0c569f42b4e7caec75928fd8a1ebeb337c95ff81) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: added crud component types.
+    Now `ActionButtonRenderer` has a new generic type `TExtraProps`. This will allow us to pass extra props to the renderer.
+
+    feat: added `TEditButtonProps`, `TDeleteButtonProps`, `TRefreshButtonProps`, and, `TListButtonProps` generic types to `RefineCrudShowProps`.
+    Now `RefineCrudShowProps` can take generic types for all the buttons.
+
+### Patch Changes
+
+-   [#4312](https://github.com/refinedev/refine/pull/4312) [`9a5f79186c1`](https://github.com/refinedev/refine/commit/9a5f79186c107d52e12b8ff87558a3c3dd7807b8) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - feat: added `className` for easier selection of all buttons and titles of CRUD components
+
+## 1.15.0
+
+### Minor Changes
+
+-   [#4303](https://github.com/refinedev/refine/pull/4303) [`0c569f42b4e`](https://github.com/refinedev/refine/commit/0c569f42b4e7caec75928fd8a1ebeb337c95ff81) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: added crud component types.
+    Now `ActionButtonRenderer` has a new generic type `TExtraProps`. This will allow us to pass extra props to the renderer.
+
+    feat: added `TEditButtonProps`, `TDeleteButtonProps`, `TRefreshButtonProps`, and, `TListButtonProps` generic types to `RefineCrudShowProps`.
+    Now `RefineCrudShowProps` can take generic types for all the buttons.
+
+### Patch Changes
+
+-   [#4312](https://github.com/refinedev/refine/pull/4312) [`9a5f79186c1`](https://github.com/refinedev/refine/commit/9a5f79186c107d52e12b8ff87558a3c3dd7807b8) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - feat: added `className` for easier selection of all buttons and titles of CRUD components
+
+## 1.14.0
+
+### Minor Changes
+
+-   [#4291](https://github.com/refinedev/refine/pull/4291) [`dc62abc890f`](https://github.com/refinedev/refine/commit/dc62abc890f68be161c7035c28c0118216a9e0ec) Thanks [@salihozdemir](https://github.com/salihozdemir)! - feat: added a new prop that `sticky` to `RefineThemedLayoutV2HeaderProps` type
+
+    fix: deprecated the `isStick` prop of `RefineThemedLayoutV2HeaderProps` type
+
+    To provide backwards compatibility, `isSticky` is still supported, but it is deprecated and will be removed in the next major version.
+
+## 1.13.0
+
+### Minor Changes
+
+-   [#4291](https://github.com/refinedev/refine/pull/4291) [`dc62abc890f`](https://github.com/refinedev/refine/commit/dc62abc890f68be161c7035c28c0118216a9e0ec) Thanks [@salihozdemir](https://github.com/salihozdemir)! - feat: added a new prop that `sticky` to `RefineThemedLayoutV2HeaderProps` type
+
+    fix: deprecated the `isStick` prop of `RefineThemedLayoutV2HeaderProps` type
+
+    To provide backwards compatibility, `isSticky` is still supported, but it is deprecated and will be removed in the next major version.
+
+## 1.12.0
+
+### Minor Changes
+
+-   [#4232](https://github.com/refinedev/refine/pull/4232) [`c99bc0ad7f7`](https://github.com/refinedev/refine/commit/c99bc0ad7f7b71cf47e45a797acdea2325e6fbc8) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: `initialSiderCollapsed` added to `RefineThemedLayoutV2Props` to control initial state of `<ThemedSiderV2>`.
+    From now on, you can control the initial collapsed state of `<ThemedSiderV2>` by passing the `initialSiderCollapsed` prop to `<ThemedLayoutV2>`.
+
+    ```tsx
+    <ThemedLayoutV2
+        initialSiderCollapsed={true} // This will make the sider collapsed by default
+    >
+        {/* .. */}
+    </ThemedLayoutV2>
+    ```
+
+-   [#4209](https://github.com/refinedev/refine/pull/4209) [`3f4b5fef76f`](https://github.com/refinedev/refine/commit/3f4b5fef76f3558fc4466f455b9f55083cf47fc2) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - feat: add `isSticky` to `RefineThemedLayoutV2HeaderProps` type
+
+## 1.11.0
+
+### Minor Changes
+
+-   [#4232](https://github.com/refinedev/refine/pull/4232) [`c99bc0ad7f7`](https://github.com/refinedev/refine/commit/c99bc0ad7f7b71cf47e45a797acdea2325e6fbc8) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: `initialSiderCollapsed` added to `RefineThemedLayoutV2Props` to control initial state of `<ThemedSiderV2>`.
+    From now on, you can control the initial collapsed state of `<ThemedSiderV2>` by passing the `initialSiderCollapsed` prop to `<ThemedLayoutV2>`.
+
+    ```tsx
+    <ThemedLayoutV2
+        initialSiderCollapsed={true} // This will make the sider collapsed by default
+    >
+        {/* .. */}
+    </ThemedLayoutV2>
+    ```
+
+-   [#4209](https://github.com/refinedev/refine/pull/4209) [`3f4b5fef76f`](https://github.com/refinedev/refine/commit/3f4b5fef76f3558fc4466f455b9f55083cf47fc2) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - feat: add `isSticky` to `RefineThemedLayoutV2HeaderProps` type
+
+## 1.10.0
+
+### Minor Changes
+
+-   [#4163](https://github.com/refinedev/refine/pull/4163) [`deec38a034a`](https://github.com/refinedev/refine/commit/deec38a034a0b5ab2d7842e428f6fc3a1b8561fa) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - refactor: deprecated `RefineThemedLayoutProps`, `RefineThemedLayoutSiderProps` and `RefineThemedLayoutHeaderProps` for `ThemedLayoutV2`
+
+## 1.9.0
+
+### Minor Changes
+
+-   [#4163](https://github.com/refinedev/refine/pull/4163) [`deec38a034a`](https://github.com/refinedev/refine/commit/deec38a034a0b5ab2d7842e428f6fc3a1b8561fa) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - refactor: deprecated `RefineThemedLayoutProps`, `RefineThemedLayoutSiderProps` and `RefineThemedLayoutHeaderProps` for `ThemedLayoutV2`
+
+## 1.8.0
+
+### Minor Changes
+
+-   [#4163](https://github.com/refinedev/refine/pull/4163) [`deec38a034a`](https://github.com/refinedev/refine/commit/deec38a034a0b5ab2d7842e428f6fc3a1b8561fa) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - refactor: deprecated `RefineThemedLayoutProps`, `RefineThemedLayoutSiderProps` and `RefineThemedLayoutHeaderProps` for `ThemedLayoutV2`
+
+## 1.7.0
+
+### Minor Changes
+
+-   [#4153](https://github.com/refinedev/refine/pull/4153) [`8d9c408d089`](https://github.com/refinedev/refine/commit/8d9c408d0893f6592709e688432a3274d0bd0fcb) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - feat: add `RefineThemedLayoutV2Props`, `RefineThemedLayoutV2SiderProps`, `RefineThemedLayoutV2HeaderProps` types for `ThemedLayoutV2`
+
+## 1.6.0
+
+### Minor Changes
+
+-   [#4153](https://github.com/refinedev/refine/pull/4153) [`8d9c408d089`](https://github.com/refinedev/refine/commit/8d9c408d0893f6592709e688432a3274d0bd0fcb) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - feat: add `RefineThemedLayoutV2Props`, `RefineThemedLayoutV2SiderProps`, `RefineThemedLayoutV2HeaderProps` types for `ThemedLayoutV2`
+
+## 1.5.0
+
+### Minor Changes
+
+-   [#3971](https://github.com/refinedev/refine/pull/3971) [`2798f715361`](https://github.com/refinedev/refine/commit/2798f715361c5fd407d09429d94b05b602b50397) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - - New props added to `RefineThemedLayoutHeaderProps`:
+
+        -   `isSiderOpen` prop is added to check the visibility of the sider from `<ThemedHeader>`.
+        -   `onToggleSiderClick` prop is added to control the visibility of the sider from `<ThemedHeader>`.
+        -   `toggleSiderIcon` prop is added to change the icon of the toggle sider button.
+
+    -   New props added to `RefineThemedLayoutSiderProps`:
+        -   `isSiderOpen` prop is added to check the visibility of the sider from a parent component.
+        -   `onToggleSiderClick` prop is added to control the visibility of the sider from a parent component.
+
+### Patch Changes
+
+-   Updated dependencies [[`d7d68e3ff68`](https://github.com/refinedev/refine/commit/d7d68e3ff686dece9f58e53e02076f0ecbd91010)]:
+    -   @refinedev/core@4.5.4
+
+## 1.4.0
+
+### Minor Changes
+
+-   [#3971](https://github.com/refinedev/refine/pull/3971) [`2798f715361`](https://github.com/refinedev/refine/commit/2798f715361c5fd407d09429d94b05b602b50397) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - - New props added to `RefineThemedLayoutHeaderProps`:
+
+        -   `isSiderOpen` prop is added to check the visibility of the sider from `<ThemedHeader>`.
+        -   `onToggleSiderClick` prop is added to control the visibility of the sider from `<ThemedHeader>`.
+        -   `toggleSiderIcon` prop is added to change the icon of the toggle sider button.
+
+    -   New props added to `RefineThemedLayoutSiderProps`:
+        -   `isSiderOpen` prop is added to check the visibility of the sider from a parent component.
+        -   `onToggleSiderClick` prop is added to control the visibility of the sider from a parent component.
+
+### Patch Changes
+
+-   Updated dependencies [[`d7d68e3ff68`](https://github.com/refinedev/refine/commit/d7d68e3ff686dece9f58e53e02076f0ecbd91010)]:
+    -   @refinedev/core@4.5.3
+
+## 1.3.0
+
+### Minor Changes
+
+-   [#3912](https://github.com/refinedev/refine/pull/3912) [`0ffe70308b2`](https://github.com/refinedev/refine/commit/0ffe70308b24d2d70695399fb0a1b7b76bcf2ccb) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - - Themed Layout types added. - `RefineThemedLayoutSiderProps`, `RefineThemedLayoutHeaderProps`, `RefineThemedLayoutProps`, `RefineLayoutThemedTitleProps`.
+
+### Patch Changes
+
+-   Updated dependencies [[`0ffe70308b2`](https://github.com/refinedev/refine/commit/0ffe70308b24d2d70695399fb0a1b7b76bcf2ccb)]:
+    -   @refinedev/core@4.5.0
+
+## 1.2.0
+
+### Minor Changes
+
+-   [#3912](https://github.com/refinedev/refine/pull/3912) [`0ffe70308b2`](https://github.com/refinedev/refine/commit/0ffe70308b24d2d70695399fb0a1b7b76bcf2ccb) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - - Themed Layout types added. - `RefineThemedLayoutSiderProps`, `RefineThemedLayoutHeaderProps`, `RefineThemedLayoutProps`, `RefineLayoutThemedTitleProps`.
+
+### Patch Changes
+
+-   Updated dependencies [[`0ffe70308b2`](https://github.com/refinedev/refine/commit/0ffe70308b24d2d70695399fb0a1b7b76bcf2ccb)]:
+    -   @refinedev/core@4.4.0
+
+## 1.1.0
+
+### Minor Changes
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+
+    -   `resourceNameOrRouteName` prop is deprecated in buttons.
+    -   `resource` prop is added to replace `resourceNameOrRouteName` prop. `resource` prop can also use `identifier` property of the resource.
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    **Moving to the `@refinedev` scope 🎉🎉**
+
+    Moved to the `@refinedev` scope and updated our packages to use the new scope. From now on, all packages will be published under the `@refinedev` scope with their new names.
+
+    Now, we're also removing the `refine` prefix from all packages. So, the `@pankod/refine-core` package is now `@refinedev/core`, `@pankod/refine-antd` is now `@refinedev/antd`, and so on.
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    `meta` prop is added to common button prop types.
+
+### Patch Changes
+
+## 0.16.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
+### Patch Changes
+
+-   Updated dependencies [[`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb)]:
+    -   @pankod/refine-core@3.103.0
+
+## 0.15.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
+### Patch Changes
+
+-   Updated dependencies [[`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb)]:
+    -   @pankod/refine-core@3.102.0
+
 ## 0.14.2
 
 ### Patch Changes

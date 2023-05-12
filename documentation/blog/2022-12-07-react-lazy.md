@@ -3,7 +3,7 @@ title: A Guide on React Lazy Loading
 description: We will be looking at what lazy loading is, how it works, and how it can be used to improve the performance of React applications.
 slug: react-lazy-loading
 authors: chidume_nnamdi
-tags: [react, react-lazy-loading, react-performance]
+tags: [react]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-12-07-react-lazy/social.png
 hide_table_of_contents: false
 ---
@@ -121,7 +121,10 @@ What is Suspense?
 
 ---
 
-<PromotionBanner title="Stop wasting your time copy/pasting your CRUD code all over your application!" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/generic_banner.png" />
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
 

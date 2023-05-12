@@ -9,25 +9,28 @@ import {
     BaseKey,
     GetManyResponse,
     HttpError,
-    MetaDataQuery,
     LiveModeProps,
     SuccessErrorNotification,
+    MetaQuery,
 } from "../../interfaces";
 import {
     useResource,
     useTranslate,
-    useCheckError,
     useResourceSubscription,
     useHandleNotification,
     useDataProvider,
+    useOnError,
+    useMeta,
 } from "@hooks";
 import {
     queryKeys,
     pickDataProvider,
     handleMultiple,
+    pickNotDeprecated,
+    useActiveAuthProvider,
 } from "@definitions/helpers";
 
-export type UseManyProps<TData, TError> = {
+export type UseManyProps<TQueryFnData, TError, TData> = {
     /**
      * Resource name for API data interactions
      */
@@ -40,17 +43,26 @@ export type UseManyProps<TData, TError> = {
     /**
      * react-query's [useQuery](https://tanstack.com/query/v4/docs/reference/useQuery) options
      */
-    queryOptions?: UseQueryOptions<GetManyResponse<TData>, TError>;
+    queryOptions?: UseQueryOptions<
+        GetManyResponse<TQueryFnData>,
+        TError,
+        GetManyResponse<TData>
+    >;
     /**
      * Metadata query for `dataProvider`,
      */
-    metaData?: MetaDataQuery;
+    meta?: MetaQuery;
+    /**
+     * Metadata query for `dataProvider`,
+     * @deprecated `metaData` is deprecated with refine@4, refine will pass `meta` instead, however, we still support `metaData` for backward compatibility.
+     */
+    metaData?: MetaQuery;
     /**
      * If there is more than one `dataProvider`, you should use the `dataProviderName` that you will use.
      * @default "default"
      */
     dataProviderName?: string;
-} & SuccessErrorNotification &
+} & SuccessErrorNotification<GetManyResponse<TData>, TError, BaseKey[]> &
     LiveModeProps;
 
 /**
@@ -60,52 +72,66 @@ export type UseManyProps<TData, TError> = {
  *
  * @see {@link https://refine.dev/docs/core/hooks/data/useMany} for more details.
  *
- * @typeParam TData - Result data of the query extends {@link https://refine.dev/docs/core/interfaceReferences#baserecord `BaseRecord`}
- * @typeParam TError - Custom error object that extends {@link https://refine.dev/docs/core/interfaceReferences#httperror `HttpError`}
+ * @typeParam TQueryFnData - Result data returned by the query function. Extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#baserecord `BaseRecord`}
+ * @typeParam TError - Custom error object that extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#httperror `HttpError`}
+ * @typeParam TData - Result data returned by the `select` function. Extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#baserecord `BaseRecord`}. Defaults to `TQueryFnData`
  *
  */
+
 export const useMany = <
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
+    TData extends BaseRecord = TQueryFnData,
 >({
     resource,
     ids,
     queryOptions,
     successNotification,
     errorNotification,
+    meta,
     metaData,
     liveMode,
     onLiveEvent,
     liveParams,
     dataProviderName,
-}: UseManyProps<TData, TError>): QueryObserverResult<
+}: UseManyProps<TQueryFnData, TError, TData>): QueryObserverResult<
     GetManyResponse<TData>
 > => {
     const { resources } = useResource();
     const dataProvider = useDataProvider();
+    const translate = useTranslate();
+    const authProvider = useActiveAuthProvider();
+    const { mutate: checkError } = useOnError({
+        v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+    });
+    const handleNotification = useHandleNotification();
+    const getMeta = useMeta();
+
+    const preferredMeta = pickNotDeprecated(meta, metaData);
+
+    const isEnabled =
+        queryOptions?.enabled === undefined || queryOptions?.enabled === true;
+
     const queryKey = queryKeys(
         resource,
         pickDataProvider(resource, dataProviderName, resources),
-        metaData,
+        preferredMeta,
+        preferredMeta,
     );
 
     const { getMany, getOne } = dataProvider(
         pickDataProvider(resource, dataProviderName, resources),
     );
 
-    const translate = useTranslate();
-    const { mutate: checkError } = useCheckError();
-    const handleNotification = useHandleNotification();
-
-    const isEnabled =
-        queryOptions?.enabled === undefined || queryOptions?.enabled === true;
+    const combinedMeta = getMeta({ meta: preferredMeta });
 
     useResourceSubscription({
         resource,
         types: ["*"],
         params: {
-            ids: ids ?? [],
-            metaData,
+            ids: ids,
+            meta: combinedMeta,
+            metaData: combinedMeta,
             subscriptionType: "useMany",
             ...liveParams,
         },
@@ -115,15 +141,27 @@ export const useMany = <
         onLiveEvent,
     });
 
-    const queryResponse = useQuery<GetManyResponse<TData>, TError>(
+    const queryResponse = useQuery<
+        GetManyResponse<TQueryFnData>,
+        TError,
+        GetManyResponse<TData>
+    >(
         queryKey.many(ids),
         ({ queryKey, pageParam, signal }) => {
             if (getMany) {
                 return getMany({
                     resource,
                     ids,
+                    meta: {
+                        ...combinedMeta,
+                        queryContext: {
+                            queryKey,
+                            pageParam,
+                            signal,
+                        },
+                    },
                     metaData: {
-                        ...metaData,
+                        ...combinedMeta,
                         queryContext: {
                             queryKey,
                             pageParam,
@@ -134,11 +172,19 @@ export const useMany = <
             } else {
                 return handleMultiple(
                     ids.map((id) =>
-                        getOne<TData>({
+                        getOne<TQueryFnData>({
                             resource,
                             id,
+                            meta: {
+                                ...combinedMeta,
+                                queryContext: {
+                                    queryKey,
+                                    pageParam,
+                                    signal,
+                                },
+                            },
                             metaData: {
-                                ...metaData,
+                                ...combinedMeta,
                                 queryContext: {
                                     queryKey,
                                     pageParam,

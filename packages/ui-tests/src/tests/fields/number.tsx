@@ -1,12 +1,12 @@
 import React, { ReactChild } from "react";
-import { RefineFieldNumberProps } from "@pankod/refine-ui-types";
+import { RefineFieldNumberProps } from "@refinedev/ui-types";
 
 import { render } from "@test";
 
 export const fieldNumberTests = function (
     NumberField: React.ComponentType<RefineFieldNumberProps<ReactChild, any>>,
 ): void {
-    describe("[@pankod/refine-ui-tests] Common Tests / Number Field", () => {
+    describe("[@refinedev/ui-tests] Common Tests / Number Field", () => {
         it("renders numbers with given formatting", () => {
             const testPrice = 12345.6789;
             const options = {
@@ -31,6 +31,20 @@ export const fieldNumberTests = function (
 
             // node 14 uses non-breaking space resulting in imcompatibility
             getByText(formattedTestPrice);
+        });
+
+        it("should render NaN when value is undefined", () => {
+            const { getByText } = render(<NumberField value={undefined} />);
+
+            getByText("NaN");
+        });
+
+        it("should render NaN when value is string", () => {
+            const { getByText } = render(
+                <NumberField value={"not a number"} />,
+            );
+
+            getByText("NaN");
         });
     });
 };

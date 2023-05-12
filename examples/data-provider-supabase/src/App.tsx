@@ -1,205 +1,393 @@
-import { Refine, AuthProvider, useGetIdentity } from "@pankod/refine-core";
+import {
+    GitHubBanner,
+    Refine,
+    AuthBindings,
+    Authenticated,
+} from "@refinedev/core";
 import {
     notificationProvider,
-    Layout,
+    ThemedLayoutV2,
     ErrorComponent,
     AuthPage,
-    notification,
-} from "@pankod/refine-antd";
-import { dataProvider, liveProvider } from "@pankod/refine-supabase";
-import routerProvider from "@pankod/refine-react-router-v6";
+    RefineThemes,
+} from "@refinedev/antd";
+import { dataProvider, liveProvider } from "@refinedev/supabase";
+import routerProvider, {
+    CatchAllNavigate,
+    NavigateToResource,
+    UnsavedChangesNotifier,
+} from "@refinedev/react-router-v6";
+import { ConfigProvider, notification } from "antd";
 import { GoogleOutlined } from "@ant-design/icons";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 
-import "@pankod/refine-antd/dist/reset.css";
+import "@refinedev/antd/dist/reset.css";
 
 import { PostList, PostCreate, PostEdit, PostShow } from "pages/posts";
 import { supabaseClient } from "utility";
 
-const authProvider: AuthProvider = {
+const authProvider: AuthBindings = {
     login: async ({ email, password, providerName }) => {
         // sign in with oauth
-        if (providerName) {
-            const { data, error } = await supabaseClient.auth.signInWithOAuth({
-                provider: providerName,
+        try {
+            if (providerName) {
+                const { data, error } =
+                    await supabaseClient.auth.signInWithOAuth({
+                        provider: providerName,
+                    });
+
+                if (error) {
+                    return {
+                        success: false,
+                        error,
+                    };
+                }
+
+                if (data?.url) {
+                    return {
+                        success: true,
+                    };
+                }
+            }
+
+            // sign in with email and password
+            const { data, error } =
+                await supabaseClient.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+
+            if (error) {
+                return {
+                    success: false,
+                    error,
+                };
+            }
+
+            if (data?.user) {
+                return {
+                    success: true,
+                };
+            }
+        } catch (error: any) {
+            return {
+                success: false,
+                error,
+            };
+        }
+
+        return {
+            success: false,
+            error: {
+                message: "Login failed",
+                name: "Invalid email or password",
+            },
+        };
+    },
+    register: async ({ email, password }) => {
+        try {
+            const { data, error } = await supabaseClient.auth.signUp({
+                email,
+                password,
             });
 
             if (error) {
-                return Promise.reject(error);
+                return {
+                    success: false,
+                    error,
+                };
             }
 
-            if (data?.url) {
-                return Promise.resolve(false);
+            if (data) {
+                return {
+                    success: true,
+                };
             }
+        } catch (error: any) {
+            return {
+                success: false,
+                error,
+            };
         }
 
-        // sign in with email and password
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
-            email,
-            password,
-        });
-
-        if (error) {
-            return Promise.reject(error);
-        }
-
-        if (data?.user) {
-            return Promise.resolve();
-        }
-
-        return Promise.resolve();
-    },
-    register: async ({ email, password }) => {
-        const { data, error } = await supabaseClient.auth.signUp({
-            email,
-            password,
-        });
-
-        if (error) {
-            return Promise.reject(error);
-        }
-
-        if (data) {
-            return Promise.resolve();
-        }
+        return {
+            success: false,
+            error: {
+                message: "Register failed",
+                name: "Invalid email or password",
+            },
+        };
     },
     forgotPassword: async ({ email }) => {
-        const { data, error } = await supabaseClient.auth.resetPasswordForEmail(
-            email,
-            {
-                redirectTo: `${window.location.origin}/update-password`,
+        try {
+            const { data, error } =
+                await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/update-password`,
+                });
+
+            if (error) {
+                return {
+                    success: false,
+                    error,
+                };
+            }
+
+            if (data) {
+                notification.open({
+                    type: "success",
+                    message: "Success",
+                    description:
+                        "Please check your email for a link to reset your password. If it doesn't appear within a few minutes, check your spam folder.",
+                });
+                return {
+                    success: true,
+                };
+            }
+        } catch (error: any) {
+            return {
+                success: false,
+                error,
+            };
+        }
+
+        return {
+            success: false,
+            error: {
+                message: "Forgot password failed",
+                name: "Invalid email",
             },
-        );
-
-        if (error) {
-            return Promise.reject(error);
-        }
-
-        if (data) {
-            notification.open({
-                type: "success",
-                message: "Success",
-                description:
-                    "Please check your email for a link to reset your password. If it doesn't appear within a few minutes, check your spam folder.",
-            });
-            return Promise.resolve();
-        }
+        };
     },
     updatePassword: async ({ password }) => {
-        const { data, error } = await supabaseClient.auth.updateUser({
-            password,
-        });
+        try {
+            const { data, error } = await supabaseClient.auth.updateUser({
+                password,
+            });
 
-        if (error) {
-            return Promise.reject(error);
-        }
+            if (error) {
+                return {
+                    success: false,
+                    error,
+                };
+            }
 
-        if (data) {
-            return Promise.resolve("/");
+            if (data) {
+                return {
+                    success: true,
+                    redirectTo: "/",
+                };
+            }
+        } catch (error: any) {
+            return {
+                success: false,
+                error,
+            };
         }
+        return {
+            success: false,
+            error: {
+                message: "Update password failed",
+                name: "Invalid password",
+            },
+        };
     },
     logout: async () => {
         const { error } = await supabaseClient.auth.signOut();
 
         if (error) {
-            return Promise.reject(error);
+            return {
+                success: false,
+                error,
+            };
         }
 
-        return Promise.resolve("/");
+        return {
+            success: true,
+            redirectTo: "/login",
+        };
     },
-    checkError: () => Promise.resolve(),
-    checkAuth: async () => {
-        const { data } = await supabaseClient.auth.getSession();
-        const { session } = data;
+    onError: async (error) => {
+        console.error(error);
+        return { error };
+    },
+    check: async () => {
+        try {
+            const { data } = await supabaseClient.auth.getSession();
+            const { session } = data;
 
-        if (!session) {
-            return Promise.reject();
+            if (!session) {
+                return {
+                    authenticated: false,
+                    error: {
+                        message: "Check failed",
+                        name: "Session not found",
+                    },
+                    logout: true,
+                    redirectTo: "/login",
+                };
+            }
+        } catch (error: any) {
+            return {
+                authenticated: false,
+                error: error || {
+                    message: "Check failed",
+                    name: "Session not found",
+                },
+                logout: true,
+                redirectTo: "/login",
+            };
         }
 
-        return Promise.resolve();
+        return {
+            authenticated: true,
+        };
     },
     getPermissions: async () => {
         const user = await supabaseClient.auth.getUser();
 
         if (user) {
-            return Promise.resolve(user.data.user?.role);
+            return user.data.user?.role;
         }
+
+        return null;
     },
-    getUserIdentity: async () => {
+    getIdentity: async () => {
         const { data } = await supabaseClient.auth.getUser();
 
         if (data?.user) {
-            return Promise.resolve({
+            return {
                 ...data.user,
                 name: data.user.email,
-            });
+            };
         }
+
+        return null;
     },
 };
 
 const App: React.FC = () => {
     return (
-        <Refine
-            dataProvider={dataProvider(supabaseClient)}
-            liveProvider={liveProvider(supabaseClient)}
-            routerProvider={{
-                ...routerProvider,
-                routes: [
-                    {
-                        path: "/register",
-                        element: <AuthPage type="register" />,
-                    },
-                    {
-                        path: "/forgot-password",
-                        element: <AuthPage type="forgotPassword" />,
-                    },
-                    {
-                        path: "/update-password",
-                        element: <AuthPage type="updatePassword" />,
-                    },
-                ],
-            }}
-            authProvider={authProvider}
-            LoginPage={() => (
-                <AuthPage
-                    type="login"
-                    providers={[
+        <BrowserRouter>
+            <GitHubBanner />
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    dataProvider={dataProvider(supabaseClient)}
+                    liveProvider={liveProvider(supabaseClient)}
+                    routerProvider={routerProvider}
+                    authProvider={authProvider}
+                    resources={[
                         {
-                            name: "google",
-                            label: "Sign in with Google",
-                            icon: (
-                                <GoogleOutlined
-                                    style={{ fontSize: 18, lineHeight: 0 }}
-                                />
-                            ),
+                            name: "posts",
+                            list: "/posts",
+                            create: "/posts/create",
+                            edit: "/posts/edit/:id",
+                            show: "/posts/show/:id",
                         },
                     ]}
-                    formProps={{
-                        initialValues: {
-                            email: "info@refine.dev",
-                            password: "refine-supabase",
-                        },
+                    notificationProvider={notificationProvider}
+                    /**
+                     * Multiple subscriptions are currently not supported with the supabase JS client v2 and @refinedev/supabase v4.
+                     * Therefore, enabling global live mode will cause unexpected behaviors.
+                     * Please set `liveMode: "auto"` or `liveMode: "manual"` manually while using real-time features of refine.
+                     */
+                    options={{
+                        liveMode: "off",
+                        syncWithLocation: true,
+                        warnWhenUnsavedChanges: true,
                     }}
-                />
-            )}
-            resources={[
-                {
-                    name: "posts",
-                    list: PostList,
-                    create: PostCreate,
-                    edit: PostEdit,
-                    show: PostShow,
-                },
-            ]}
-            /**
-             * Multiple subscriptions are currently not supported with the supabase JS client v2 and @pankod/refine-supabase v4.
-             * Therefore, enabling global live mode will cause unexpected behaviors.
-             * Please set `liveMode: "auto"` or `liveMode: "manual"` manually while using real-time features of refine.
-             */
-            options={{ liveMode: "off" }}
-            notificationProvider={notificationProvider}
-            Layout={Layout}
-            catchAll={<ErrorComponent />}
-        />
+                >
+                    <Routes>
+                        <Route
+                            element={
+                                <Authenticated
+                                    fallback={<CatchAllNavigate to="/login" />}
+                                >
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route
+                                index
+                                element={
+                                    <NavigateToResource resource="posts" />
+                                }
+                            />
+
+                            <Route path="/posts">
+                                <Route index element={<PostList />} />
+                                <Route path="create" element={<PostCreate />} />
+                                <Route path="edit/:id" element={<PostEdit />} />
+                                <Route path="show/:id" element={<PostShow />} />
+                            </Route>
+                        </Route>
+
+                        <Route
+                            element={
+                                <Authenticated fallback={<Outlet />}>
+                                    <NavigateToResource resource="posts" />
+                                </Authenticated>
+                            }
+                        >
+                            <Route
+                                path="/login"
+                                element={
+                                    <AuthPage
+                                        type="login"
+                                        providers={[
+                                            {
+                                                name: "google",
+                                                label: "Sign in with Google",
+                                                icon: (
+                                                    <GoogleOutlined
+                                                        style={{
+                                                            fontSize: 18,
+                                                            lineHeight: 0,
+                                                        }}
+                                                    />
+                                                ),
+                                            },
+                                        ]}
+                                        formProps={{
+                                            initialValues: {
+                                                email: "info@refine.dev",
+                                                password: "refine-supabase",
+                                            },
+                                        }}
+                                    />
+                                }
+                            />
+                            <Route
+                                path="/register"
+                                element={<AuthPage type="register" />}
+                            />
+                            <Route
+                                path="/forgot-password"
+                                element={<AuthPage type="forgotPassword" />}
+                            />
+                            <Route
+                                path="/update-password"
+                                element={<AuthPage type="updatePassword" />}
+                            />
+                        </Route>
+
+                        <Route
+                            element={
+                                <Authenticated>
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="*" element={<ErrorComponent />} />
+                        </Route>
+                    </Routes>
+                    <UnsavedChangesNotifier />
+                </Refine>
+            </ConfigProvider>
+        </BrowserRouter>
     );
 };
 

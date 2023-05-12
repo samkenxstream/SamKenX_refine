@@ -1,8 +1,9 @@
-import { Card, Icons, ShowButton } from "@pankod/refine-antd";
+import { ShowButton } from "@refinedev/antd";
+
+import { EditOutlined } from "@ant-design/icons";
+import { Card } from "antd";
 
 import { IProduct } from "interfaces";
-
-const { EditOutlined } = Icons;
 
 type ProductItemProps = {
     item: IProduct;
@@ -14,7 +15,7 @@ const { Meta } = Card;
 export const ProductItem: React.FC<ProductItemProps> = ({ item, editShow }) => {
     const image = item.image
         ? JSON.parse(item.image).map((p: { url: string }) => p.url)
-        : "./error.png";
+        : "/error.png";
 
     return (
         <Card

@@ -9,22 +9,23 @@ import {
     LoadingOverlay,
 } from "@mantine/core";
 import {
-    ResourceRouterParams,
+    useBack,
     useNavigation,
     useRefineContext,
-    useResourceWithRoute,
+    useResource,
     userFriendlyResourceName,
-    useRouterContext,
+    useRouterType,
     useTranslate,
-} from "@pankod/refine-core";
+} from "@refinedev/core";
 import { IconArrowLeft } from "@tabler/icons";
-import { SaveButton, Breadcrumb } from "@components";
+import { SaveButton, Breadcrumb, SaveButtonProps } from "@components";
 import { CreateProps } from "../types";
+import { RefinePageHeaderClassNames } from "@refinedev/ui-types";
 
 export const Create: React.FC<CreateProps> = (props) => {
     const {
         children,
-        saveButtonProps,
+        saveButtonProps: saveButtonPropsFromProps,
         isLoading,
         resource: resourceFromProps,
         footerButtons: footerButtonsFromProps,
@@ -39,23 +40,18 @@ export const Create: React.FC<CreateProps> = (props) => {
         title,
     } = props;
     const translate = useTranslate();
+    const { options: { breadcrumb: globalBreadcrumb } = {} } =
+        useRefineContext();
 
+    const routerType = useRouterType();
+    const back = useBack();
     const { goBack } = useNavigation();
 
-    const { useParams } = useRouterContext();
-
-    const { resource: routeResourceName, action: routeFromAction } =
-        useParams<ResourceRouterParams>();
-
-    const resourceWithRoute = useResourceWithRoute();
-
-    const resource = resourceWithRoute(resourceFromProps ?? routeResourceName);
-
-    const { options } = useRefineContext();
+    const { resource, action } = useResource(resourceFromProps);
 
     const breadcrumb =
         typeof breadcrumbFromProps === "undefined"
-            ? options?.breadcrumb
+            ? globalBreadcrumb
             : breadcrumbFromProps;
 
     const breadcrumbComponent =
@@ -65,19 +61,27 @@ export const Create: React.FC<CreateProps> = (props) => {
             <Breadcrumb />
         );
 
+    const saveButtonProps: SaveButtonProps = {
+        ...(isLoading ? { disabled: true } : {}),
+        ...saveButtonPropsFromProps,
+    };
+
     const loadingOverlayVisible =
         isLoading ?? saveButtonProps?.disabled ?? false;
 
-    const defaultFooterButtons = (
-        <SaveButton
-            {...(isLoading ? { disabled: true } : {})}
-            {...saveButtonProps}
-        />
-    );
+    const defaultFooterButtons = <SaveButton {...saveButtonProps} />;
 
     const buttonBack =
         goBackFromProps === (false || null) ? null : (
-            <ActionIcon onClick={routeFromAction ? goBack : undefined}>
+            <ActionIcon
+                onClick={
+                    action !== "list" || typeof action !== "undefined"
+                        ? routerType === "legacy"
+                            ? goBack
+                            : back
+                        : undefined
+                }
+            >
                 {typeof goBackFromProps !== "undefined" ? (
                     goBackFromProps
                 ) : (
@@ -96,7 +100,10 @@ export const Create: React.FC<CreateProps> = (props) => {
 
     const footerButtons = footerButtonsFromProps
         ? typeof footerButtonsFromProps === "function"
-            ? footerButtonsFromProps({ defaultButtons: defaultFooterButtons })
+            ? footerButtonsFromProps({
+                  defaultButtons: defaultFooterButtons,
+                  saveButtonProps,
+              })
             : footerButtonsFromProps
         : defaultFooterButtons;
 
@@ -109,11 +116,18 @@ export const Create: React.FC<CreateProps> = (props) => {
                     <Group spacing="xs">
                         {buttonBack}
                         {title ?? (
-                            <Title order={3} transform="capitalize">
+                            <Title
+                                order={3}
+                                transform="capitalize"
+                                className={RefinePageHeaderClassNames.Title}
+                            >
                                 {translate(
-                                    `${resource.name}.titles.create`,
+                                    `${resource?.name}.titles.create`,
                                     `Create ${userFriendlyResourceName(
-                                        resource.label ?? resource.name,
+                                        resource?.meta?.label ??
+                                            resource?.options?.label ??
+                                            resource?.label ??
+                                            resource?.name,
                                         "singular",
                                     )}`,
                                 )}

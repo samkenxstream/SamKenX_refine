@@ -10,179 +10,289 @@ tutorial:
 window.__refineAuthStatus = false;
 
 const authProvider = {
-    login: (params) => {
+    login: async () => {
         window.__refineAuthStatus = true;
-        console.log("login: ", params);
-        return Promise.resolve();
+        return {
+            success: true,
+            redirectTo: "/",
+        };
     },
-    register: (params) => {
-        console.log("register: ", params);
-        return Promise.resolve();
+    register: async () => {
+        return {
+            success: true,
+        };
     },
-    forgotPassword: () => {
-        console.log("forgotPassword: ", params);
-        return Promise.resolve();
+    forgotPassword: async () => {
+        return {
+            success: true,
+        };
     },
-    updatePassword: () => {
-        console.log("updatePassword: ", params);
-        return Promise.resolve();
+    updatePassword: async () => {
+        return {
+            success: true,
+        };
     },
-    logout: () => {
+    logout: async () => {
         window.__refineAuthStatus = false;
+        return {
+            success: true,
+            redirectTo: "/",
+        };
     },
-    checkAuth: () =>
-        window.__refineAuthStatus ? Promise.resolve() : Promise.reject(),
-    checkError: () => Promise.resolve(),
-    getPermissions: () => Promise.resolve(),
-    getUserIdentity: () => Promise.resolve(),
+    check: async () => {
+        return {
+            authenticated: window.__refineAuthStatus ? true : false,
+            redirectTo: window.__refineAuthStatus ? undefined : "/login",
+        };
+    },
+    onError: async (error) => {
+        console.error(error);
+        return { error };
+    },
+    getPermissions: async () => null,
+    getIdentity: async () => null,
 };
 
-import { Refine } from "@pankod/refine-core";
+import { Refine, Authenticated } from "@refinedev/core";
 import {
-    Layout,
-    ReadyPage,
+    ThemedLayoutV2,
+    RefineThemes,
     notificationProvider,
     ErrorComponent,
     AuthPage,
-} from "@pankod/refine-antd";
-import routerProvider from "@pankod/refine-react-router-v6";
-import dataProvider from "@pankod/refine-simple-rest";
-import { AntdInferencer } from "@pankod/refine-inferencer/antd";
+} from "@refinedev/antd";
+import routerBindings, {
+    CatchAllNavigate,
+    NavigateToResource,
+} from "@refinedev/react-router-v6";
+import dataProvider from "@refinedev/simple-rest";
+import { AntdInferencer } from "@refinedev/inferencer/antd";
 
-import "@pankod/refine-antd/dist/reset.css";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+
+import { ConfigProvider } from "antd";
+import "@refinedev/antd/dist/reset.css";
 
 const App: React.FC = () => {
     return (
-        <Refine
-            dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
-            authProvider={authProvider}
-            routerProvider={{
-                ...routerProvider,
-                routes: [
-                    { path: "/login", element: <AuthPage /> },
-                    {
-                        path: "/register",
-                        element: <AuthPage type="register" />,
-                    },
-                    {
-                        path: "/forgot-password",
-                        element: <AuthPage type="forgotPassword" />,
-                    },
-                    {
-                        path: "/update-password",
-                        element: <AuthPage type="updatePassword" />,
-                    },
-                ],
-            }}
-            Layout={Layout}
-            ReadyPage={ReadyPage}
-            notificationProvider={notificationProvider}
-            catchAll={<ErrorComponent />}
-            resources={[
-                {
-                    name: "products",
-                    list: AntdInferencer,
-                    show: AntdInferencer,
-                    create: AntdInferencer,
-                    edit: AntdInferencer,
-                },
-            ]}
-        />
+        <BrowserRouter>
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    authProvider={authProvider}
+                    routerProvider={routerBindings}
+                    dataProvider={dataProvider(
+                        "https://api.fake-rest.refine.dev",
+                    )}
+                    notificationProvider={notificationProvider}
+                    resources={[
+                        {
+                            name: "blog_posts",
+                            list: "/blog-posts",
+                            show: "/blog-posts/show/:id",
+                            edit: "/blog-posts/edit/:id",
+                            create: "/blog-posts/create",
+                        },
+                    ]}
+                >
+                    <Routes>
+                        <Route
+                            element={
+                                <Authenticated
+                                    fallback={<CatchAllNavigate to="/login" />}
+                                >
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="blog-posts">
+                                <Route index element={<AntdInferencer />} />
+                                <Route
+                                    path="show/:id"
+                                    element={<AntdInferencer />}
+                                />
+                                <Route
+                                    path="edit/:id"
+                                    element={<AntdInferencer />}
+                                />
+                                <Route
+                                    path="create"
+                                    element={<AntdInferencer />}
+                                />
+                            </Route>
+                        </Route>
+                        <Route
+                            element={
+                                <Authenticated fallback={<Outlet />}>
+                                    <NavigateToResource />
+                                </Authenticated>
+                            }
+                        >
+                            <Route
+                                path="/login"
+                                element={<AuthPage type="login" />}
+                            />
+                            <Route
+                                path="/register"
+                                element={<AuthPage type="register" />}
+                            />
+                            <Route
+                                path="/forgot-password"
+                                element={<AuthPage type="forgotPassword" />}
+                            />
+                            <Route
+                                path="/update-password"
+                                element={<AuthPage type="updatePassword" />}
+                            />
+                        </Route>
+                        <Route
+                            element={
+                                <Authenticated fallback={<Outlet />}>
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="*" element={<ErrorComponent />} />
+                        </Route>
+                    </Routes>
+                </Refine>
+            </ConfigProvider>
+        </BrowserRouter>
     );
 };
 ```
 
 In this section, we will learn how to create auth pages such as login, signup, forgot password and reset password using the `<AuthPage/>` component.
 
-[Refer to the `<AuthPage/>` documentation for more information &#8594](/docs/api-reference/antd/components/antd-auth-page/)
+It will allow us to easily create and customize them with various props. Though we do need to have an auth provider to use it, since we already created one in the previous section, we will just use that.
 
-`<AuthPage/>` component provides auth pages for login, signup, forgot password and reset password. It also provides a way to customize theses pages with various props. So, `<AuthPage/>` is a quick starting point for creating auth pages.
-
-Before using `<AuthPage/>` component, we need to create an auth provider because `<AuthPage/>` component uses the auth provider to perform auth operations. However, we have already created an auth provider in the previous section. So, we will use the same auth provider for this section.
-
-Let's create the auth pages step by step.
+> For more information, refer to the [`<AuthPage/>` documentation &#8594](/docs/api-reference/antd/components/antd-auth-page/)
 
 ## Login Page
 
-Login page is used to authenticate users. It provides a basic form to enter email, password and remember. After submitting the form, it sends the email, password and remember to the auth provider's `login` method via `useLogin` hook.
+Login page is used for authenticating the users. It provides a basic form to enter email, password and remember, which it sends to auth provider’s `login` method via the `useLogin` hook.
 
-1. Open `src/App.tsx` file and import the `<AuthPage/>` component.
+To implement the page, open `src/App.tsx` file and import the `<AuthPage/>` component.
 
-    ```tsx
-    import { AuthPage } from "@pankod/refine-antd";
-    ```
+```tsx
+import { AuthPage } from "@refinedev/antd";
+```
 
-2. Add the `<AuthPage/>` component to the `routes` prop of the `routerProvider` prop of the `<Refine/>` component.
+Then place the `<AuthPage/>` component to the respective route inside your router.
 
-    ```tsx
-    import { Refine } from "@pankod/refine-core";
-    import {
-        Layout,
-        ReadyPage,
-        notificationProvider,
-        ErrorComponent,
-        //highlight-next-line
-        AuthPage,
-    } from "@pankod/refine-antd";
-    import dataProvider from "@pankod/refine-simple-rest";
-    import routerProvider from "@pankod/refine-react-router-v6";
+```tsx
+import { Refine, Authenticated } from "@refinedev/core";
+import {
+    ThemedLayoutV2,
+    RefineThemes,
+    notificationProvider,
+    ErrorComponent,
+    //highlight-next-line
+    AuthPage,
+} from "@refinedev/antd";
+import dataProvider from "@refinedev/simple-rest";
+import routerBindings, {
+    CatchAllNavigate,
+    NavigateToResource,
+} from "@refinedev/react-router-v6";
 
-    import { ProductList } from "pages/products/list";
-    import { ProductEdit } from "pages/products/edit";
-    import { productshow } from "pages/products/show";
-    import { ProductCreate } from "pages/products/create";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 
-    import { authProvider } from "./authProvider";
+import { BlogPostList } from "pages/blog-posts/list";
 
-    import "@pankod/refine-antd/dist/reset.css";
+import { authProvider } from "./authProvider";
 
-    const App: React.FC = () => {
-        return (
-            <Refine
-                authProvider={authProvider}
-                //highlight-start
-                routerProvider={{
-                    ...routerProvider,
-                    routes: [{ path: "/login", element: <AuthPage /> }],
-                }}
-                //highlight-end
-                dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
-                Layout={Layout}
-                ReadyPage={ReadyPage}
-                notificationProvider={notificationProvider}
-                catchAll={<ErrorComponent />}
-                resources={[
-                    {
-                        name: "products",
-                        list: ProductList,
-                        edit: ProductEdit,
-                        show: ProductShow,
-                        create: ProductCreate,
-                    },
-                ]}
-            />
-        );
-    };
-    ```
+import { ConfigProvider } from "antd";
+import "@refinedev/antd/dist/reset.css";
 
-    By default, `<AuthPage>` component renders the login page. So, we don't need to pass any props to the `<AuthPage/>` component.
+const App: React.FC = () => {
+    return (
+        <BrowserRouter>
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    authProvider={authProvider}
+                    routerProvider={routerBindings}
+                    dataProvider={dataProvider(
+                        "https://api.fake-rest.refine.dev",
+                    )}
+                    notificationProvider={notificationProvider}
+                    resources={[
+                        {
+                            name: "blog_posts",
+                            list: "/blog-posts",
+                        },
+                    ]}
+                >
+                    <Routes>
+                        <Route
+                            element={
+                                <Authenticated
+                                    fallback={<CatchAllNavigate to="/login" />}
+                                >
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="blog-posts">
+                                <Route index element={<BlogPostList />} />
+                            </Route>
+                        </Route>
+                        <Route
+                            element={
+                                <Authenticated fallback={<Outlet />}>
+                                    <NavigateToResource />
+                                </Authenticated>
+                            }
+                        >
+                            {/* highlight-start */}
+                            <Route
+                                path="/login"
+                                element={<AuthPage type="login" />}
+                            />
+                            {/* highlight-end */}
+                        </Route>
+                        <Route
+                            element={
+                                <Authenticated fallback={<Outlet />}>
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="*" element={<ErrorComponent />} />
+                        </Route>
+                    </Routes>
+                </Refine>
+            </ConfigProvider>
+        </BrowserRouter>
+    );
+};
+```
 
-    :::note
+The `<AuthPage>` component renders the login page by default, so we don't need to pass any props to the `<AuthPage/>` component.
 
-    When the user submits the login form, it passes the email, password and remember to the auth provider's `login` method like below:
+:::note
 
-    ```ts
-    const authProvider = {
-        login: ({ email, password, remember }) => {
-            ...
-        },
+Email, password and remember are passed to the auth provider's `login` method like below upon login:
+
+```ts
+const authProvider = {
+    login: ({ email, password, remember }) => {
         ...
-    };
-    ```
+    },
+    ...
+};
+```
 
-    :::
+:::
 
-3. Run the app and navigate to the `/login` page.
+Finally, run the app and navigate to the `/login` page.
 
 ```tsx live previewOnly previewHeight=600px url=http://localhost:3000/login
 setInitialRoutes(["/login"]);
@@ -190,108 +300,126 @@ setInitialRoutes(["/login"]);
 render(<App />);
 ```
 
-<br />
+## Register Page
 
-:::tip
+Register page is used to register new users. It provides a basic form to enter email and password, which it sends to the auth provider's `register` method via the `useRegister` hook.
 
-You can also use the `LoginPage` prop of the `<Refine/>` component to render the login page.
+To implement the page, place the `<AuthPage/>` component to the respective route inside your router.
 
 ```tsx
-<Refine
-    authProvider={authProvider}
-    routerProvider={routerProvider}
-    ...
-    //highlight-start
-    LoginPage={AuthPage}
-    //highlight-end
-/>
+import { Refine, Authenticated } from "@refinedev/core";
+import {
+    ThemedLayoutV2,
+    RefineThemes,
+    notificationProvider,
+    ErrorComponent,
+    //highlight-next-line
+    AuthPage,
+} from "@refinedev/antd";
+import dataProvider from "@refinedev/simple-rest";
+import routerBindings, {
+    CatchAllNavigate,
+    NavigateToResource,
+} from "@refinedev/react-router-v6";
+
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+
+import { BlogPostList } from "pages/blog-posts/list";
+
+import { authProvider } from "./authProvider";
+
+import { ConfigProvider } from "antd";
+import "@refinedev/antd/dist/reset.css";
+
+const App: React.FC = () => {
+    return (
+        <BrowserRouter>
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    authProvider={authProvider}
+                    routerProvider={routerBindings}
+                    dataProvider={dataProvider(
+                        "https://api.fake-rest.refine.dev",
+                    )}
+                    notificationProvider={notificationProvider}
+                    resources={[
+                        {
+                            name: "blog_posts",
+                            list: "/blog-posts",
+                        },
+                    ]}
+                >
+                    <Routes>
+                        <Route
+                            element={
+                                <Authenticated
+                                    fallback={<CatchAllNavigate to="/login" />}
+                                >
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="blog-posts">
+                                <Route index element={<BlogPostList />} />
+                            </Route>
+                        </Route>
+                        <Route
+                            element={
+                                <Authenticated fallback={<Outlet />}>
+                                    <NavigateToResource />
+                                </Authenticated>
+                            }
+                        >
+                            <Route
+                                path="/login"
+                                element={<AuthPage type="login" />}
+                            />
+                            {/* highlight-start */}
+                            <Route
+                                path="/register"
+                                element={<AuthPage type="register" />}
+                            />
+                            {/* highlight-end */}
+                        </Route>
+                        <Route
+                            element={
+                                <Authenticated fallback={<Outlet />}>
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="*" element={<ErrorComponent />} />
+                        </Route>
+                    </Routes>
+                </Refine>
+            </ConfigProvider>
+        </BrowserRouter>
+    );
+};
 ```
 
-[Refer to the `<Refine/>` documentation for more information &#8594](/docs/api-reference/core/components/refine-config.md#loginpage)
+We need to pass the `type` prop to the `<AuthPage/>` component to render the register page.
+
+:::note
+
+Email and password are passed to the auth provider's `register` method like below:
+
+```ts
+const authProvider = {
+    register: ({ email, password }) => {
+        ...
+    },
+    ...
+};
+```
 
 :::
 
-## Register Page
-
-Register page is used to register new users. It provides a basic form to enter email and password. After submitting the form, it sends the email and password to the auth provider's `register` method via `useRegister` hook.
-
-1. Open `src/App.tsx` file and add the `<AuthPage/>` component to the `routes` prop of the `routerProvider` prop of the `<Refine/>` component.
-
-    ```tsx
-    import { Refine } from "@pankod/refine-core";
-    import {
-        Layout,
-        ReadyPage,
-        notificationProvider,
-        ErrorComponent,
-        //highlight-next-line
-        AuthPage,
-    } from "@pankod/refine-antd";
-    import dataProvider from "@pankod/refine-simple-rest";
-    import routerProvider from "@pankod/refine-react-router-v6";
-
-    import { ProductList } from "pages/products/list";
-    import { ProductEdit } from "pages/products/edit";
-    import { productshow } from "pages/products/show";
-    import { ProductCreate } from "pages/products/create";
-
-    import { authProvider } from "./authProvider";
-
-    import "@pankod/refine-antd/dist/reset.css";
-
-    const App: React.FC = () => {
-        return (
-            <Refine
-                authProvider={authProvider}
-                routerProvider={{
-                    ...routerProvider,
-                    routes: [
-                        { path: "/login", element: <AuthPage /> },
-                        //highlight-start
-                        {
-                            path: "/register",
-                            element: <AuthPage type="register" />,
-                        },
-                        //highlight-end
-                    ],
-                }}
-                dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
-                Layout={Layout}
-                ReadyPage={ReadyPage}
-                notificationProvider={notificationProvider}
-                catchAll={<ErrorComponent />}
-                resources={[
-                    {
-                        name: "products",
-                        list: ProductList,
-                        edit: ProductEdit,
-                        show: ProductShow,
-                        create: ProductCreate,
-                    },
-                ]}
-            />
-        );
-    };
-    ```
-
-    We need to pass the `type` prop to the `<AuthPage/>` component to render the register page.
-
-    :::note
-
-    When the user submits the register form, it passes the email and password to the auth provider's `register` method like below:
-
-    ```ts
-    const authProvider = {
-        register: ({ email, password }) => {
-            ...
-        },
-        ...
-    };
-    ```
-
-    :::
-
-2. Run the app and navigate to the `/register` page.
+Then run the app and navigate to the `/register` page.
 
 ```tsx live previewOnly previewHeight=600px url=http://localhost:3000/register
 setInitialRoutes(["/register"]);
@@ -301,90 +429,128 @@ render(<App />);
 
 ## Forgot Password Page
 
-Forgot password page is used to send a reset password link to the user's email. It provides a basic form to enter email. After submitting the form, it sends the email to the auth provider's `forgotPassword` method via `useForgotPassword` hook.
+Forgot password page is used to send a reset password link to the user's email. It provides a basic form to enter email, which it sends to the auth provider's `forgotPassword` method via the `useForgotPassword` hook.
 
-1. Open `src/App.tsx` file and add the `<AuthPage/>` component to the `routes` prop of the `routerProvider` prop of the `<Refine/>` component.
+To implement the page, place the `<AuthPage/>` component to the respective route inside your router:
 
-    ```tsx
-    import { Refine } from "@pankod/refine-core";
-    import {
-        Layout,
-        ReadyPage,
-        notificationProvider,
-        ErrorComponent,
-        //highlight-next-line
-        AuthPage,
-    } from "@pankod/refine-antd";
-    import dataProvider from "@pankod/refine-simple-rest";
-    import routerProvider from "@pankod/refine-react-router-v6";
+```tsx
+import { Refine, Authenticated } from "@refinedev/core";
+import {
+    ThemedLayoutV2,
+    RefineThemes,
+    notificationProvider,
+    ErrorComponent,
+    //highlight-next-line
+    AuthPage,
+} from "@refinedev/antd";
+import dataProvider from "@refinedev/simple-rest";
+import routerBindings, {
+    CatchAllNavigate,
+    NavigateToResource,
+} from "@refinedev/react-router-v6";
 
-    import { ProductList } from "pages/products/list";
-    import { ProductEdit } from "pages/products/edit";
-    import { productshow } from "pages/products/show";
-    import { ProductCreate } from "pages/products/create";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 
-    import { authProvider } from "./authProvider";
+import { BlogPostList } from "pages/blog-posts/list";
 
-    import "@pankod/refine-antd/dist/reset.css";
+import { authProvider } from "./authProvider";
 
-    const App: React.FC = () => {
-        return (
-            <Refine
-                authProvider={authProvider}
-                routerProvider={{
-                    ...routerProvider,
-                    routes: [
-                        { path: "/login", element: <AuthPage /> },
+import { ConfigProvider } from "antd";
+import "@refinedev/antd/dist/reset.css";
+
+const App: React.FC = () => {
+    return (
+        <BrowserRouter>
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    authProvider={authProvider}
+                    routerProvider={routerBindings}
+                    dataProvider={dataProvider(
+                        "https://api.fake-rest.refine.dev",
+                    )}
+                    notificationProvider={notificationProvider}
+                    resources={[
                         {
-                            path: "/register",
-                            element: <AuthPage type="register" />,
+                            name: "blog_posts",
+                            list: "/blog-posts",
                         },
-                        //highlight-start
-                        {
-                            path: "/forgot-password",
-                            element: <AuthPage type="forgotPassword" />,
-                        },
-                        //highlight-end
-                    ],
-                }}
-                dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
-                Layout={Layout}
-                ReadyPage={ReadyPage}
-                notificationProvider={notificationProvider}
-                catchAll={<ErrorComponent />}
-                resources={[
-                    {
-                        name: "products",
-                        list: ProductList,
-                        edit: ProductEdit,
-                        show: ProductShow,
-                        create: ProductCreate,
-                    },
-                ]}
-            />
-        );
-    };
-    ```
+                    ]}
+                >
+                    <Routes>
+                        <Route
+                            element={
+                                <Authenticated
+                                    fallback={<CatchAllNavigate to="/login" />}
+                                >
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="blog-posts">
+                                <Route index element={<AntdInferencer />} />
+                            </Route>
+                        </Route>
+                        <Route
+                            element={
+                                <Authenticated fallback={<Outlet />}>
+                                    <NavigateToResource />
+                                </Authenticated>
+                            }
+                        >
+                            <Route
+                                path="/login"
+                                element={<AuthPage type="login" />}
+                            />
+                            <Route
+                                path="/register"
+                                element={<AuthPage type="register" />}
+                            />
+                            {/* highlight-start */}
+                            <Route
+                                path="/forgot-password"
+                                element={<AuthPage type="forgotPassword" />}
+                            />
+                            {/* highlight-end */}
+                        </Route>
+                        <Route
+                            element={
+                                <Authenticated fallback={<Outlet />}>
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="*" element={<ErrorComponent />} />
+                        </Route>
+                    </Routes>
+                </Refine>
+            </ConfigProvider>
+        </BrowserRouter>
+    );
+};
+```
 
-    We need to pass the `forgotPassword` prop to the `<AuthPage/>` component to render the forgot password page.
+We need to pass the `forgotPassword` prop to the `<AuthPage/>` component to render the forgot password page.
 
-    :::note
+:::note
 
-    When the user submits the forgot password form, it passes the email to the auth provider's `forgotPassword` method like below:
+The email is passed to the auth provider's `forgotPassword` method like below:
 
-    ```ts
+```ts
 
-    const authProvider = {
-        forgotPassword: ({ email }) => {
-            ...
-        },
+const authProvider = {
+    forgotPassword: ({ email }) => {
         ...
     };
-    ```
+};
+```
 
-    :::
+:::
 
-2. Run the app and navigate to the `/forgot-password` page.
+Then run the app and navigate to the `/forgot-password` page.
 
 ```tsx live previewOnly previewHeight=600px url=http://localhost:3000/forgot-password
 setInitialRoutes(["/forgot-password"]);
@@ -394,93 +560,132 @@ render(<App />);
 
 ## Update Password Page
 
-Update password page is used to update the user's password. It provides a basic form to enter new password and confirm password. After submitting the form, it sends the new password and confirm password to the auth provider's `updatePassword` method via `useUpdatePassword` hook.
+Update password page is used to update the user's password. It provides a basic form to enter new password and confirm password, which it sends to the auth provider's `updatePassword` method via `useUpdatePassword` hook.
 
-1. Open `src/App.tsx` file and add the `<AuthPage/>` component to the `routes` prop of the `routerProvider` prop of the `<Refine/>` component.
+To implement this page, place the `<AuthPage/>` component to the respective route inside your router:
 
-    ```tsx
-    import { Refine } from "@pankod/refine-core";
-    import {
-        Layout,
-        ReadyPage,
-        notificationProvider,
-        ErrorComponent,
-        //highlight-next-line
-        AuthPage,
-    } from "@pankod/refine-antd";
-    import dataProvider from "@pankod/refine-simple-rest";
-    import routerProvider from "@pankod/refine-react-router-v6";
+```tsx
+import { Refine, Authenticated } from "@refinedev/core";
+import {
+    ThemedLayoutV2,
+    RefineThemes,
+    notificationProvider,
+    ErrorComponent,
+    //highlight-next-line
+    AuthPage,
+} from "@refinedev/antd";
+import dataProvider from "@refinedev/simple-rest";
+import routerBindings, {
+    CatchAllNavigate,
+    NavigateToResource,
+} from "@refinedev/react-router-v6";
 
-    import { ProductList } from "pages/products/list";
-    import { ProductEdit } from "pages/products/edit";
-    import { productshow } from "pages/products/show";
-    import { ProductCreate } from "pages/products/create";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-    import { authProvider } from "./authProvider";
+import { BlogPostList } from "pages/blog-posts/list";
 
-    import "@pankod/refine-antd/dist/reset.css";
+import { authProvider } from "./authProvider";
 
-    const App: React.FC = () => {
-        return (
-            <Refine
-                authProvider={authProvider}
-                routerProvider={{
-                    ...routerProvider,
-                    routes: [
-                        { path: "/login", element: <AuthPage /> },
+import { ConfigProvider } from "antd";
+import "@refinedev/antd/dist/reset.css";
+
+const App: React.FC = () => {
+    return (
+        <BrowserRouter>
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    authProvider={authProvider}
+                    routerProvider={routerBindings}
+                    dataProvider={dataProvider(
+                        "https://api.fake-rest.refine.dev",
+                    )}
+                    notificationProvider={notificationProvider}
+                    resources={[
                         {
-                            path: "/register",
-                            element: <AuthPage type="register" />,
+                            name: "blog_posts",
+                            list: "/blog-posts",
                         },
-                        {
-                            path: "/forgot-password",
-                            element: <AuthPage type="forgotPassword" />,
-                        },
-                        //highlight-start
-                        {
-                            path: "/update-password",
-                            element: <AuthPage type="updatePassword" />,
-                        },
-                        //highlight-end
-                    ],
-                }}
-                dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
-                Layout={Layout}
-                ReadyPage={ReadyPage}
-                notificationProvider={notificationProvider}
-                catchAll={<ErrorComponent />}
-                resources={[
-                    {
-                        name: "products",
-                        list: ProductList,
-                        edit: ProductEdit,
-                        show: ProductShow,
-                        create: ProductCreate,
-                    },
-                ]}
-            />
-        );
-    };
-    ```
+                    ]}
+                >
+                    <Routes>
+                        <Route
+                            element={
+                                <Authenticated
+                                    fallback={<CatchAllNavigate to="/login" />}
+                                >
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="blog-posts">
+                                <Route index element={<AntdInferencer />} />
+                            </Route>
+                        </Route>
+                        <Route
+                            element={
+                                <Authenticated fallback={<Outlet />}>
+                                    <NavigateToResource />
+                                </Authenticated>
+                            }
+                        >
+                            <Route
+                                path="/login"
+                                element={<AuthPage type="login" />}
+                            />
+                            <Route
+                                path="/register"
+                                element={<AuthPage type="register" />}
+                            />
+                            <Route
+                                path="/forgot-password"
+                                element={<AuthPage type="forgotPassword" />}
+                            />
+                            {/* highlight-start */}
+                            <Route
+                                path="/update-password"
+                                element={<AuthPage type="updatePassword" />}
+                            />
+                            {/* highlight-end */}
+                        </Route>
+                        <Route
+                            element={
+                                <Authenticated fallback={<Outlet />}>
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="*" element={<ErrorComponent />} />
+                        </Route>
+                    </Routes>
+                </Refine>
+            </ConfigProvider>
+        </BrowserRouter>
+    );
+};
+```
 
-    We need to pass the `updatePassword` prop to the `<AuthPage/>` component to render the update password page.
+We need to pass the `updatePassword` prop to the `<AuthPage/>` component to render the update password page.
 
-    :::note
+:::note
 
-    When the user submits the update password form, it passes the new password and confirm password to the auth provider's `updatePassword` method like below:
+The new password and confirm password are passed to the auth provider's `updatePassword` method like below:
 
-    ```ts
-    const authProvider = {
-        updatePassword: ({ password, confirmPassword }) => {
-            ...
-        },
+```ts
+const authProvider = {
+    updatePassword: ({ password, confirmPassword }) => {
         ...
-    };
-    ```
+    },
+    ...
+};
+```
 
-    :::
+:::
 
-2. Run the app and navigate to the `/update-password` page.
+Then run the app and navigate to the `/update-password` page.
 
 ```tsx live previewOnly previewHeight=600px url=http://localhost:3000/update-password
 setInitialRoutes(["/update-password"]);
@@ -490,38 +695,32 @@ render(<App />);
 
 ## Customizing Auth Pages
 
-You can customize the auth pages by using the `<AuthPage/>` component's props. Also, you can use [`refine-cli`](/docs/packages/documentation/cli/) to [swizzle](/docs/packages/documentation/cli.md#swizzle) the auth pages.
+You can use [`refine-cli`](/docs/packages/documentation/cli/) to [swizzle](/docs/packages/documentation/cli.md#swizzle) the auth pages and customize them:
 
-[Refer to the `<AuthPage/>` component's props to customize the auth pages &#8594](/docs/api-reference/antd/components/auth-page.md#props)
-
-When you swizzle the auth pages, default auth pages will be copied to the `components/pages/auth` folder. You can customize the auth pages as you want by editing the files.
-
-Let's customize the auth pages.
-
-1. Run the following command in the project directory.
+1. Run the following command in the project directory:
 
     ```bash
-    npm run refine swizzle
+        npm run refine swizzle
     ```
 
-2. Select the `@pankod/refine-antd` package.
+2. Select the `@refinedev/antd` package:
 
     ```bash
-        ? Which package do you want to swizzle?
-        UI Framework
-        ❯  @pankod/refine-antd
+            ? Which package do you want to swizzle?
+            UI Framework
+            ❯  @refinedev/antd
     ```
 
-3. Select the `AuthPage` component.
+3. Select the `AuthPage` component:
 
     ```bash
-        ? Which component do you want to swizzle?
-        Pages
-           ErrorPage
-        ❯  AuthPage
+            ? Which component do you want to swizzle?
+            Pages
+            ErrorPage
+            ❯  AuthPage
     ```
 
-After swizzling the auth pages, you will show the success message like below.
+After swizzling the auth pages, you should see a success message like below:
 
 ```bash
     Successfully swizzled AuthPage
@@ -539,7 +738,12 @@ After swizzling the auth pages, you will show the success message like below.
 
 Now, you can customize the auth pages by editing the files in the `src/components/pages/auth` folder.
 
-<br/>
+:::tip
+You can also customize the auth pages by using the `<AuthPage>` component's props.
+
+For more information, refer to the [component props section of the `<AuthPage/>` documentation &#8594](/docs/api-reference/antd/components/auth-page.md#props)
+:::
+
 <br/>
 
 <Checklist>

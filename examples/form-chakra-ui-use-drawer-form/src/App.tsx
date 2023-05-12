@@ -1,35 +1,64 @@
-import { Refine } from "@pankod/refine-core";
+import { GitHubBanner, Refine } from "@refinedev/core";
 import {
-    ChakraProvider,
     ErrorComponent,
-    Layout,
-    refineTheme,
-    ReadyPage,
+    ThemedLayoutV2,
+    RefineThemes,
     notificationProvider,
-} from "@pankod/refine-chakra-ui";
-import dataProvider from "@pankod/refine-simple-rest";
-import routerProvider from "@pankod/refine-react-router-v6";
+} from "@refinedev/chakra-ui";
+import dataProvider from "@refinedev/simple-rest";
+import routerProvider, {
+    NavigateToResource,
+    UnsavedChangesNotifier,
+} from "@refinedev/react-router-v6";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { ChakraProvider } from "@chakra-ui/react";
 
 import { PostList } from "./pages";
 
 const App: React.FC = () => {
     return (
-        <ChakraProvider theme={refineTheme}>
-            <Refine
-                routerProvider={routerProvider}
-                dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
-                notificationProvider={notificationProvider()}
-                Layout={Layout}
-                ReadyPage={ReadyPage}
-                catchAll={<ErrorComponent />}
-                resources={[
-                    {
-                        name: "posts",
-                        list: PostList,
-                    },
-                ]}
-            />
-        </ChakraProvider>
+        <BrowserRouter>
+            <GitHubBanner />
+            <ChakraProvider theme={RefineThemes.Blue}>
+                <Refine
+                    routerProvider={routerProvider}
+                    dataProvider={dataProvider(
+                        "https://api.fake-rest.refine.dev",
+                    )}
+                    notificationProvider={notificationProvider()}
+                    resources={[
+                        {
+                            name: "posts",
+                            list: "/posts",
+                        },
+                    ]}
+                    options={{
+                        syncWithLocation: true,
+                        warnWhenUnsavedChanges: true,
+                    }}
+                >
+                    <Routes>
+                        <Route
+                            element={
+                                <ThemedLayoutV2>
+                                    <Outlet />
+                                </ThemedLayoutV2>
+                            }
+                        >
+                            <Route
+                                index
+                                element={
+                                    <NavigateToResource resource="posts" />
+                                }
+                            />
+                            <Route path="/posts" element={<PostList />} />
+                            <Route path="*" element={<ErrorComponent />} />
+                        </Route>
+                    </Routes>
+                    <UnsavedChangesNotifier />
+                </Refine>
+            </ChakraProvider>
+        </BrowserRouter>
     );
 };
 

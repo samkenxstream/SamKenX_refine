@@ -1,7 +1,8 @@
-import { useTranslate, useApiUrl } from "@pankod/refine-core";
+import { useTranslate, useApiUrl, BaseKey } from "@refinedev/core";
+
+import { Edit, getValueFromEvent, useSelect } from "@refinedev/antd";
 
 import {
-    Edit,
     Drawer,
     DrawerProps,
     Form,
@@ -16,9 +17,7 @@ import {
     Typography,
     Upload,
     Grid,
-    getValueFromEvent,
-    useSelect,
-} from "@pankod/refine-antd";
+} from "antd";
 
 const { Text } = Typography;
 
@@ -28,12 +27,14 @@ type EditProductProps = {
     drawerProps: DrawerProps;
     formProps: FormProps;
     saveButtonProps: ButtonProps;
+    editId?: BaseKey;
 };
 
 export const EditProduct: React.FC<EditProductProps> = ({
     drawerProps,
     formProps,
     saveButtonProps,
+    editId,
 }) => {
     const t = useTranslate();
     const apiUrl = useApiUrl();
@@ -47,13 +48,20 @@ export const EditProduct: React.FC<EditProductProps> = ({
         <Drawer
             {...drawerProps}
             width={breakpoint.sm ? "500px" : "100%"}
-            bodyStyle={{ padding: 0 }}
             zIndex={1001}
         >
             <Edit
                 saveButtonProps={saveButtonProps}
-                headerProps={{ extra: null }}
                 resource="products"
+                recordItemId={editId}
+                contentProps={{
+                    style: {
+                        boxShadow: "none",
+                    },
+                    bodyStyle: {
+                        padding: 0,
+                    },
+                }}
             >
                 <Form {...formProps} layout="vertical">
                     <Form.Item label={t("products.fields.images.label")}>

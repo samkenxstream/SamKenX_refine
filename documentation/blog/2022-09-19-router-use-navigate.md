@@ -3,7 +3,7 @@ title: Redirect in React Router V6 with useNavigate hook
 description: We'll discover how to perform a redirect using useNavigate in React Router V6
 slug: usenavigate-react-router-redirect
 authors: joseph_mawa
-tags: [react, react-router, usenavigate]
+tags: [react]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-09-19-router-use-navigate/social.jpg
 hide_table_of_contents: false
 ---
@@ -97,7 +97,10 @@ That is just about everything you need to do to start using React router version
 
 ---
 
-<PromotionBanner title="Does your CRUD app need server state management?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/generic_banner.png" />
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
 ## How to use the `useNavigate` hook

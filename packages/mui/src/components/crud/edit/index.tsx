@@ -1,15 +1,17 @@
 import React from "react";
 
 import {
-    useResourceWithRoute,
     useMutationMode,
     useNavigation,
     useTranslate,
-    useRouterContext,
     userFriendlyResourceName,
-    ResourceRouterParams,
     useRefineContext,
-} from "@pankod/refine-core";
+    useToPath,
+    useResource,
+    useRouterType,
+    useBack,
+    useGo,
+} from "@refinedev/core";
 
 import {
     Card,
@@ -28,8 +30,13 @@ import {
     ListButton,
     SaveButton,
     Breadcrumb,
+    ListButtonProps,
+    RefreshButtonProps,
+    DeleteButtonProps,
+    SaveButtonProps,
 } from "@components";
 import { EditProps } from "../types";
+import { RefinePageHeaderClassNames } from "@refinedev/ui-types";
 
 /**
  * `<Edit>` provides us a layout for displaying the page.
@@ -39,19 +46,14 @@ import { EditProps } from "../types";
  */
 export const Edit: React.FC<EditProps> = ({
     title,
-    actionButtons,
-    saveButtonProps,
+    saveButtonProps: saveButtonPropsFromProps,
     mutationMode: mutationModeProp,
     recordItemId,
     children,
-    deleteButtonProps,
+    deleteButtonProps: deleteButtonPropsFromProps,
     canDelete,
     resource: resourceFromProps,
     isLoading = false,
-    cardProps,
-    cardHeaderProps,
-    cardContentProps,
-    cardActionsProps,
     breadcrumb: breadcrumbFromProps,
     dataProviderName,
     wrapperProps,
@@ -64,33 +66,39 @@ export const Edit: React.FC<EditProps> = ({
     goBack: goBackFromProps,
 }) => {
     const translate = useTranslate();
-
-    const { goBack, list } = useNavigation();
-
-    const resourceWithRoute = useResourceWithRoute();
-
+    const { options: { breadcrumb: globalBreadcrumb } = {} } =
+        useRefineContext();
     const { mutationMode: mutationModeContext } = useMutationMode();
-
     const mutationMode = mutationModeProp ?? mutationModeContext;
 
-    const { useParams } = useRouterContext();
+    const routerType = useRouterType();
+    const back = useBack();
+    const go = useGo();
+    const { goBack, list: legacyGoList } = useNavigation();
 
     const {
-        resource: routeResourceName,
-        action: routeFromAction,
-        id: idFromRoute,
-    } = useParams<ResourceRouterParams>();
+        resource,
+        action,
+        id: idFromParams,
+    } = useResource(resourceFromProps);
 
-    const resource = resourceWithRoute(resourceFromProps ?? routeResourceName);
+    const goListPath = useToPath({
+        resource,
+        action: "list",
+    });
 
-    const isDeleteButtonVisible =
-        canDelete ?? (resource.canDelete || deleteButtonProps);
+    const id = recordItemId ?? idFromParams;
 
-    const { options } = useRefineContext();
     const breadcrumb =
         typeof breadcrumbFromProps === "undefined"
-            ? options?.breadcrumb
+            ? globalBreadcrumb
             : breadcrumbFromProps;
+
+    const hasList = resource?.list && !recordItemId;
+    const isDeleteButtonVisible =
+        canDelete ??
+        ((resource?.meta?.canDelete ?? resource?.canDelete) ||
+            deleteButtonPropsFromProps);
 
     const breadcrumbComponent =
         typeof breadcrumb !== "undefined" ? (
@@ -99,58 +107,86 @@ export const Edit: React.FC<EditProps> = ({
             <Breadcrumb />
         );
 
-    const id = recordItemId ?? idFromRoute;
+    const listButtonProps: ListButtonProps | undefined = hasList
+        ? {
+              ...(isLoading ? { disabled: true } : {}),
+              resource:
+                  routerType === "legacy"
+                      ? resource?.route
+                      : resource?.identifier ?? resource?.name,
+          }
+        : undefined;
+
+    const refreshButtonProps: RefreshButtonProps = {
+        ...(isLoading ? { disabled: true } : {}),
+        resource:
+            routerType === "legacy"
+                ? resource?.route
+                : resource?.identifier ?? resource?.name,
+        recordItemId: id,
+        dataProviderName,
+    };
 
     const defaultHeaderButtons = (
         <>
-            {!recordItemId && (
-                <ListButton
-                    {...(isLoading ? { disabled: true } : {})}
-                    resourceNameOrRouteName={resource.route}
-                />
-            )}
-            <RefreshButton
-                {...(isLoading ? { disabled: true } : {})}
-                resourceNameOrRouteName={resource.route}
-                recordItemId={id}
-                dataProviderName={dataProviderName}
-            />
+            {hasList && <ListButton {...listButtonProps} />}
+            <RefreshButton {...refreshButtonProps} />
         </>
     );
 
+    const deleteButtonProps: DeleteButtonProps | undefined =
+        isDeleteButtonVisible
+            ? ({
+                  ...(isLoading ? { disabled: true } : {}),
+                  resource:
+                      routerType === "legacy"
+                          ? resource?.route
+                          : resource?.identifier ?? resource?.name,
+                  mutationMode,
+                  variant: "outlined",
+                  onSuccess: () => {
+                      if (routerType === "legacy") {
+                          legacyGoList(resource?.route ?? resource?.name ?? "");
+                      } else {
+                          go({ to: goListPath });
+                      }
+                  },
+                  recordItemId: id,
+                  dataProviderName,
+                  ...deleteButtonPropsFromProps,
+              } as const)
+            : undefined;
+
+    const saveButtonProps: SaveButtonProps = {
+        ...(isLoading ? { disabled: true } : {}),
+        ...saveButtonPropsFromProps,
+    };
+
     const defaultFooterButtons = (
         <>
-            {isDeleteButtonVisible && (
-                <DeleteButton
-                    {...(isLoading ? { disabled: true } : {})}
-                    mutationMode={mutationMode}
-                    variant="outlined"
-                    onSuccess={() => {
-                        list(resource.route ?? resource.name);
-                    }}
-                    dataProviderName={dataProviderName}
-                    {...deleteButtonProps}
-                />
-            )}
-            <SaveButton
-                {...(isLoading ? { disabled: true } : {})}
-                {...saveButtonProps}
-            />
+            {isDeleteButtonVisible && <DeleteButton {...deleteButtonProps} />}
+            <SaveButton {...saveButtonProps} />
         </>
     );
 
     return (
-        <Card {...(cardProps ?? {})} {...(wrapperProps ?? {})}>
+        <Card {...(wrapperProps ?? {})}>
             {breadcrumbComponent}
             <CardHeader
                 sx={{ display: "flex", flexWrap: "wrap" }}
                 title={
                     title ?? (
-                        <Typography variant="h5">
+                        <Typography
+                            variant="h5"
+                            className={RefinePageHeaderClassNames.Title}
+                        >
                             {translate(
-                                `${resource.name}.titles.edit`,
+                                `${resource?.name}.titles.edit`,
                                 `Edit ${userFriendlyResourceName(
-                                    resource.label ?? resource.name,
+                                    resource?.meta?.label ??
+                                        resource?.options?.label ??
+                                        resource?.label ??
+                                        resource?.name,
                                     "singular",
                                 )}`,
                             )}
@@ -162,7 +198,14 @@ export const Edit: React.FC<EditProps> = ({
                         goBackFromProps
                     ) : (
                         <IconButton
-                            onClick={routeFromAction ? goBack : undefined}
+                            onClick={
+                                action !== "list" &&
+                                typeof action !== "undefined"
+                                    ? routerType === "legacy"
+                                        ? goBack
+                                        : back
+                                    : undefined
+                            }
                         >
                             <ArrowBackIcon />
                         </IconButton>
@@ -178,20 +221,16 @@ export const Edit: React.FC<EditProps> = ({
                             ? typeof headerButtons === "function"
                                 ? headerButtons({
                                       defaultButtons: defaultHeaderButtons,
+                                      listButtonProps,
+                                      refreshButtonProps,
                                   })
                                 : headerButtons
                             : defaultHeaderButtons}
                     </Box>
                 }
-                {...(cardHeaderProps ?? {})}
                 {...(headerProps ?? {})}
             />
-            <CardContent
-                {...(cardContentProps ?? {})}
-                {...(contentProps ?? {})}
-            >
-                {children}
-            </CardContent>
+            <CardContent {...(contentProps ?? {})}>{children}</CardContent>
             <CardActions
                 sx={{
                     display: "flex",
@@ -199,17 +238,16 @@ export const Edit: React.FC<EditProps> = ({
                     gap: "16px",
                     padding: "16px",
                 }}
-                {...(cardActionsProps ?? {})}
                 {...(footerButtonProps ?? {})}
             >
                 {footerButtons
                     ? typeof footerButtons === "function"
                         ? footerButtons({
                               defaultButtons: defaultFooterButtons,
+                              deleteButtonProps,
+                              saveButtonProps,
                           })
                         : footerButtons
-                    : actionButtons
-                    ? actionButtons
                     : defaultFooterButtons}
             </CardActions>
         </Card>

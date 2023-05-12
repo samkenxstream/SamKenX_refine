@@ -1,5 +1,95 @@
 # @pankod/refine-medusa
 
+## 2.4.2
+
+### Patch Changes
+
+-   [#4285](https://github.com/refinedev/refine/pull/4285) [`b5cd3328504`](https://github.com/refinedev/refine/commit/b5cd332850428383e8b43f997cbb0340ac7f0dc6) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - fixed: A bug that prevented data providers from being swizzled.
+
+## 2.4.1
+
+### Patch Changes
+
+-   [#4285](https://github.com/refinedev/refine/pull/4285) [`b5cd3328504`](https://github.com/refinedev/refine/commit/b5cd332850428383e8b43f997cbb0340ac7f0dc6) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - fixed: A bug that prevented data providers from being swizzled.
+
+## 2.4.0
+
+### Minor Changes
+
+-   [#4281](https://github.com/refinedev/refine/pull/4281) [`ebfb075f07e`](https://github.com/refinedev/refine/commit/ebfb075f07e793e5ff7c5c3f712136fb54d8b0de) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: added swizzle to medusa
+
+## 2.3.0
+
+### Minor Changes
+
+-   [#4281](https://github.com/refinedev/refine/pull/4281) [`ebfb075f07e`](https://github.com/refinedev/refine/commit/ebfb075f07e793e5ff7c5c3f712136fb54d8b0de) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: added swizzle to medusa
+
+## 2.2.0
+
+### Minor Changes
+
+-   [#4281](https://github.com/refinedev/refine/pull/4281) [`ebfb075f07e`](https://github.com/refinedev/refine/commit/ebfb075f07e793e5ff7c5c3f712136fb54d8b0de) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: added swizzle to medusa
+
+## 2.1.0
+
+### Minor Changes
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    `AuthProvider` is renamed to `LegacyAuthProvider` with refine@4. Components and functions are updated to support `LegacyAuthProvider`.
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+
+    -   `metaData` prop is now deprecated for all data provider methods. Use `meta` prop instead.
+
+        > For backward compatibility, we still support `metaData` prop with refine v4.
+
+        ```diff
+        create: async ({
+        -    metaData
+        +    meta
+        }) => {
+            ...
+        },
+        ```
+
+    -   `sort`, `hasPagination`, and `metaData` parameters of `getList` method are now deprecated. Use `sorters`, `pagination`, and `meta` parameters instead.
+
+        > For backward compatibility, we still support `sort`, `hasPagination` and `metaData` props with refine v4.
+
+        ```diff
+        getList: async ({
+        -    sort
+        +    sorters
+        -    hasPagination
+        +    pagination: { mode: "off" | "server | "client" }
+        -    metaData
+        +    meta
+        }) => {
+            ...
+        },
+        ```
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    **Moving to the `@refinedev` scope 🎉🎉**
+
+    Moved to the `@refinedev` scope and updated our packages to use the new scope. From now on, all packages will be published under the `@refinedev` scope with their new names.
+
+    Now, we're also removing the `refine` prefix from all packages. So, the `@pankod/refine-core` package is now `@refinedev/core`, `@pankod/refine-antd` is now `@refinedev/antd`, and so on.
+
+### Patch Changes
+
+## 1.9.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
+## 1.8.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
 ## 1.7.2
 
 ### Patch Changes

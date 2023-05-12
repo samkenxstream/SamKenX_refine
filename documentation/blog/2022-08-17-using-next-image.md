@@ -3,7 +3,7 @@ title: Nextjs image optimization with examples
 description: Built-in image optimization using next image component
 slug: using-next-image
 authors: michael
-tags: [nextjs, img, image, next-image,image-optimization]
+tags: [nextjs]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-08-17-using-next-image/social.png
 hide_table_of_contents: false
 ---
@@ -54,10 +54,9 @@ Once you're done optimizing your images manually, you can now proceed to use the
 
 ---
 
-<PromotionBanner title="Not confident with your frontend skills?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/generic_banner.png" />
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
 
 ---
-
 ## The NextJS image component
 
 The [`<Image />`](https://nextjs.org/docs/api-reference/next/image) component is a batteries-included modern solution for serving images in NextJS applications. It's similar to the native HTML `<img/>` element but has a few differences.
@@ -117,12 +116,12 @@ const Profile = () => {
 You **should** always add the `width` and `height` props in the image component when using remote images because NextJS cannot determine the images dimension during the build process for proper page rendering to prevent layout shifts.
 :::
 
-<br/>
-<div>
-<a href="https://github.com/refinedev/refine">
-  <img  src="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/github-support-banner.png" alt="github support banner" />
-</a>
-</div>
+---
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
+---
 
 ## The image component properties
 

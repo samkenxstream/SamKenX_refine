@@ -1,5 +1,204 @@
 # @pankod/refine-hasura
 
+## 6.4.2
+
+### Patch Changes
+
+-   [#4285](https://github.com/refinedev/refine/pull/4285) [`b5cd3328504`](https://github.com/refinedev/refine/commit/b5cd332850428383e8b43f997cbb0340ac7f0dc6) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - fixed: A bug that prevented data providers from being swizzled.
+
+## 6.4.1
+
+### Patch Changes
+
+-   [#4285](https://github.com/refinedev/refine/pull/4285) [`b5cd3328504`](https://github.com/refinedev/refine/commit/b5cd332850428383e8b43f997cbb0340ac7f0dc6) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - fixed: A bug that prevented data providers from being swizzled.
+
+## 6.4.0
+
+### Minor Changes
+
+-   [#4174](https://github.com/refinedev/refine/pull/4174) [`d040da9a428`](https://github.com/refinedev/refine/commit/d040da9a4282f0b90385035449c38815b2287ffe) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: added refine.config.js to support swizzling. Now with swizzle support, you can easily customize hasura data provider for your needs.
+
+    feat: tests added for utility functions.
+
+    chore: utility functions have been moved to their own files.
+
+    chore: `genereteUseListSubscription` is deprecated and has been renamed to `generateListSubscriptionHook`.
+    chore: `genereteUseManySubscription` is deprecated and has been renamed to `generateUseManySubscription`.
+    chore: `genereteUseOneSubscription` is deprecated and has been renamed to `generateUseOneSubscription`.
+
+### Patch Changes
+
+-   [#4179](https://github.com/refinedev/refine/pull/4179) [`fd808368a36`](https://github.com/refinedev/refine/commit/fd808368a363bf9f4f7ec159676b3f69beb43772) Thanks [@austin047](https://github.com/austin047)! - fix: change enum from lowercase to UPPERCASE in api request for hasura camelCase naming convention
+
+    From the hasura documentation [here](https://hasura.io/docs/latest/schema/postgres/naming-convention/), for the graphql-default naming convention, the naming convention for enums is upper-cased. Currently the request are being made with the lowercase enum and not uppercase.
+
+    The change mainly
+    affects `sort`, desc gets changed to DESC and asc gets changed to ASC. the request from the refine client interface maintains the underscore and convertion to uppercase is only done at the API request layer.
+
+## 6.3.0
+
+### Minor Changes
+
+-   [#4174](https://github.com/refinedev/refine/pull/4174) [`d040da9a428`](https://github.com/refinedev/refine/commit/d040da9a4282f0b90385035449c38815b2287ffe) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: added refine.config.js to support swizzling. Now with swizzle support, you can easily customize hasura data provider for your needs.
+
+    feat: tests added for utility functions.
+
+    chore: utility functions have been moved to their own files.
+
+    chore: `genereteUseListSubscription` is deprecated and has been renamed to `generateListSubscriptionHook`.
+    chore: `genereteUseManySubscription` is deprecated and has been renamed to `generateUseManySubscription`.
+    chore: `genereteUseOneSubscription` is deprecated and has been renamed to `generateUseOneSubscription`.
+
+### Patch Changes
+
+-   [#4179](https://github.com/refinedev/refine/pull/4179) [`fd808368a36`](https://github.com/refinedev/refine/commit/fd808368a363bf9f4f7ec159676b3f69beb43772) Thanks [@austin047](https://github.com/austin047)! - fix: change enum from lowercase to UPPERCASE in api request for hasura camelCase naming convention
+
+    From the hasura documentation [here](https://hasura.io/docs/latest/schema/postgres/naming-convention/), for the graphql-default naming convention, the naming convention for enums is upper-cased. Currently the request are being made with the lowercase enum and not uppercase.
+
+    The change mainly
+    affects `sort`, desc gets changed to DESC and asc gets changed to ASC. the request from the refine client interface maintains the underscore and convertion to uppercase is only done at the API request layer.
+
+## 6.2.0
+
+### Minor Changes
+
+-   [#4144](https://github.com/refinedev/refine/pull/4144) [`06bdf9e4837`](https://github.com/refinedev/refine/commit/06bdf9e4837db83870d30461db00297195e4ecc8) Thanks [@mattbho](https://github.com/mattbho)! - feat: support camelCase graphql naming convention for Hasura
+
+    Previously, our Hasura data provider only supported snake-case naming conventions for operations and type names.
+
+    Hasura recently released a setting allowing for camelCase support.
+
+    The following changes do the Hasura data provider now support the new setting.
+
+    All methods for the Hasura Data provider now support the camelCase `graphql-default` naming convention.
+
+    The data provider now accepts a `namingConvention` field in the options payload.
+
+    Ex:
+
+    ```
+    const gqlDataProvider = dataProvider(client, {namingConvention: "graphql-default"});
+    ```
+
+    If the `graphql-default` naming convention is provided, all field names and variables will be camel cased. Type names will be PascalCased.
+
+## 6.1.0
+
+### Minor Changes
+
+-   [#4144](https://github.com/refinedev/refine/pull/4144) [`06bdf9e4837`](https://github.com/refinedev/refine/commit/06bdf9e4837db83870d30461db00297195e4ecc8) Thanks [@mattbho](https://github.com/mattbho)! - feat: support camelCase graphql naming convention for Hasura
+
+    Previously, our Hasura data provider only supported snake-case naming conventions for operations and type names.
+
+    Hasura recently released a setting allowing for camelCase support.
+
+    The following changes do the Hasura data provider now support the new setting.
+
+    All methods for the Hasura Data provider now support the camelCase `graphql-default` naming convention.
+
+    The data provider now accepts a `namingConvention` field in the options payload.
+
+    Ex:
+
+    ```
+    const gqlDataProvider = dataProvider(client, {namingConvention: "graphql-default"});
+    ```
+
+    If the `graphql-default` naming convention is provided, all field names and variables will be camel cased. Type names will be PascalCased.
+
+## 6.0.1
+
+### Patch Changes
+
+-   [#4030](https://github.com/refinedev/refine/pull/4030) [`1b019280252`](https://github.com/refinedev/refine/commit/1b019280252140c251bf464426b0b072acd310fe) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - Upgraded `graphql-request` dependency `4.x` to [`5.x`](https://github.com/jasonkuhrt/graphql-request/releases/tag/5.0.0).
+
+## 6.0.0
+
+### Major Changes
+
+-   [#4030](https://github.com/refinedev/refine/pull/4030) [`1b019280252`](https://github.com/refinedev/refine/commit/1b019280252140c251bf464426b0b072acd310fe) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - Upgraded `graphql-request` dependency `4.x` to [`5.x`](https://github.com/jasonkuhrt/graphql-request/releases/tag/5.0.0).
+
+## 5.1.2
+
+### Patch Changes
+
+-   [#4001](https://github.com/refinedev/refine/pull/4001) [`e9807e60510`](https://github.com/refinedev/refine/commit/e9807e60510aa689cdb5f36ce878c1398c420721) Thanks [@BatuhanW](https://github.com/BatuhanW)! - fix: add missing possible id types to hasura data provider
+
+## 5.1.1
+
+### Patch Changes
+
+-   [#4001](https://github.com/refinedev/refine/pull/4001) [`e9807e60510`](https://github.com/refinedev/refine/commit/e9807e60510aa689cdb5f36ce878c1398c420721) Thanks [@BatuhanW](https://github.com/BatuhanW)! - fix: add missing possible id types to hasura data provider
+
+## 5.1.0
+
+### Minor Changes
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+
+    -   `metaData` prop is now deprecated for all data provider methods. Use `meta` prop instead.
+
+        > For backward compatibility, we still support `metaData` prop with refine v4.
+
+        ```diff
+        create: async ({
+        -    metaData
+        +    meta
+        }) => {
+            ...
+        },
+        ```
+
+    -   `sort`, `hasPagination`, and `metaData` parameters of `getList` method are now deprecated. Use `sorters`, `pagination`, and `meta` parameters instead.
+
+        > For backward compatibility, we still support `sort`, `hasPagination` and `metaData` props with refine v4.
+
+        ```diff
+        getList: async ({
+        -    sort
+        +    sorters
+        -    hasPagination
+        +    pagination: { mode: "off" | "server | "client" }
+        -    metaData
+        +    meta
+        }) => {
+            ...
+        },
+        ```
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    **Moving to the `@refinedev` scope 🎉🎉**
+
+    Moved to the `@refinedev` scope and updated our packages to use the new scope. From now on, all packages will be published under the `@refinedev` scope with their new names.
+
+    Now, we're also removing the `refine` prefix from all packages. So, the `@pankod/refine-core` package is now `@refinedev/core`, `@pankod/refine-antd` is now `@refinedev/antd`, and so on.
+
+### Patch Changes
+
+## 4.21.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
+## 4.20.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
+## 4.19.0
+
+### Minor Changes
+
+-   [#3752](https://github.com/refinedev/refine/pull/3752) [`426386ca250`](https://github.com/refinedev/refine/commit/426386ca2506de14094ccdde767b7bede210e5e4) Thanks [@zulianrizki](https://github.com/zulianrizki)! - Allow custom ID types with `idType` property when initializing the data provider instance. `idType` can either be `Int`, `uuid` or a function returning the type by resource name.
+
+## 4.18.0
+
+### Minor Changes
+
+-   [#3752](https://github.com/refinedev/refine/pull/3752) [`426386ca250`](https://github.com/refinedev/refine/commit/426386ca2506de14094ccdde767b7bede210e5e4) Thanks [@zulianrizki](https://github.com/zulianrizki)! - Allow custom ID types with `idType` property when initializing the data provider instance. `idType` can either be `Int`, `uuid` or a function returning the type by resource name.
+
 ## 4.17.3
 
 ### Patch Changes

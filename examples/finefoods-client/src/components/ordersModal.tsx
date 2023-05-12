@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { useCreate, useNavigation } from "@pankod/refine-core";
+import { useCreate, useGo } from "@refinedev/core";
 
 import {
     useBasketContext,
@@ -12,7 +12,7 @@ import { IOrder } from "@interfaces";
 
 export const OrdersModal: React.FC = () => {
     const ref = useRef(null);
-    const { replace } = useNavigation();
+    const go = useGo();
     const { setOrdersModalVisible } = useOrdesModalContext();
     const { orders, totalPrice, products, dispatch } = useBasketContext();
     const { mutate } = useCreate<IOrder>();
@@ -32,7 +32,7 @@ export const OrdersModal: React.FC = () => {
                 >
                     <div className="bg-primary relative p-2">
                         <button
-                            className="absolute top-2 right-2 p-1 transition-all hover:bg-orange-500 active:scale-90"
+                            className="absolute right-2 top-2 p-1 transition-all hover:bg-orange-500 active:scale-90"
                             onClick={() => setOrdersModalVisible(false)}
                         >
                             <CloseIcon className="h-6 w-6 text-white" />
@@ -74,10 +74,10 @@ export const OrdersModal: React.FC = () => {
                                         },
                                         {
                                             onSuccess: (data) => {
-                                                replace(
-                                                    "/order/[id]",
-                                                    `/order/${data.data.id}`,
-                                                );
+                                                go({
+                                                    to: `/order/${data.data.id}`,
+                                                    type: "replace",
+                                                });
                                                 setOrdersModalVisible(false);
                                                 dispatch({
                                                     type: "resetBasket",

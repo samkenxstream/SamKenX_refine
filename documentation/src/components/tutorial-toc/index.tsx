@@ -1,5 +1,5 @@
 import React from "react";
-import Link from "@docusaurus/Link";
+import snarkdown from "snarkdown";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import { useWindowSize } from "@docusaurus/theme-common";
 // @ts-expect-error no types
@@ -19,7 +19,7 @@ import { useTutorialUIPackage } from "../../hooks/use-tutorial-ui-package";
 import { PreferredUIPackage } from "../../context/TutorialUIPackageContext";
 // import { useTutorialConfig } from "../../hooks/use-tutorial-config";
 // import useGlobalData from "@docusaurus/useGlobalData";
-
+import { HTMLAttributes } from "react";
 const uiNames: Record<PreferredUIPackage, string> = {
     headless: "Headless",
     antd: "Ant Design",
@@ -27,28 +27,44 @@ const uiNames: Record<PreferredUIPackage, string> = {
     mantine: "Mantine",
     "chakra-ui": "Chakra UI",
 };
-
 const baseIconUrl =
     "https://refine.ams3.digitaloceanspaces.com/website/static/icons/colored/ui-framework-";
 
-const LinkWithId: React.FC<
-    React.PropsWithChildren<{
-        id: string;
-        className?: string;
-        isCurrent?: boolean;
-    }>
-> = ({ id, children, className, isCurrent }) => {
+type LinkWithIdProps = HTMLAttributes<HTMLAnchorElement> & {
+    id: string;
+    isCurrent?: boolean;
+    dangerouslySetInnerHTML?: { __html: string };
+};
+
+const LinkWithId = ({
+    id,
+    isCurrent,
+    className,
+    dangerouslySetInnerHTML,
+    ...rest
+}: LinkWithIdProps) => {
     const toUrl = useBaseUrl(`/docs/${id}`, { forcePrependBaseUrl: true });
 
     return (
-        <Link
-            to={toUrl}
-            className={className}
-            onClick={(e) => (isCurrent ? e?.preventDefault() : undefined)}
-        >
-            {children}
-        </Link>
+        <a
+            {...rest}
+            href={toUrl}
+            className={`${className || ""} ${
+                isCurrent ? "text-black" : "text-gray-600 hover:text-black"
+            }`}
+            dangerouslySetInnerHTML={dangerouslySetInnerHTML}
+        />
     );
+};
+
+const markdownConverter = (text) => {
+    const numericStartRegexp = /^\d+\.\s?/g;
+    const numericStart = text.match(numericStartRegexp)?.[0] || "";
+    const numericStartIgnore = text.replace(numericStartRegexp, "");
+
+    const marked = snarkdown(numericStartIgnore);
+
+    return `${numericStart}${marked}`;
 };
 
 const TutorialUIStatus = () => {
@@ -64,7 +80,7 @@ const TutorialUIStatus = () => {
                     <div className="flex items-center gap-2">
                         <img
                             src={`${baseIconUrl}${preferredUIPackage}.svg`}
-                            className="w-5 h-auto"
+                            className="h-auto w-5"
                         />
                         <span className="font-semibold">
                             {uiNames[preferredUIPackage]}
@@ -100,7 +116,7 @@ export const TutorialTOC = ({ isMobile }: { isMobile?: boolean }) => {
 
     // const test = useGlobalData();
 
-    const renderTocItem = (item: typeof toc[number]) => {
+    const renderTocItem = (item: (typeof toc)[number]) => {
         return (
             <li
                 key={item.id}
@@ -110,13 +126,12 @@ export const TutorialTOC = ({ isMobile }: { isMobile?: boolean }) => {
                 className="mb-1"
             >
                 <a
+                    dangerouslySetInnerHTML={{ __html: item.value }}
                     href={`#${item.id}`}
                     className={`tutorial__item--toc-item ${
                         `${hash}`.slice(1) === item.id ? "active" : ""
                     }`}
-                >
-                    {item.value}
-                </a>
+                ></a>
             </li>
         );
     };
@@ -124,7 +139,7 @@ export const TutorialTOC = ({ isMobile }: { isMobile?: boolean }) => {
     const renderTOC = () => {
         if (toc.length === 0) return null;
         return (
-            <ul className="list-none pl-0 mt-1">{toc.map(renderTocItem)}</ul>
+            <ul className="mt-1 list-none pl-0">{toc.map(renderTocItem)}</ul>
         );
     };
 
@@ -133,9 +148,11 @@ export const TutorialTOC = ({ isMobile }: { isMobile?: boolean }) => {
             typeof currentTutorial
         >["units"][number]["docs"][number],
     ) => {
+        const formattedTitle = markdownConverter(doc.title);
+
         return (
-            <li key={doc.id} className="pb-2 flex flex-row gap-2 items-start">
-                <div className="w-5 h-5 mt-0.5 flex-shrink-0">
+            <li key={doc.id} className="flex flex-row items-start gap-2 pb-2">
+                <div className="mt-0.5 h-5 w-5 flex-shrink-0">
                     <TutorialCircle id={doc.id} width="100%" height="100%" />
                 </div>
                 <div className="flex flex-col gap-2">
@@ -149,9 +166,9 @@ export const TutorialTOC = ({ isMobile }: { isMobile?: boolean }) => {
                                 ? "hover:cursor-default hover:no-underline"
                                 : ""
                         }`}
-                    >
-                        {doc.title}
-                    </LinkWithId>
+                        dangerouslySetInnerHTML={{ __html: formattedTitle }}
+                    />
+
                     {doc.current && renderTOC()}
                 </div>
             </li>
@@ -159,12 +176,12 @@ export const TutorialTOC = ({ isMobile }: { isMobile?: boolean }) => {
     };
 
     const renderUnitDocs = (
-        unit: NonNullable<typeof currentTutorial>["units"][number],
+        unit?: NonNullable<typeof currentTutorial>["units"][number],
     ) => {
         return (
             <div>
                 <ul className="list-none pl-0">
-                    {unit.docs
+                    {unit?.docs
                         .sort((a, b) =>
                             `${a.title}`?.localeCompare(`${b.title}`),
                         )
@@ -174,7 +191,7 @@ export const TutorialTOC = ({ isMobile }: { isMobile?: boolean }) => {
         );
     };
 
-    const renderUnitTab = (unit: typeof currentTutorial["units"][number]) => {
+    const renderUnitTab = (unit: (typeof currentTutorial)["units"][number]) => {
         return (
             <button
                 key={unit.no}
@@ -194,46 +211,48 @@ export const TutorialTOC = ({ isMobile }: { isMobile?: boolean }) => {
                     unit.unit === selectedUnit
                         ? "tutorial__item--unit-item"
                         : ""
-                } w-[28px] h-[30px] pt-0 px-[3.5px] rounded-tl-[24px] rounded-tr-[24px] cursor-pointer border-none font-semibold flex justify-center items-start -mb-1`}
+                } -mb-1 flex h-[30px] w-[28px] cursor-pointer items-start justify-center rounded-tl-[24px] rounded-tr-[24px] border-none px-[3.5px] pt-0 font-semibold`}
             >
                 <UnitCircle unit={unit.unit} width="100%" height="28px" />
             </button>
         );
     };
 
-    const currentUnit = currentTutorial?.units.find(
+    const currentUnit:
+        | NonNullable<typeof currentTutorial>["units"][number]
+        | undefined = currentTutorial?.units.find(
         (unit) => unit.unit === selectedUnit,
     );
 
     const isFirstUnit =
-        currentTutorial?.units.find((el) => el.unit === currentTutorial.unit)
+        currentTutorial?.units?.find((el) => el?.unit === currentTutorial?.unit)
             ?.no === 1;
 
     return (
         <div
-            className="sticky top-[5rem] max-h-[calc(100vh-6rem]"
+            className="max-h-[calc(100vh-6rem] sticky top-[5rem]"
             style={{
                 color: "var(--tutorial-toc-text-color)",
             }}
         >
-            <div className="unit-tabs flex gap-0.5 mb-1">
+            <div className="unit-tabs mb-1 flex gap-0.5">
                 {currentTutorial?.units.map(renderUnitTab)}
             </div>
             <div
-                className={`unit-list-container py-3 px-3 rounded-md ${
-                    currentUnit.no === 1 ? "rounded-tl-none" : ""
+                className={`unit-list-container rounded-md px-3 py-3 ${
+                    currentUnit?.no === 1 ? "rounded-tl-none" : ""
                 }`}
                 style={{
                     backgroundColor: "var(--tutorial-toc-bg-color)",
                 }}
             >
                 <div
-                    className="font-bold text-sm mb-2"
+                    className="mb-2 text-sm font-bold"
                     style={{
                         color: "var(--tutorial-toc-text-color)",
                     }}
                 >
-                    {currentUnit.title ?? currentUnit.unit}
+                    {currentUnit?.title ?? currentUnit?.unit ?? "-"}
                 </div>
                 <div className="text-sm">{renderUnitDocs(currentUnit)}</div>
             </div>

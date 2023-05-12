@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 
-import { useTranslate, useRouterContext, useForgotPassword } from "@hooks";
+import {
+    useTranslate,
+    useRouterContext,
+    useLink,
+    useRouterType,
+    useForgotPassword,
+} from "@hooks";
 
 import { DivPropsType, FormPropsType } from "../..";
 import {
@@ -20,9 +26,14 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordProps> = ({
     contentProps,
     renderContent,
     formProps,
+    title = undefined,
 }) => {
     const translate = useTranslate();
-    const { Link } = useRouterContext();
+    const routerType = useRouterType();
+    const Link = useLink();
+    const { Link: LegacyLink } = useRouterContext();
+
+    const ActiveLink = routerType === "legacy" ? LegacyLink : Link;
 
     const [email, setEmail] = useState("");
 
@@ -32,7 +43,7 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordProps> = ({
     const renderLink = (link: React.ReactNode, text?: string) => {
         if (link) {
             if (typeof link === "string") {
-                return <Link to={link}>{text}</Link>;
+                return <ActiveLink to={link}>{text}</ActiveLink>;
             }
             return link;
         }
@@ -106,7 +117,7 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordProps> = ({
 
     return (
         <div {...wrapperProps}>
-            {renderContent ? renderContent(content) : content}
+            {renderContent ? renderContent(content, title) : content}
         </div>
     );
 };

@@ -1,24 +1,26 @@
 import React from "react";
 import {
-    ResourceRouterParams,
     useNavigation,
-    useResourceWithRoute,
-    userFriendlyResourceName,
-    useRouterContext,
     useTranslate,
-} from "@pankod/refine-core";
+    userFriendlyResourceName,
+    useRefineContext,
+    useRouterType,
+    useResource,
+    useBack,
+} from "@refinedev/core";
 import { Box, Heading, HStack, IconButton, Spinner } from "@chakra-ui/react";
 
 // We use @tabler/icons for icons but you can use any icon library you want.
 import { IconArrowLeft } from "@tabler/icons";
 
-import { Breadcrumb, SaveButton } from "@components";
+import { Breadcrumb, SaveButton, SaveButtonProps } from "@components";
 import { CreateProps } from "../types";
+import { RefinePageHeaderClassNames } from "@refinedev/ui-types";
 
 export const Create: React.FC<CreateProps> = (props) => {
     const {
         children,
-        saveButtonProps,
+        saveButtonProps: saveButtonPropsFromProps,
         isLoading,
         resource: resourceFromProps,
         footerButtons: footerButtonsFromProps,
@@ -29,28 +31,30 @@ export const Create: React.FC<CreateProps> = (props) => {
         contentProps,
         headerProps,
         goBack: goBackFromProps,
-        breadcrumb = <Breadcrumb />,
+        breadcrumb: breadcrumbFromProps,
         title,
     } = props;
     const translate = useTranslate();
+    const { options: { breadcrumb: globalBreadcrumb } = {} } =
+        useRefineContext();
 
+    const routerType = useRouterType();
+    const back = useBack();
     const { goBack } = useNavigation();
 
-    const { useParams } = useRouterContext();
+    const { resource, action } = useResource(resourceFromProps);
 
-    const { resource: routeResourceName, action: routeFromAction } =
-        useParams<ResourceRouterParams>();
+    const breadcrumb =
+        typeof breadcrumbFromProps === "undefined"
+            ? globalBreadcrumb
+            : breadcrumbFromProps;
 
-    const resourceWithRoute = useResourceWithRoute();
+    const saveButtonProps: SaveButtonProps = {
+        ...(isLoading ? { disabled: true } : {}),
+        ...saveButtonPropsFromProps,
+    };
 
-    const resource = resourceWithRoute(resourceFromProps ?? routeResourceName);
-
-    const defaultFooterButtons = (
-        <SaveButton
-            {...(isLoading ? { disabled: true } : {})}
-            {...saveButtonProps}
-        />
-    );
+    const defaultFooterButtons = <SaveButton {...saveButtonProps} />;
 
     const buttonBack =
         goBackFromProps === (false || null) ? null : (
@@ -58,7 +62,13 @@ export const Create: React.FC<CreateProps> = (props) => {
                 aria-label="back"
                 variant="ghost"
                 size="sm"
-                onClick={routeFromAction ? goBack : undefined}
+                onClick={
+                    action !== "list" || typeof action !== "undefined"
+                        ? routerType === "legacy"
+                            ? goBack
+                            : back
+                        : undefined
+                }
             >
                 {typeof goBackFromProps !== "undefined" ? (
                     goBackFromProps
@@ -78,15 +88,24 @@ export const Create: React.FC<CreateProps> = (props) => {
 
     const footerButtons = footerButtonsFromProps
         ? typeof footerButtonsFromProps === "function"
-            ? footerButtonsFromProps({ defaultButtons: defaultFooterButtons })
+            ? footerButtonsFromProps({
+                  defaultButtons: defaultFooterButtons,
+                  saveButtonProps,
+              })
             : footerButtonsFromProps
         : defaultFooterButtons;
 
     const renderTitle = () => {
+        if (title === false) return null;
+
         if (title) {
             if (typeof title === "string" || typeof title === "number") {
                 return (
-                    <Heading as="h3" size="lg">
+                    <Heading
+                        as="h3"
+                        size="lg"
+                        className={RefinePageHeaderClassNames.Title}
+                    >
                         {title}
                     </Heading>
                 );
@@ -96,11 +115,18 @@ export const Create: React.FC<CreateProps> = (props) => {
         }
 
         return (
-            <Heading as="h3" size="lg">
+            <Heading
+                as="h3"
+                size="lg"
+                className={RefinePageHeaderClassNames.Title}
+            >
                 {translate(
-                    `${resource.name}.titles.create`,
+                    `${resource?.name}.titles.create`,
                     `Create ${userFriendlyResourceName(
-                        resource.label ?? resource.name,
+                        resource?.meta?.label ??
+                            resource?.options?.label ??
+                            resource?.label ??
+                            resource?.name,
                         "singular",
                     )}`,
                 )}
@@ -135,7 +161,11 @@ export const Create: React.FC<CreateProps> = (props) => {
                 {...headerProps}
             >
                 <Box minW={200}>
-                    {breadcrumb}
+                    {typeof breadcrumb !== "undefined" ? (
+                        <>{breadcrumb}</>
+                    ) : (
+                        <Breadcrumb />
+                    )}
                     <HStack>
                         {buttonBack}
                         {renderTitle()}

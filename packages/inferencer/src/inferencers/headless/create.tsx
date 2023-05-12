@@ -1,5 +1,4 @@
-import * as RefineCore from "@pankod/refine-core";
-import * as RefineReactHookForm from "@pankod/refine-react-hook-form";
+import { useForm } from "@refinedev/react-hook-form";
 
 import { createInferencer } from "@/create-inferencer";
 import {
@@ -19,7 +18,7 @@ import {
 
 import { ErrorComponent } from "./error";
 import { LoadingComponent } from "./loading";
-import { CodeViewerComponent } from "./code-viewer";
+import { SharedCodeViewer } from "@/components/shared-code-viewer";
 
 import {
     InferencerResultComponent,
@@ -27,6 +26,7 @@ import {
     ImportElement,
     RendererContext,
 } from "@/types";
+import { getMetaProps } from "@/utilities/get-meta-props";
 
 /**
  * a renderer function for create page with unstyled html elements
@@ -35,6 +35,7 @@ import {
 export const renderer = ({
     resource,
     fields,
+    meta,
     isCustomPage,
 }: RendererContext) => {
     const COMPONENT_NAME = componentName(
@@ -43,8 +44,8 @@ export const renderer = ({
     );
     const imports: Array<ImportElement> = [
         ["React", "react", true],
-        ["useNavigation", "@pankod/refine-core"],
-        ["useForm", "@pankod/refine-react-hook-form"],
+        ["useNavigation", "@refinedev/core"],
+        ["useForm", "@refinedev/react-hook-form"],
     ];
 
     const relationFields: (InferField | null)[] = fields.filter(
@@ -55,13 +56,18 @@ export const renderer = ({
         .filter(Boolean)
         .map((field) => {
             if (field?.relation && !field.fieldable && field.resource) {
-                imports.push(["useSelect", "@pankod/refine-core"]);
+                imports.push(["useSelect", "@refinedev/core"]);
 
                 return `
                 const { options: ${getVariableName(field.key, "Options")} } =
                 useSelect({
                     resource: "${field.resource.name}",
                     ${getOptionLabel(field)}
+                    ${getMetaProps(
+                        field?.resource?.identifier ?? field?.resource?.name,
+                        meta,
+                        "getList",
+                    )}
                 });
             `;
             }
@@ -71,7 +77,7 @@ export const renderer = ({
 
     const renderRelationFields = (field: InferField) => {
         if (field.relation && field.resource) {
-            imports.push(["useSelect", "@pankod/refine-core"]);
+            imports.push(["useSelect", "@refinedev/core"]);
 
             const variableName = getVariableName(field.key, "Options");
 
@@ -263,8 +269,25 @@ export const renderer = ({
                 refineCoreProps: {
                     resource: "${resource.name}",
                     action: "create",
+                    ${getMetaProps(
+                        resource.identifier ?? resource.name,
+                        meta,
+                        "getOne",
+                    )}
                 }
             }`
+                    : getMetaProps(
+                          resource.identifier ?? resource.name,
+                          meta,
+                          "getOne",
+                      )
+                    ? `{
+                        refineCoreProps: { ${getMetaProps(
+                            resource.identifier ?? resource.name,
+                            meta,
+                            "getOne",
+                        )} }
+                        }`
                     : ""
             }
         );
@@ -321,14 +344,9 @@ export const renderer = ({
 export const CreateInferencer: InferencerResultComponent = createInferencer({
     type: "create",
     additionalScope: [
-        ["@pankod/refine-core", "RefineCore", RefineCore],
-        [
-            "@pankod/refine-react-hook-form",
-            "RefineReactHookForm",
-            RefineReactHookForm,
-        ],
+        ["@refinedev/react-hook-form", "RefineReactHookForm", { useForm }],
     ],
-    codeViewerComponent: CodeViewerComponent,
+    codeViewerComponent: SharedCodeViewer,
     loadingComponent: LoadingComponent,
     errorComponent: ErrorComponent,
     renderer,

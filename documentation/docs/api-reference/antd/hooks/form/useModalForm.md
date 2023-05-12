@@ -1,12 +1,13 @@
 ---
 id: useModalForm
 title: useModalForm
+sidebar_label: useModalForm
 ---
 
 `useModalForm` hook allows you to manage a form within a [`<Modal>`][antd-modal]. It returns Ant Design [`<Form>`][antd-form] and [Modal][antd-modal] components props.
 
 :::info
-`useModalForm` hook is extended from [`useForm`][antd-use-form] from the [`@pankod/refine-antd`][@pankod/refine-antd] package. This means that you can use all the features of [`useForm`][antd-use-form] hook.
+`useModalForm` hook is extended from [`useForm`][antd-use-form] from the [`@refinedev/antd`][@refinedev/antd] package. This means that you can use all the features of [`useForm`][antd-use-form] hook.
 :::
 
 ## Basic Usage
@@ -31,22 +32,11 @@ setInitialRoutes(["/posts"]);
 // visible-block-start
 
 import React from "react";
-import { IResourceComponentsProps } from "@pankod/refine-core";
 
-import {
-    List,
-    Table,
-    Form,
-    Select,
-    Input,
-    Modal,
-    Space,
-    EditButton,
-    useTable,
-    useModalForm,
-} from "@pankod/refine-antd";
+import { List, EditButton, useTable, useModalForm } from "@refinedev/antd";
+import { Table, Form, Select, Input, Modal, Space } from "antd";
 
-const PostList: React.FC<IResourceComponentsProps> = () => {
+const PostList: React.FC = () => {
     const { tableProps } = useTable<IPost>();
 
     // highlight-start
@@ -154,22 +144,11 @@ Let's learn how to add editing capabilities to records that will be opening form
 setInitialRoutes(["/posts"]);
 
 import React from "react";
-import { IResourceComponentsProps } from "@pankod/refine-core";
 
-import {
-    List,
-    Table,
-    Form,
-    Select,
-    Input,
-    Modal,
-    Space,
-    EditButton,
-    useTable,
-    useModalForm,
-} from "@pankod/refine-antd";
+import { List, EditButton, useTable, useModalForm } from "@refinedev/antd";
+import { Table, Form, Select, Input, Modal, Space } from "antd";
 
-const PostList: React.FC<IResourceComponentsProps> = () => {
+const PostList: React.FC = () => {
     const { tableProps } = useTable<IPost>();
 
     // highlight-start
@@ -305,22 +284,11 @@ Let's learn how to add cloning capabilities to records that will be opening form
 setInitialRoutes(["/posts"]);
 
 import React from "react";
-import { IResourceComponentsProps } from "@pankod/refine-core";
 
-import {
-    List,
-    Table,
-    Form,
-    Select,
-    Input,
-    Modal,
-    Space,
-    CloneButton,
-    useTable,
-    useModalForm,
-} from "@pankod/refine-antd";
+import { List, CloneButton, useTable, useModalForm } from "@refinedev/antd";
+import { Table, Form, Select, Input, Modal, Space } from "antd";
 
-const PostList: React.FC<IResourceComponentsProps> = () => {
+const PostList: React.FC = () => {
     const { tableProps } = useTable<IPost>();
 
     // highlight-start
@@ -454,6 +422,20 @@ Don't forget to pass the record id to `show` to fetch the record data. This is n
 :::tip
 All [`useForm`][antd-use-form] props also available in `useModalForm`. You can find descriptions on [`useForm`](/docs/api-reference/antd/hooks/form/useForm/#properties) docs.
 :::
+
+### `syncWithLocation`
+
+> Default: `false`
+
+When `true`, the modals visibility state and the `id` of the record will be synced with the URL.
+
+This property can also be set as an object `{ key: string; syncId?: boolean }` to customize the key of the URL query parameter. `id` will be synced with the URL only if `syncId` is `true`.
+
+```tsx
+const modalForm = useModalForm({
+    syncWithLocation: { key: "my-modal", syncId: true },
+});
+```
 
 ### `defaultFormValues`
 
@@ -697,15 +679,70 @@ return (
 );
 ```
 
+## FAQ
+
+### How can I change the form data before submitting it to the API?
+
+You may need to modify the form data before it is sent to the API.
+
+For example, Let's send the values we received from the user in two separate inputs, `name` and `surname`, to the API as `fullName`.
+
+```tsx title="pages/user/create.tsx"
+import React from "react";
+import { Modal, useModalForm } from "@refinedev/antd";
+import { Form, Input } from "antd";
+
+export const UserCreate: React.FC = () => {
+    // highlight-start
+    const { formProps, modalProps } = useModalForm({
+        action: "create",
+    });
+    // highlight-end
+
+    // highlight-start
+    const handleOnFinish = (values) => {
+        formProps.onFinish?.({
+            fullName: `${values.name} ${values.surname}`,
+        });
+    };
+    // highlight-end
+
+    return (
+        <Modal {...modalProps}>
+            // highlight-next-line
+            <Form {...formProps} onFinish={handleOnFinish} layout="vertical">
+                <Form.Item label="Name" name="name">
+                    <Input />
+                </Form.Item>
+                <Form.Item label="Surname" name="surname">
+                    <Input />
+                </Form.Item>
+            </Form>
+        </Modal>
+    );
+};
+```
+
 ## API Reference
 
 ### Properties
 
-<PropsTable module="@pankod/refine-antd/useModalForm"/>
+<PropsTable module="@refinedev/antd/useModalForm"/>
 
 > `*`: These props have default values in `RefineContext` and can also be set on **<[Refine](/api-reference/core/components/refine-config.md)>** component. `useModalForm` will use what is passed to `<Refine>` as default but a local value will override it.
 
 > `**`: If not explicitly configured, default value of `redirect` depends on which `action` used. If `action` is `create`, `redirect`s default value is `edit` (created resources edit page). If `action` is `edit` instead, `redirect`s default value is `list`.
+
+### Type Parameters
+
+| Property       | Desription                                                                                                                                                          | Type                       | Default                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------- |
+| TQueryFnData   | Result data returned by the query function. Extends [`BaseRecord`][baserecord]                                                                                      | [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
+| TError         | Custom error object that extends [`HttpError`][httperror]                                                                                                           | [`HttpError`][httperror]   | [`HttpError`][httperror]   |
+| TVariables     | Values for params.                                                                                                                                                  | `{}`                       |                            |
+| TData          | Result data returned by the `select` function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TQueryFnData` will be used as the default value. | [`BaseRecord`][baserecord] | `TQueryFnData`             |
+| TResponse      | Result data returned by the mutation function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TData` will be used as the default value.        | [`BaseRecord`][baserecord] | `TData`                    |
+| TResponseError | Custom error object that extends [`HttpError`][httperror]. If not specified, the value of `TError` will be used as the default value.                               | [`HttpError`][httperror]   | `TError`                   |
 
 ### Return Value
 
@@ -725,34 +762,14 @@ return (
 | queryResult              | Result of the query of a record                                                                            | [`QueryObserverResult<{ data: TData }>`](https://react-query.tanstack.com/reference/useQuery)                                                                                         |
 | mutationResult           | Result of the mutation triggered by submitting the form                                                    | [`UseMutationResult<`<br/>`{ data: TData },`<br/>`TError,`<br/>` { resource: string; values: TVariables; },`<br/>` unknown>`](https://react-query.tanstack.com/reference/useMutation) |
 
-### Type Parameters
-
-| Property   | Desription                                                       | Default                    |
-| ---------- | ---------------------------------------------------------------- | -------------------------- |
-| TData      | Result data of the query that extends [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
-| TError     | Custom error object that extends [`HttpError`][httperror]        | [`HttpError`][httperror]   |
-| TVariables | Values for params.                                               | `{}`                       |
-
 ## Example
 
-   <CodeSandboxExample path="form-antd-use-modal-form" />
+<CodeSandboxExample path="form-antd-use-modal-form" />
 
-[@pankod/refine-antd]: https://github.com/refinedev/refine/tree/master/packages/antd
+[@refinedev/antd]: https://github.com/refinedev/refine/tree/master/packages/antd
 [baserecord]: /api-reference/core/interfaces.md#baserecord
 [httperror]: /api-reference/core/interfaces.md#httperror
 [basekey]: /api-reference/core/interfaces.md#basekey
 [antd-use-form]: /docs/api-reference/antd/hooks/form/useForm
 [antd-modal]: https://ant.design/components/modal/
 [antd-form]: https://ant.design/components/form/
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```

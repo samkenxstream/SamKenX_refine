@@ -2,12 +2,14 @@ import React from "react";
 import {
     ForgotPasswordPageProps,
     ForgotPasswordFormTypes,
-} from "@pankod/refine-core";
+    useRouterType,
+    useLink,
+} from "@refinedev/core";
 import {
     useTranslate,
     useRouterContext,
     useForgotPassword,
-} from "@pankod/refine-core";
+} from "@refinedev/core";
 import {
     Box,
     Card,
@@ -20,10 +22,17 @@ import {
     BoxProps,
     CardProps,
     Group,
+    useMantineTheme,
 } from "@mantine/core";
 
+import { ThemedTitle } from "@components";
 import { FormContext } from "@contexts/form-context";
-import { layoutStyles, cardStyles, titleStyles } from "../styles";
+import {
+    layoutStyles,
+    cardStyles,
+    titleStyles,
+    pageTitleStyles,
+} from "../styles";
 import { FormPropsType } from "../..";
 
 type ResetPassworProps = ForgotPasswordPageProps<
@@ -42,11 +51,17 @@ export const ForgotPasswordPage: React.FC<ResetPassworProps> = ({
     wrapperProps,
     renderContent,
     formProps,
+    title,
 }) => {
+    const theme = useMantineTheme();
     const { useForm, FormProvider } = FormContext;
     const { onSubmit: onSubmitProp, ...useFormProps } = formProps || {};
     const translate = useTranslate();
-    const { Link } = useRouterContext();
+    const routerType = useRouterType();
+    const Link = useLink();
+    const { Link: LegacyLink } = useRouterContext();
+
+    const ActiveLink = routerType === "legacy" ? LegacyLink : Link;
 
     const form = useForm({
         initialValues: {
@@ -68,9 +83,19 @@ export const ForgotPasswordPage: React.FC<ResetPassworProps> = ({
     const { mutate: forgotPassword, isLoading } =
         useForgotPassword<ForgotPasswordFormTypes>();
 
+    const PageTitle =
+        title === false ? null : (
+            <div style={pageTitleStyles}>
+                {title ?? <ThemedTitle collapsed={false} />}
+            </div>
+        );
+
     const CardContent = (
         <Card style={cardStyles} {...(contentProps ?? {})}>
-            <Title style={titleStyles}>
+            <Title
+                style={titleStyles}
+                color={theme.colorScheme === "dark" ? "brand.5" : "brand.8"}
+            >
                 {translate(
                     "pages.forgotPassword.title",
                     "Forgot your password?",
@@ -106,7 +131,7 @@ export const ForgotPasswordPage: React.FC<ResetPassworProps> = ({
                                     "Have an account?",
                                 )}{" "}
                                 <Anchor
-                                    component={Link}
+                                    component={ActiveLink as any}
                                     to="/login"
                                     weight={700}
                                 >
@@ -137,7 +162,14 @@ export const ForgotPasswordPage: React.FC<ResetPassworProps> = ({
 
     return (
         <Box style={layoutStyles} {...(wrapperProps ?? {})}>
-            {renderContent ? renderContent(CardContent) : CardContent}
+            {renderContent ? (
+                renderContent(CardContent, PageTitle)
+            ) : (
+                <>
+                    {PageTitle}
+                    {CardContent}
+                </>
+            )}
         </Box>
     );
 };

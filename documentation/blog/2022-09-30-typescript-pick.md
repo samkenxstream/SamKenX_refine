@@ -3,7 +3,7 @@ title: A Detailed Guide on TypeScript Pick Type
 description: We'll deep dive into the TypeScript Pick utility type with examples and use cases.
 slug: typescript-pick-utility-type
 authors: abdullah_numan
-tags: [typescript, typescript-pick, typescript-utility-types]
+tags: [typescript]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-09-30-typescript-pick/social.png
 hide_table_of_contents: false
 ---
@@ -58,7 +58,10 @@ For example, in this article we will consider the use case for `Pick<Type, Keys>
 
 ---
 
-<PromotionBanner title="Not confident with your frontend skills?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/diagram.png" />
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
 

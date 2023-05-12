@@ -1,14 +1,10 @@
 ```tsx live url=http://localhost:3000 previewHeight=400px
 setInitialRoutes(["/posts/create"]);
 // visible-block-start
-import {
-    Create,
-    Box,
-    Autocomplete,
-    useAutocomplete,
-    TextField,
-} from "@pankod/refine-mui";
-import { useForm, Controller } from "@pankod/refine-react-hook-form";
+import { Create, useAutocomplete } from "@refinedev/mui";
+import { Box, Autocomplete, TextField } from "@mui/material";
+import { useForm } from "@refinedev/react-hook-form";
+import { Controller } from "react-hook-form";
 
 interface ICategory {
     id: number;
@@ -45,8 +41,7 @@ const PostCreate: React.FC = () => {
                             }}
                             getOptionLabel={({ title }) => title}
                             isOptionEqualToValue={(option, value) =>
-                                value === undefined ||
-                                option.id.toString() === value.toString()
+                                value === undefined || option?.id?.toString() === (value?.id ?? value)?.toString()
                             }
                             placeholder="Select a category"
                             renderInput={(params) => (

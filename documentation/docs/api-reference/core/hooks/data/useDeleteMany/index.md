@@ -19,7 +19,7 @@ If your data provider does not have a `deleteMany` method, `useDeleteMany` will 
 The `useDeleteMany` hook returns many useful properties and methods. One of them is the `mutate` method which expects `resource` and `ids` as parameters. These parameters will be passed to the `deleteMany` method from the `dataProvider` as parameters.
 
 ```tsx
-import { useDeleteMany } from "@pankod/refine-core";
+import { useDeleteMany } from "@refinedev/core";
 
 const { mutate } = useDeleteMany();
 
@@ -164,7 +164,7 @@ After data is fetched successfully, `useDeleteMany` can call `open` function fro
 const { mutate } = useDeleteMany();
 
 mutate({
-    successNotification: (data, values, resource) => {
+    successNotification: (data, ids, resource) => {
         return {
             message: `${data.title} Successfully fetched.`,
             description: "Success with no errors",
@@ -184,7 +184,7 @@ After data fetching is failed, `useDeleteMany` will call `open` function from `N
 const { mutate } = useDeleteMany();
 
 mutate({
-    errorNotification: (data, values, resource) => {
+    errorNotification: (data, ids, resource) => {
         return {
             message: `Something went wrong when getting ${data.id}`,
             description: "Error",
@@ -194,21 +194,23 @@ mutate({
 });
 ```
 
-### `metaData`
+### `meta`
 
-[`metaData`](/docs/api-reference/general-concepts/#metadata) is used following two purposes:
+`meta` is a special property that can be used to pass additional information to data provider methods for the following purposes:
 
--   To pass additional information to data provider methods.
--   Generate GraphQL queries using plain JavaScript Objects (JSON). Please refer [GraphQL](/docs/advanced-tutorials/data-provider/graphql/#edit-page) for more information.
+-   Customizing the data provider methods for specific use cases.
+-   Generating GraphQL queries using plain JavaScript Objects (JSON).
 
-In the following example, we pass the `headers` property in the `metaData` object to the `deleteMany` method. With similar logic, you can pass any properties to specifically handle the data provider methods.
+[Refer to the `meta` section of the General Concepts documentation for more information &#8594](/docs/api-reference/general-concepts/#meta)
+
+In the following example, we pass the `headers` property in the `meta` object to the `deleteMany` method. With similar logic, you can pass any properties to specifically handle the data provider methods.
 
 ```tsx
 const { mutate } = useDeleteMany();
 
 mutate({
     // highlight-start
-    metaData: {
+    meta: {
         headers: { "x-meta-data": "true" },
     },
     // highlight-end
@@ -220,10 +222,10 @@ const myDataProvider = {
         resource,
         ids,
         // highlight-next-line
-        metaData,
+        meta,
     }) => {
         // highlight-next-line
-        const headers = metaData?.headers ?? {};
+        const headers = meta?.headers ?? {};
         const url = `${apiUrl}/${resource}`;
 
         //...
@@ -286,7 +288,7 @@ Returns an object with TanStack Query's `useMutation` return values.
 | onCancel                                                                                            | Callback that runs when undo button is clicked on `mutationMode = "undoable"`                      | `(cancelMutation: () => void) => void`                                                   |                                                              |
 | successNotification                                                                                 | Successful Mutation notification                                                                   | [`SuccessErrorNotification`](/api-reference/core/interfaces.md#successerrornotification) | "Successfully deleted `resource`"                            |
 | errorNotification                                                                                   | Unsuccessful Mutation notification                                                                 | [`SuccessErrorNotification`](/api-reference/core/interfaces.md#successerrornotification) | "Error when updating `resource` (status code: `statusCode`)" |
-| metaData                                                                                            | Metadata query for `dataProvider`                                                                  | [`MetaDataQuery`](/api-reference/core/interfaces.md#metadataquery)                       | {}                                                           |
+| meta                                                                                                | Meta data query for `dataProvider`                                                                 | [`MetaDataQuery`](/api-reference/core/interfaces.md#metadataquery)                       | {}                                                           |
 | dataProviderName                                                                                    | If there is more than one `dataProvider`, you should use the `dataProviderName` that you will use. | `string`                                                                                 | `default`                                                    |
 | invalidates                                                                                         | You can use it to manage the invalidations that will occur at the end of the mutation.             | `all`, `resourceAll`, `list`, `many`, `detail`, `false`                                  | `["list", "many"]`                                           |
 

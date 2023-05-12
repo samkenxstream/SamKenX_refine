@@ -28,9 +28,14 @@ const columns: ColumnDef<Post>[] = [
 
 describe("useTable Hook", () => {
     it("It should work successfully with no properties", async () => {
-        const { result } = renderHook(() => useTable({ columns }), {
-            wrapper: TestWrapper({}),
-        });
+        const { result } = renderHook(
+            () => useTable({ columns, refineCoreProps: { resource: "posts" } }),
+            {
+                wrapper: TestWrapper({
+                    routerInitialEntries: ["/posts"],
+                }),
+            },
+        );
 
         await waitFor(
             () => {
@@ -61,12 +66,17 @@ describe("useTable Hook", () => {
                 useTable({
                     columns,
                     refineCoreProps: {
-                        initialCurrent: 2,
-                        initialPageSize: 1,
+                        resource: "posts",
+                        pagination: {
+                            current: 2,
+                            pageSize: 1,
+                        },
                     },
                 }),
             {
-                wrapper: TestWrapper({}),
+                wrapper: TestWrapper({
+                    routerInitialEntries: ["/posts"],
+                }),
             },
         );
 
@@ -94,22 +104,27 @@ describe("useTable Hook", () => {
                 useTable({
                     columns,
                     refineCoreProps: {
-                        initialFilter: [
-                            {
-                                field: "title",
-                                operator: "contains",
-                                value: "Hello2",
-                            },
-                            {
-                                field: "active",
-                                operator: "eq",
-                                value: true,
-                            },
-                        ],
+                        resource: "posts",
+                        filters: {
+                            initial: [
+                                {
+                                    field: "title",
+                                    operator: "contains",
+                                    value: "Hello2",
+                                },
+                                {
+                                    field: "active",
+                                    operator: "eq",
+                                    value: true,
+                                },
+                            ],
+                        },
                     },
                 }),
             {
-                wrapper: TestWrapper({}),
+                wrapper: TestWrapper({
+                    routerInitialEntries: ["/posts"],
+                }),
             },
         );
 
@@ -130,8 +145,8 @@ describe("useTable Hook", () => {
             { field: "active", value: true, operator: "eq" },
         ]);
         expect(state.columnFilters).toEqual([
-            { id: "title", value: "Hello2" },
-            { id: "active", value: true },
+            { id: "title", value: "Hello2", operator: "contains" },
+            { id: "active", value: true, operator: "eq" },
         ]);
 
         act(() => {
@@ -151,7 +166,7 @@ describe("useTable Hook", () => {
         ]);
         expect(result.current.options.state.columnFilters).toEqual([
             { id: "title", value: "Hello" },
-            { id: "active", value: true },
+            { id: "active", operator: "eq", value: true },
         ]);
 
         act(() => {
@@ -169,7 +184,7 @@ describe("useTable Hook", () => {
             { field: "active", value: true, operator: "eq" },
         ]);
         expect(result.current.options.state.columnFilters).toEqual([
-            { id: "active", value: true },
+            { id: "active", operator: "eq", value: true },
         ]);
     });
 
@@ -179,14 +194,18 @@ describe("useTable Hook", () => {
                 useTable({
                     columns,
                     refineCoreProps: {
-                        initialSorter: [
-                            { field: "id", order: "asc" },
-                            { field: "title", order: "desc" },
-                        ],
+                        sorters: {
+                            initial: [
+                                { field: "id", order: "asc" },
+                                { field: "title", order: "desc" },
+                            ],
+                        },
                     },
                 }),
             {
-                wrapper: TestWrapper({}),
+                wrapper: TestWrapper({
+                    routerInitialEntries: ["/posts"],
+                }),
             },
         );
 
@@ -240,24 +259,28 @@ describe("useTable Hook", () => {
                 useTable({
                     columns,
                     refineCoreProps: {
-                        initialFilter: [
-                            {
-                                field: "title",
-                                operator: "contains",
-                                value: "Hello",
-                            },
-                        ],
-                        permanentFilter: [
-                            {
-                                field: "category.id",
-                                operator: "eq",
-                                value: 1,
-                            },
-                        ],
+                        filters: {
+                            initial: [
+                                {
+                                    field: "title",
+                                    operator: "contains",
+                                    value: "Hello",
+                                },
+                            ],
+                            permanent: [
+                                {
+                                    field: "category.id",
+                                    operator: "eq",
+                                    value: 1,
+                                },
+                            ],
+                        },
                     },
                 }),
             {
-                wrapper: TestWrapper({}),
+                wrapper: TestWrapper({
+                    routerInitialEntries: ["/posts"],
+                }),
             },
         );
 
@@ -278,8 +301,8 @@ describe("useTable Hook", () => {
             { field: "title", value: "Hello", operator: "contains" },
         ]);
         expect(state.columnFilters).toEqual([
-            { id: "title", value: "Hello" },
-            { id: "category.id", value: 1 },
+            { id: "title", operator: "contains", value: "Hello" },
+            { id: "category.id", operator: "eq", value: 1 },
         ]);
 
         act(() => {
@@ -299,7 +322,7 @@ describe("useTable Hook", () => {
         ]);
         expect(result.current.options.state.columnFilters).toEqual([
             { id: "title", value: "Test" },
-            { id: "category.id", value: 1 },
+            { id: "category.id", operator: "eq", value: 1 },
         ]);
 
         act(() => {
@@ -317,7 +340,7 @@ describe("useTable Hook", () => {
             { field: "category.id", value: 1, operator: "eq" },
         ]);
         expect(result.current.options.state.columnFilters).toEqual([
-            { id: "category.id", value: 1 },
+            { id: "category.id", operator: "eq", value: 1 },
         ]);
     });
 
@@ -327,22 +350,26 @@ describe("useTable Hook", () => {
                 useTable({
                     columns,
                     refineCoreProps: {
-                        initialSorter: [
-                            {
-                                field: "title",
-                                order: "asc",
-                            },
-                        ],
-                        permanentSorter: [
-                            {
-                                field: "category.id",
-                                order: "desc",
-                            },
-                        ],
+                        sorters: {
+                            initial: [
+                                {
+                                    field: "title",
+                                    order: "asc",
+                                },
+                            ],
+                            permanent: [
+                                {
+                                    field: "category.id",
+                                    order: "desc",
+                                },
+                            ],
+                        },
                     },
                 }),
             {
-                wrapper: TestWrapper({}),
+                wrapper: TestWrapper({
+                    routerInitialEntries: ["/posts"],
+                }),
             },
         );
 
@@ -388,4 +415,60 @@ describe("useTable Hook", () => {
             { id: "category.id", desc: true },
         ]);
     });
+
+    it.each(["off", "server"] as const)(
+        "when sorters.mode is %s, should set sortingMode to %s",
+        async (mode) => {
+            const { result } = renderHook(
+                () =>
+                    useTable({
+                        columns,
+                        refineCoreProps: {
+                            sorters: {
+                                mode,
+                            },
+                        },
+                    }),
+                {
+                    wrapper: TestWrapper({}),
+                },
+            );
+
+            expect(result.current.options.getSortedRowModel).toEqual(
+                mode === "server" ? undefined : expect.any(Function),
+            );
+
+            expect(result.current.options.manualSorting).toEqual(
+                mode === "server" ? true : false,
+            );
+        },
+    );
+
+    it.each(["off", "server"] as const)(
+        "when filters.mode is %s, should set sortingMode to %s",
+        async (mode) => {
+            const { result } = renderHook(
+                () =>
+                    useTable({
+                        columns,
+                        refineCoreProps: {
+                            filters: {
+                                mode,
+                            },
+                        },
+                    }),
+                {
+                    wrapper: TestWrapper({}),
+                },
+            );
+
+            expect(result.current.options.getFilteredRowModel).toEqual(
+                mode === "server" ? undefined : expect.any(Function),
+            );
+
+            expect(result.current.options.manualFiltering).toEqual(
+                mode === "server" ? true : false,
+            );
+        },
+    );
 });

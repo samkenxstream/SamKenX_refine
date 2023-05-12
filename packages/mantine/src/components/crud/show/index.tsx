@@ -9,14 +9,16 @@ import {
     LoadingOverlay,
 } from "@mantine/core";
 import {
-    ResourceRouterParams,
+    useBack,
+    useGo,
     useNavigation,
     useRefineContext,
-    useResourceWithRoute,
+    useResource,
     userFriendlyResourceName,
-    useRouterContext,
+    useRouterType,
+    useToPath,
     useTranslate,
-} from "@pankod/refine-core";
+} from "@refinedev/core";
 import { IconArrowLeft } from "@tabler/icons";
 
 import {
@@ -25,8 +27,13 @@ import {
     ListButton,
     RefreshButton,
     Breadcrumb,
+    ListButtonProps,
+    EditButtonProps,
+    DeleteButtonProps,
+    RefreshButtonProps,
 } from "@components";
 import { ShowProps } from "../types";
+import { RefinePageHeaderClassNames } from "@refinedev/ui-types";
 
 export const Show: React.FC<ShowProps> = (props) => {
     const {
@@ -49,29 +56,30 @@ export const Show: React.FC<ShowProps> = (props) => {
         title,
     } = props;
     const translate = useTranslate();
+    const { options: { breadcrumb: globalBreadcrumb } = {} } =
+        useRefineContext();
 
-    const { goBack, list } = useNavigation();
-
-    const resourceWithRoute = useResourceWithRoute();
-
-    const { useParams } = useRouterContext();
+    const routerType = useRouterType();
+    const back = useBack();
+    const go = useGo();
+    const { goBack, list: legacyGoList } = useNavigation();
 
     const {
-        resource: routeResourceName,
-        action: routeFromAction,
-        id: idFromRoute,
-    } = useParams<ResourceRouterParams>();
+        resource,
+        action,
+        id: idFromParams,
+    } = useResource(resourceFromProps);
 
-    const resource = resourceWithRoute(resourceFromProps ?? routeResourceName);
+    const goListPath = useToPath({
+        resource,
+        action: "list",
+    });
 
-    const isDeleteButtonVisible = canDelete ?? resource.canDelete;
+    const id = recordItemId ?? idFromParams;
 
-    const isEditButtonVisible = canEdit ?? resource.canEdit;
-
-    const { options } = useRefineContext();
     const breadcrumb =
         typeof breadcrumbFromProps === "undefined"
-            ? options?.breadcrumb
+            ? globalBreadcrumb
             : breadcrumbFromProps;
 
     const breadcrumbComponent =
@@ -81,46 +89,84 @@ export const Show: React.FC<ShowProps> = (props) => {
             <Breadcrumb />
         );
 
-    const id = recordItemId ?? idFromRoute;
+    const hasList = resource?.list && !recordItemId;
+    const isDeleteButtonVisible =
+        canDelete ?? resource?.meta?.canDelete ?? resource?.canDelete;
+    const isEditButtonVisible =
+        canEdit ?? resource?.canEdit ?? !!resource?.edit;
+
+    const listButtonProps: ListButtonProps | undefined = hasList
+        ? {
+              ...(isLoading ? { disabled: true } : {}),
+              resource:
+                  routerType === "legacy"
+                      ? resource?.route
+                      : resource?.identifier ?? resource?.name,
+          }
+        : undefined;
+    const editButtonProps: EditButtonProps | undefined = isEditButtonVisible
+        ? {
+              ...(isLoading ? { disabled: true } : {}),
+              color: "primary",
+              variant: "filled",
+              resource:
+                  routerType === "legacy"
+                      ? resource?.route
+                      : resource?.identifier ?? resource?.name,
+              recordItemId: id,
+          }
+        : undefined;
+    const deleteButtonProps: DeleteButtonProps | undefined =
+        isDeleteButtonVisible
+            ? {
+                  ...(isLoading ? { disabled: true } : {}),
+                  resource:
+                      routerType === "legacy"
+                          ? resource?.route
+                          : resource?.identifier ?? resource?.name,
+                  recordItemId: id,
+                  onSuccess: () => {
+                      if (routerType === "legacy") {
+                          legacyGoList(resource?.route ?? resource?.name ?? "");
+                      } else {
+                          go({ to: goListPath });
+                      }
+                  },
+                  dataProviderName,
+              }
+            : undefined;
+    const refreshButtonProps: RefreshButtonProps = {
+        ...(isLoading ? { disabled: true } : {}),
+        resource:
+            routerType === "legacy"
+                ? resource?.route
+                : resource?.identifier ?? resource?.name,
+        recordItemId: id,
+        dataProviderName,
+    };
 
     const loadingOverlayVisible = isLoading ?? false;
 
     const defaultHeaderButtons = (
         <>
-            {!recordItemId && (
-                <ListButton
-                    {...(isLoading ? { disabled: true } : {})}
-                    resourceNameOrRouteName={resource.route}
-                />
-            )}
-            {isEditButtonVisible && (
-                <EditButton
-                    {...(isLoading ? { disabled: true } : {})}
-                    resourceNameOrRouteName={resource.route}
-                    recordItemId={id}
-                />
-            )}
-            {isDeleteButtonVisible && (
-                <DeleteButton
-                    {...(isLoading ? { disabled: true } : {})}
-                    resourceNameOrRouteName={resource.route}
-                    recordItemId={id}
-                    onSuccess={() => list(resource.route ?? resource.name)}
-                    dataProviderName={dataProviderName}
-                />
-            )}
-            <RefreshButton
-                {...(isLoading ? { disabled: true } : {})}
-                resourceNameOrRouteName={resource.route}
-                recordItemId={id}
-                dataProviderName={dataProviderName}
-            />
+            {hasList && <ListButton {...listButtonProps} />}
+            {isEditButtonVisible && <EditButton {...editButtonProps} />}
+            {isDeleteButtonVisible && <DeleteButton {...deleteButtonProps} />}
+            <RefreshButton {...refreshButtonProps} />
         </>
     );
 
     const buttonBack =
         goBackFromProps === (false || null) ? null : (
-            <ActionIcon onClick={routeFromAction ? goBack : undefined}>
+            <ActionIcon
+                onClick={
+                    action !== "list" && typeof action !== "undefined"
+                        ? routerType === "legacy"
+                            ? goBack
+                            : back
+                        : undefined
+                }
+            >
                 {typeof goBackFromProps !== "undefined" ? (
                     goBackFromProps
                 ) : (
@@ -133,6 +179,10 @@ export const Show: React.FC<ShowProps> = (props) => {
         ? typeof headerButtonsFromProps === "function"
             ? headerButtonsFromProps({
                   defaultButtons: defaultHeaderButtons,
+                  deleteButtonProps,
+                  editButtonProps,
+                  listButtonProps,
+                  refreshButtonProps,
               })
             : headerButtonsFromProps
         : defaultHeaderButtons;
@@ -152,11 +202,18 @@ export const Show: React.FC<ShowProps> = (props) => {
                     <Group spacing="xs">
                         {buttonBack}
                         {title ?? (
-                            <Title order={3} transform="capitalize">
+                            <Title
+                                order={3}
+                                transform="capitalize"
+                                className={RefinePageHeaderClassNames.Title}
+                            >
                                 {translate(
-                                    `${resource.name}.titles.show`,
+                                    `${resource?.name}.titles.show`,
                                     `Show ${userFriendlyResourceName(
-                                        resource.label ?? resource.name,
+                                        resource?.meta?.label ??
+                                            resource?.options?.label ??
+                                            resource?.label ??
+                                            resource?.name,
                                         "singular",
                                     )}`,
                                 )}

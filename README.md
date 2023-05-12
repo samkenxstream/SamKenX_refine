@@ -41,15 +41,12 @@
 [![Awesome](https://github.com/refinedev/awesome-refine/raw/main/images/badge.svg)](https://github.com/refinedev/awesome-refine)
 [![Maintainability](https://api.codeclimate.com/v1/badges/99a65a191bdd26f4601c/maintainability)](https://codeclimate.com/github/pankod/refine/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/99a65a191bdd26f4601c/test_coverage)](https://codeclimate.com/github/pankod/refine/test_coverage)
-[![npm version](https://img.shields.io/npm/v/@pankod/refine-core.svg)](https://www.npmjs.com/package/@pankod/refine-core)
-[![npm](https://img.shields.io/npm/dm/@pankod/refine-core)](https://www.npmjs.com/package/@pankod/refine-core)
+[![npm version](https://img.shields.io/npm/v/@refinedev/core.svg)](https://www.npmjs.com/package/@refinedev/core)
 [![](https://img.shields.io/github/commit-activity/m/refinedev/refine)](https://github.com/refinedev/refine/commits/next)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
 
-<a href="https://refine.dev/blog/refine-hackathon/">
-  <img alt="refine hackathon" src="https://refine.ams3.cdn.digitaloceanspaces.com/blog/2023-01-06-hackaton-january/social_prizes.png" />
-</a>
+
 
 
 
@@ -72,10 +69,33 @@ It eliminates repetitive tasks demanded by **CRUD** operations and provides indu
 
 **refine** is *headless by design*, thereby offering unlimited styling and customization options.
 
-## What do you mean by "headless" ?
+
+
+## What do you mean by "headless"?
 Instead of being a limited set of pre-styled components, **refine** is a collection of helper `hooks`, `components`, and `providers`. They are all decoupled from *UI components* and *business logic*, so that they never keep you from customizing your *UI* or coding your own flow.
 
 **refine** seamlessly works with any **custom design** or **UI framework** that you favor. For convenience, it ships with ready-made integrations for [Ant Design System](https://ant.design/), [Material UI](https://mui.com/), [Mantine](https://mantine.dev/), and [Chakra UI](https://chakra-ui.com/).
+
+
+## 🔥 Try refine online in just 10 seconds
+
+<br/>
+
+<a  href="https://s.refine.dev/refine-new-github">
+<img  src="https://user-images.githubusercontent.com/18739364/231496370-8c2accd3-321f-4ed5-9763-7ecae95c4600.png">
+</a>
+<br/>
+<br/>
+
+ [refine.new](https://s.refine.dev/refine-new-github) is a powerful open-source browser tool that lets you create refine apps. 
+
+You have the ability to preview, modify, and download your project immediately, thereby streamlining the development process.  
+
+<div align="center">
+<a href="https://s.refine.dev/refine-new-github" target="_blank">
+<img src="https://user-images.githubusercontent.com/18739364/231501815-295deedd-cbee-4b90-80dc-12116ee53274.gif"    />
+</a>
+</div>
 
 ## Use cases
 **refine** shines on *data-intensive⚡* applications like **admin panels**, **dashboards** and **internal tools**. Thanks to the built-in **SSR support**, **refine** can also power *customer-facing* applications like **storefronts**.
@@ -141,7 +161,15 @@ You can take a look at some live examples that can be built using **refine** fro
 
 ## Quick Start
 
-The fastest way to get started with **refine** is by using the `create refine-app` project starter tool.
+The fastest way to get started with **refine** is by using the `create refine-app` project starter tool or using [refine.new](https://s.refine.dev/refine-new-github) browser tool.
+
+
+### Using refine.new browser tool
+[refine.new](https://s.refine.dev/refine-new-github) lets you create a new refine application by making step-by-step selections directly in your browser.
+
+You can choose the libraries and frameworks you want to work with, and the tool will generate a downloadable boilerplate code for you.
+
+### Using `create refine-app`
 Run the following command to create a new **refine** project configured with  [Ant Design System](https://ant.design/) as the default UI framework:
 
 ```
@@ -160,59 +188,86 @@ Your **refine** application will be accessible at [http://localhost:3000](http:/
 
 
 
-<a href="http://localhost:3000">![Welcome on board](https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/welcome-on-board.png)</a>
+<a href="http://localhost:3000">![Welcome on board](https://refine.ams3.cdn.digitaloceanspaces.com/website%2Fstatic%2Fimg%2Fwelcome.png)</a>
 
 <br/>
 
-Let's consume a public `fake REST API` and add two resources (*posts*, *categories*) to our project. Replace the contents of `src/App.tsx` with the following code:
+Let's consume a public `fake REST API` and add two resources (*blog_posts*, *categories*) to our project. Replace the contents of `src/App.tsx` with the following code:
 
 ```tsx title="src/App.tsx"
-import { Refine } from "@pankod/refine-core";
+import { Refine } from '@refinedev/core';
 import {
-    Layout,
-    ReadyPage,
     notificationProvider,
     ErrorComponent,
-} from "@pankod/refine-antd";
-import routerProvider from "@pankod/refine-react-router-v6";
-import dataProvider from "@pankod/refine-simple-rest";
+    ThemedLayout,
+} from '@refinedev/antd';
+import routerProvider, { NavigateToResource } from '@refinedev/react-router-v6';
+import dataProvider from '@refinedev/simple-rest';
 
-import {
-    AntdListInferencer,
-    AntdShowInferencer,
-    AntdCreateInferencer,
-    AntdEditInferencer,
-} from '@pankod/refine-inferencer/antd';
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 
-import "@pankod/refine-antd/dist/reset.css";
+import { AntdInferencer } from '@refinedev/inferencer/antd';
+
+import '@refinedev/antd/dist/reset.css';
 
 const App: React.FC = () => {
     return (
-        <Refine
-            routerProvider={routerProvider}
-            dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
-            Layout={Layout}
-            ReadyPage={ReadyPage}
-            notificationProvider={notificationProvider}
-            catchAll={<ErrorComponent />}
-            resources={[
-                {
-                    name: 'posts',
-                    list: AntdListInferencer,
-                    show: AntdShowInferencer,
-                    create: AntdCreateInferencer,
-                    edit: AntdEditInferencer,
-                    canDelete: true,
-                },
-                {
-                    name: 'categories',
-                    list: AntdListInferencer,
-                    show: AntdShowInferencer,
-                }
-            ]}
-        />
+        <BrowserRouter>
+            <Refine
+                routerProvider={routerProvider}
+                dataProvider={dataProvider('https://api.fake-rest.refine.dev')}
+                notificationProvider={notificationProvider}
+                resources={[
+                    {
+                        name: 'blog_posts',
+                        list: '/blog-posts',
+                        show: '/blog-posts/show/:id',
+                        create: '/blog-posts/create',
+                        edit: '/blog-posts/edit/:id',
+                        meta: { canDelete: true },
+                    },
+                    {
+                        name: 'categories',
+                        list: '/categories',
+                        show: '/categories/show/:id',
+                    },
+                ]}
+            >
+                <Routes>
+                    <Route
+                        element={
+                            <ThemedLayout>
+                                <Outlet />
+                            </ThemedLayout>
+                        }
+                    >
+                        <Route index element={<NavigateToResource />} />
+                        <Route path="blog-posts">
+                            <Route index element={<AntdInferencer />} />
+                            <Route
+                                path="show/:id"
+                                element={<AntdInferencer />}
+                            />
+                            <Route path="create" element={<AntdInferencer />} />
+                            <Route
+                                path="edit/:id"
+                                element={<AntdInferencer />}
+                            />
+                        </Route>
+                        <Route path="categories">
+                            <Route index element={<AntdInferencer />} />
+                            <Route
+                                path="show/:id"
+                                element={<AntdInferencer />}
+                            />
+                        </Route>
+                        <Route path="*" element={<ErrorComponent />} />
+                    </Route>
+                </Routes>
+            </Refine>
+        </BrowserRouter>
     );
-};   
+};
 
 export default App;
 ```
@@ -225,9 +280,9 @@ export default App;
 
 
 
-Now, you should see the output as a table populated with `post` & `category` data:
+Now, you should see the output as a table populated with `blog_posts` & `category` data:
 
-![First example result](https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/readme-quick-start.png)
+![First example result](https://refine.ams3.cdn.digitaloceanspaces.com/website%2Fstatic%2Fimg%2Freadme-quick-start-2.png)
 
 <br/>
 

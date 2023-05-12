@@ -1,6 +1,6 @@
 import { IconButton } from "@chakra-ui/react";
-import { IconChevronDown, IconSelector } from "@tabler/icons";
-import type { Column } from "@pankod/refine-react-table";
+import { IconChevronDown, IconSelector, IconChevronUp } from "@tabler/icons";
+import { Column } from "@tanstack/react-table";
 
 export const ColumnSorter: React.FC<{ column: Column<any, any> }> = ({
     column,
@@ -17,11 +17,9 @@ export const ColumnSorter: React.FC<{ column: Column<any, any> }> = ({
             size="xs"
             onClick={column.getToggleSortingHandler()}
         >
-            {sorted ? (
-                <IconChevronDown size={18} />
-            ) : (
-                <IconSelector size={18} />
-            )}
+            {!sorted && <IconSelector size={18} />}
+            {sorted === "asc" && <IconChevronDown size={18} />}
+            {sorted === "desc" && <IconChevronUp size={18} />}
         </IconButton>
     );
 };

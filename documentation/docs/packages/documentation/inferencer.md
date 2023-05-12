@@ -3,9 +3,9 @@ id: inferencer
 title: Inferencer
 ---
 
-`@pankod/refine-inferencer` is a package that provides a way to automatically generate views for resources based on the data structure. The aim is to reduce the amount of time spent on creating views for resources by generating the code automatically that can be customized easily. 
+`@refinedev/inferencer` is a package that provides a way to automatically generate views for resources based on the data structure. The aim is to reduce the amount of time spent on creating views for resources by generating the code automatically that can be customized easily. 
 
-The package exports components for **List**, **Show**, **Create** and **Edit** views inside UI package scopes. For example, `@pankod/refine-inferencer/antd` exports components for `@pankod/refine-antd` package.
+The package exports components for **List**, **Show**, **Create** and **Edit** views inside UI package scopes. For example, `@refinedev/inferencer/antd` exports components for `@refinedev/antd` package.
 
 ## Installation
 
@@ -18,14 +18,14 @@ values={[
 <TabItem value="npm">
 
 ```bash
-npm i @pankod/refine-inferencer
+npm i @refinedev/inferencer
 ```
 
   </TabItem>
     <TabItem value="yarn">
 
 ```bash
-yarn add @pankod/refine-inferencer
+yarn add @refinedev/inferencer
 ```
 
   </TabItem>
@@ -40,18 +40,18 @@ yarn add @pankod/refine-inferencer
 - [Headless](/docs/api-reference/core/components/inferencer)
 
 :::info
-`@pankod/refine-inferencer` is an experimental package and it is now in the early stages of development. We are working on improving the package and adding new features.
+`@refinedev/inferencer` is an experimental package and it is now in the early stages of development. We are working on improving the package and adding new features.
 
 If you have any suggestions or feedback, please let us know in the [**GitHub Discussions**](https://github.com/refinedev/refine/discussions/3046)
 :::
 
 :::caution Warning
-`@pankod/refine-inferencer` components are meant to be used in development environments. They are not meant to be used in production environments.
+`@refinedev/inferencer` components are meant to be used in development environments. They are not meant to be used in production environments.
 :::
 
 ## How it works?
 
-Simply, `@pankod/refine-inferencer` generates views and codes based on the data structure of the resource by fetching it using the `dataProvider` of `<Refine/>` component.
+Simply, `@refinedev/inferencer` generates views and codes based on the data structure of the resource by fetching it using the `dataProvider` of `<Refine/>` component.
 
 ### How the data is obtained?
 
@@ -113,7 +113,7 @@ If your `dataProvider` and `resources` has a different way of work that makes it
 To render the components we use a [fork](https://github.com/aliemir/react-live) of [`react-live`](https://github.com/FormidableLabs/react-live) package with Typescript support.
 :::
 
-After the fields are determined, we use the `renderer` functions to create the code for the components and also use the same code to render the components in the view. `renderer` functions are constructed per action type and the UI package. This means, `@pankod/refine-inferencer/antd` and other UI scopes has different `renderer` functions for `list`, `show`, `edit` and `create` actions. 
+After the fields are determined, we use the `renderer` functions to create the code for the components and also use the same code to render the components in the view. `renderer` functions are constructed per action type and the UI package. This means, `@refinedev/inferencer/antd` and other UI scopes has different `renderer` functions for `list`, `show`, `edit` and `create` actions. 
 
 `renderer` function returns a `string` that includes the code for the component which is presented to user to copy and paste to their project. The same code is also used to render the component in the view.
 
@@ -121,6 +121,58 @@ After the fields are determined, we use the `renderer` functions to create the c
 Component name is determined by the active `resource` element and the active action. If the resource has `option.label` field, it will be used as the part of the component name. Otherwise, the `resource.name` will be used. For example, if the resource name is `categories` and the action is `list`, the component name will be `CategoryList`.
 :::
 
+### Usage with GraphQL backends and `meta` values
+
+**refine* handles the GraphQL backends by using the `meta` properties in its data hooks. Inferencer lets you define meta values for your resources and methods in a single prop and uses it when generating the code and inferring the fields. Unlike the `meta` property of the data hooks, Inferencer components uses the `meta` property with a nested structure, letting you define the `meta` values per resource and action.
+
+Here's the syntax for defining the `meta` values in Inferencer components:
+
+```tsx
+<AntdListInferencer
+    meta={{
+        [resourceNameOrIdentifier: string]: {
+            [methodName: "default" | "getList" | "getMany" | "getOne" | "update"]: Record<string, unknown>,
+        }
+    }}
+/>
+```
+
+`default` is the default `meta` value for all the methods. In the absence of a specific `meta` value for a method for a resource, the `default` value will be used.
+
+This structure is designed to let users provide `meta` values for multiple resources and actions at once since the Inferencer might find relations and try to use hooks to fetch the necessary data.
+
+#### Example Usage
+
+```tsx
+<AntdListInferencer
+    meta={{
+        posts: {
+            getList: {
+                fields: [
+                    "id",
+                    "title",
+                    "content",
+                    "category_id",
+                    "created_at",
+                ],
+            },
+        },
+        categories: {
+            default: {
+                fields: ["id", "title"],
+            },
+        },
+    }}
+/>
+```
+
+
 ### Modifying the inferred fields
 
 If you want to customize the output of the Inferencer such as setting a custom `accessor` property for `object` type fields or changing the `type` of a field, or changing the `resource` for a `relation` type, you can use`fieldTransformer` prop in Inferencer components. It is a function that takes the field as an argument and returns the modified field. If `undefined | false | null` is returned, the field will be removed from the output, both for the preview and the code.
+
+### Hiding the Code Viewer and Development Warning
+
+If you want to hide the code viewer and the warning components, you can use the `hideCodeViewerInProduction` prop. This will only work in production mode. In development mode, the code viewer and the information block will always be visible.
+
+Please note that the Inferencer components are not meant to be used in production. They are meant to be used in development mode to help you generate the code for your components.

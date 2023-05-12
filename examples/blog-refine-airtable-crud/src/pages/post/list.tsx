@@ -1,12 +1,13 @@
 import React from "react";
-import { useTable, ColumnDef, flexRender } from "@pankod/refine-react-table";
+import { useTable } from "@refinedev/react-table";
+import { ColumnDef, flexRender } from "@tanstack/react-table";
 import { ICategory, IPost } from "../../interfaces/post";
 import {
     useNavigation,
     useDelete,
     GetManyResponse,
     useMany,
-} from "@pankod/refine-core";
+} from "@refinedev/core";
 
 export const PostList: React.FC = () => {
     const { show, edit, create } = useNavigation();
@@ -142,7 +143,7 @@ export const PostList: React.FC = () => {
                                 <th
                                     key={idx}
                                     colSpan={header.colSpan}
-                                    className="py-3 px-6 text-left text-xs font-medium uppercase tracking-wider text-gray-700 "
+                                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 "
                                 >
                                     {flexRender(
                                         header.column.columnDef.header,
@@ -164,7 +165,7 @@ export const PostList: React.FC = () => {
                                     return (
                                         <td
                                             key={idx}
-                                            className="whitespace-nowrap py-2 px-6 text-sm font-medium text-gray-900"
+                                            className="whitespace-nowrap px-6 py-2 text-sm font-medium text-gray-900"
                                         >
                                             {flexRender(
                                                 cell.column.columnDef.cell,
@@ -179,8 +180,8 @@ export const PostList: React.FC = () => {
                 </tbody>
             </table>
 
-            <div className="flex items-center justify-between mx-auto mt-12">
-                <div className="md:w-7/12 flex items-center justify-between mx-auto">
+            <div className="mx-auto mt-12 flex items-center justify-between">
+                <div className="mx-auto flex items-center justify-between md:w-7/12">
                     <button
                         className="rounded border border-gray-200 p-2 text-xs font-medium leading-tight transition duration-150 ease-in-out hover:bg-indigo-500 hover:text-white"
                         onClick={() => setPageIndex(0)}
@@ -219,7 +220,7 @@ export const PostList: React.FC = () => {
                     <div className="px-5">
                         Go to page:
                         <input
-                            className="p-2 block border rounded-[8px]"
+                            className="block rounded-[8px] border p-2"
                             type="number"
                             defaultValue={getState().pagination.pageIndex + 1}
                             onChange={(e) => {
@@ -231,7 +232,7 @@ export const PostList: React.FC = () => {
                         />
                     </div>{" "}
                     <select
-                        className="px-5 border w-[50%]"
+                        className="w-[50%] border px-5"
                         value={getState().pagination.pageSize}
                         onChange={(e) => {
                             setPageSize(Number(e.target.value));

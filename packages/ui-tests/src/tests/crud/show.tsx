@@ -1,10 +1,7 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
-import {
-    RefineCrudShowProps,
-    RefineButtonTestIds,
-} from "@pankod/refine-ui-types";
-import { AccessControlProvider } from "@pankod/refine-core";
+import { RefineCrudShowProps, RefineButtonTestIds } from "@refinedev/ui-types";
+import { AccessControlProvider } from "@refinedev/core";
 
 import { ITestWrapperProps, render, TestWrapper } from "@test";
 
@@ -31,9 +28,11 @@ const renderShow = (
 };
 
 export const crudShowTests = function (
-    Show: React.ComponentType<RefineCrudShowProps<any, any, any, any, any, {}>>,
+    Show: React.ComponentType<
+        RefineCrudShowProps<any, any, any, any, any, {}, any, any, any, any>
+    >,
 ): void {
-    describe("[@pankod/refine-ui-tests] Common Tests / CRUD Show", () => {
+    describe("[@refinedev/ui-tests] Common Tests / CRUD Show", () => {
         beforeAll(() => {
             jest.spyOn(console, "warn").mockImplementation(jest.fn());
         });
@@ -45,7 +44,21 @@ export const crudShowTests = function (
         });
 
         it("should render default edit and delete buttons successfuly", async () => {
-            const { queryByTestId } = renderShow(<Show canEdit canDelete />);
+            const { queryByTestId } = renderShow(
+                <Show
+                    canEdit
+                    canDelete
+                    headerButtons={({
+                        defaultButtons,
+                        editButtonProps,
+                        deleteButtonProps,
+                    }) => {
+                        expect(editButtonProps).toBeDefined();
+                        expect(deleteButtonProps).toBeDefined();
+                        return <>{defaultButtons}</>;
+                    }}
+                />,
+            );
 
             expect(
                 queryByTestId(RefineButtonTestIds.EditButton),
@@ -75,6 +88,13 @@ export const crudShowTests = function (
             const { getByText } = renderShow(<Show />);
 
             getByText("Show Post");
+        });
+
+        it("should not render title when is false", async () => {
+            const { queryByText } = renderShow(<Show title={false} />);
+
+            const text = queryByText("Show Post");
+            expect(text).not.toBeInTheDocument();
         });
 
         it("should render optional title with title prop", async () => {

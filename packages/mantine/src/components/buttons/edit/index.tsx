@@ -5,8 +5,13 @@ import {
     useTranslate,
     useResource,
     useRouterContext,
-} from "@pankod/refine-core";
-import { RefineButtonTestIds } from "@pankod/refine-ui-types";
+    useRouterType,
+    useLink,
+} from "@refinedev/core";
+import {
+    RefineButtonClassNames,
+    RefineButtonTestIds,
+} from "@refinedev/ui-types";
 import { ActionIcon, Anchor, Button } from "@mantine/core";
 import { IconPencil } from "@tabler/icons";
 
@@ -21,33 +26,37 @@ import { EditButtonProps } from "../types";
  * @see {@link https://refine.dev/docs/ui-frameworks/mantine/components/buttons/edit-button} for more details.
  */
 export const EditButton: React.FC<EditButtonProps> = ({
+    resource: resourceNameFromProps,
     resourceNameOrRouteName,
     recordItemId,
     hideText = false,
     accessControl,
-    ignoreAccessControlProvider = false,
     svgIconProps,
+    meta,
     children,
     onClick,
     ...rest
 }) => {
-    const accessControlEnabled =
-        accessControl?.enabled ?? !ignoreAccessControlProvider;
+    const accessControlEnabled = accessControl?.enabled ?? true;
     const hideIfUnauthorized = accessControl?.hideIfUnauthorized ?? false;
-    const { resourceName, resource, id } = useResource({
-        resourceNameOrRouteName,
-        recordItemId,
-    });
-
     const translate = useTranslate();
 
+    const routerType = useRouterType();
+    const Link = useLink();
+    const { Link: LegacyLink } = useRouterContext();
+
+    const ActiveLink = routerType === "legacy" ? LegacyLink : Link;
+
     const { editUrl: generateEditUrl } = useNavigation();
-    const { Link } = useRouterContext();
+
+    const { id, resource } = useResource(
+        resourceNameFromProps ?? resourceNameOrRouteName,
+    );
 
     const { data } = useCan({
-        resource: resourceName,
+        resource: resource?.name,
         action: "edit",
-        params: { id, resource },
+        params: { id: recordItemId ?? id, resource },
         queryOptions: {
             enabled: accessControlEnabled,
         },
@@ -63,7 +72,10 @@ export const EditButton: React.FC<EditButtonProps> = ({
             );
     };
 
-    const editUrl = generateEditUrl(resource.route!, id!);
+    const editUrl =
+        resource && (recordItemId ?? id)
+            ? generateEditUrl(resource, recordItemId! ?? id!, meta)
+            : "";
 
     const { variant, styles, ...commonProps } = rest;
 
@@ -73,7 +85,7 @@ export const EditButton: React.FC<EditButtonProps> = ({
 
     return (
         <Anchor
-            component={Link}
+            component={ActiveLink as any}
             to={editUrl}
             replace={false}
             onClick={(e: React.PointerEvent<HTMLButtonElement>) => {
@@ -92,6 +104,7 @@ export const EditButton: React.FC<EditButtonProps> = ({
                     title={disabledTitle()}
                     disabled={data?.can === false}
                     data-testid={RefineButtonTestIds.EditButton}
+                    className={RefineButtonClassNames.EditButton}
                     {...(variant
                         ? {
                               variant:
@@ -109,6 +122,7 @@ export const EditButton: React.FC<EditButtonProps> = ({
                     leftIcon={<IconPencil size={18} {...svgIconProps} />}
                     title={disabledTitle()}
                     data-testid={RefineButtonTestIds.EditButton}
+                    className={RefineButtonClassNames.EditButton}
                     {...rest}
                 >
                     {children ?? translate("buttons.edit", "Edit")}

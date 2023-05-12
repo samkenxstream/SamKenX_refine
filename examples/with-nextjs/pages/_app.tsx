@@ -1,58 +1,78 @@
 import React from "react";
-import { AppProps } from "next/app";
+import type { AppProps } from "next/app";
+import type { NextPage } from "next";
 
-import { Refine } from "@pankod/refine-core";
+import { GitHubBanner, Refine } from "@refinedev/core";
 import {
+    ThemedLayoutV2,
     notificationProvider,
-    Layout,
-    ErrorComponent,
-    AuthPage,
-} from "@pankod/refine-antd";
-import dataProvider from "@pankod/refine-simple-rest";
-import routerProvider from "@pankod/refine-nextjs-router";
-import "@pankod/refine-antd/dist/reset.css";
+    RefineThemes,
+} from "@refinedev/antd";
+import dataProvider from "@refinedev/simple-rest";
+import routerProvider, {
+    UnsavedChangesNotifier,
+} from "@refinedev/nextjs-router";
+import "@refinedev/antd/dist/reset.css";
 
+import { ConfigProvider } from "antd";
 import "@styles/global.css";
 
 import { authProvider } from "src/authProvider";
 import { API_URL } from "../src/constants";
 
-import { PostList, PostCreate, PostEdit, PostShow } from "@components";
+export type ExtendedNextPage = NextPage & {
+    noLayout?: boolean;
+};
 
-function MyApp({ Component, pageProps }: AppProps): JSX.Element {
+type ExtendedAppProps = AppProps & {
+    Component: ExtendedNextPage;
+};
+
+function MyApp({ Component, pageProps }: ExtendedAppProps): JSX.Element {
+    const renderComponent = () => {
+        if (Component.noLayout) {
+            return <Component {...pageProps} />;
+        }
+
+        return (
+            <ThemedLayoutV2>
+                <Component {...pageProps} />
+            </ThemedLayoutV2>
+        );
+    };
+
     return (
-        <Refine
-            routerProvider={routerProvider}
-            authProvider={authProvider}
-            dataProvider={dataProvider(API_URL)}
-            resources={[
-                { name: "users" },
-                {
-                    name: "posts",
-                    list: PostList,
-                    create: PostCreate,
-                    edit: PostEdit,
-                    show: PostShow,
-                    canDelete: true,
-                },
-            ]}
-            options={{ syncWithLocation: true }}
-            notificationProvider={notificationProvider}
-            LoginPage={() => (
-                <AuthPage
-                    formProps={{
-                        initialValues: {
-                            email: "admin@refine.dev",
-                            password: "password",
+        <>
+            <GitHubBanner />
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    authProvider={authProvider}
+                    routerProvider={routerProvider}
+                    dataProvider={dataProvider(API_URL)}
+                    resources={[
+                        { name: "users", list: "/users" },
+                        {
+                            name: "posts",
+                            list: "/posts",
+                            create: "/posts/create",
+                            edit: "/posts/edit/:id",
+                            show: "/posts/show/:id",
+                            meta: {
+                                canDelete: true,
+                            },
                         },
+                    ]}
+                    options={{
+                        syncWithLocation: true,
+                        warnWhenUnsavedChanges: true,
                     }}
-                />
-            )}
-            Layout={Layout}
-            catchAll={<ErrorComponent />}
-        >
-            <Component {...pageProps} />
-        </Refine>
+                    notificationProvider={notificationProvider}
+                >
+                    {renderComponent()}
+                    <UnsavedChangesNotifier />
+                </Refine>
+            </ConfigProvider>
+        </>
     );
 }
 

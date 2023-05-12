@@ -1,6 +1,13 @@
-import * as RefineCore from "@pankod/refine-core";
-import * as RefineChakraUI from "@pankod/refine-chakra-ui";
-import * as RefineReactHookForm from "@pankod/refine-react-hook-form";
+import { Create } from "@refinedev/chakra-ui";
+import {
+    FormControl,
+    FormLabel,
+    FormErrorMessage,
+    Select,
+    Input,
+    Checkbox,
+} from "@chakra-ui/react";
+import { useForm } from "@refinedev/react-hook-form";
 
 import { createInferencer } from "@/create-inferencer";
 import {
@@ -19,7 +26,7 @@ import {
 
 import { ErrorComponent } from "./error";
 import { LoadingComponent } from "./loading";
-import { CodeViewerComponent } from "./code-viewer";
+import { SharedCodeViewer } from "@/components/shared-code-viewer";
 
 import {
     InferencerResultComponent,
@@ -27,6 +34,7 @@ import {
     ImportElement,
     RendererContext,
 } from "@/types";
+import { getMetaProps } from "@/utilities/get-meta-props";
 
 /**
  * a renderer function for create page in Chakra UI
@@ -35,6 +43,7 @@ import {
 export const renderer = ({
     resource,
     fields,
+    meta,
     isCustomPage,
 }: RendererContext) => {
     const COMPONENT_NAME = componentName(
@@ -42,11 +51,11 @@ export const renderer = ({
         "create",
     );
     const imports: Array<ImportElement> = [
-        ["Create", "@pankod/refine-chakra-ui"],
-        ["FormControl", "@pankod/refine-chakra-ui"],
-        ["FormLabel", "@pankod/refine-chakra-ui"],
-        ["FormErrorMessage", "@pankod/refine-chakra-ui"],
-        ["useForm", "@pankod/refine-react-hook-form"],
+        ["Create", "@refinedev/chakra-ui"],
+        ["FormControl", "@chakra-ui/react"],
+        ["FormLabel", "@chakra-ui/react"],
+        ["FormErrorMessage", "@chakra-ui/react"],
+        ["useForm", "@refinedev/react-hook-form"],
     ];
 
     const relationFields: (InferField | null)[] = fields.filter(
@@ -57,13 +66,18 @@ export const renderer = ({
         .filter(Boolean)
         .map((field) => {
             if (field?.relation && !field.fieldable && field.resource) {
-                imports.push(["useSelect", "@pankod/refine-core"]);
+                imports.push(["useSelect", "@refinedev/core"]);
 
                 return `
                 const { options: ${getVariableName(field.key, "Options")} } =
                 useSelect({
                     resource: "${field.resource.name}",
                     ${getOptionLabel(field)}
+                    ${getMetaProps(
+                        field?.resource?.identifier ?? field?.resource?.name,
+                        meta,
+                        "getList",
+                    )}
                 });
             `;
             }
@@ -73,8 +87,8 @@ export const renderer = ({
 
     const renderRelationFields = (field: InferField) => {
         if (field.relation && field.resource) {
-            imports.push(["useSelect", "@pankod/refine-core"]);
-            imports.push(["Select", "@pankod/refine-chakra-ui"]);
+            imports.push(["useSelect", "@refinedev/core"]);
+            imports.push(["Select", "@chakra-ui/react"]);
 
             const variableName = getVariableName(field.key, "Options");
 
@@ -127,7 +141,7 @@ export const renderer = ({
                 return undefined;
             }
 
-            imports.push(["Input", "@pankod/refine-chakra-ui"]);
+            imports.push(["Input", "@chakra-ui/react"]);
 
             if (field.multiple) {
                 return undefined;
@@ -176,7 +190,7 @@ export const renderer = ({
 
     const booleanFields = (field: InferField) => {
         if (field.type === "boolean") {
-            imports.push(["Checkbox", "@pankod/refine-chakra-ui"]);
+            imports.push(["Checkbox", "@chakra-ui/react"]);
 
             if (field.multiple) {
                 return undefined;
@@ -220,7 +234,7 @@ export const renderer = ({
 
             return `
                 {/* 
-                    DatePicker component is not included in "@pankod/refine-chakra-ui" package.
+                    DatePicker component is not included in "@refinedev/chakra-ui" package.
                     To use a <DatePicker> component, you can examine the following links:
                     
                     - https://github.com/aboveyunhai/chakra-dayzed-datepicker
@@ -270,8 +284,25 @@ export const renderer = ({
                 refineCoreProps: {
                     resource: "${resource.name}",
                     action: "create",
+                    ${getMetaProps(
+                        resource.identifier ?? resource.name,
+                        meta,
+                        "getOne",
+                    )}
                 }
             }`
+                    : getMetaProps(
+                          resource.identifier ?? resource.name,
+                          meta,
+                          "getOne",
+                      )
+                    ? `{
+                        refineCoreProps: { ${getMetaProps(
+                            resource.identifier ?? resource.name,
+                            meta,
+                            "getOne",
+                        )} }
+                        }`
                     : ""
             }
         );
@@ -293,15 +324,22 @@ export const renderer = ({
 export const CreateInferencer: InferencerResultComponent = createInferencer({
     type: "create",
     additionalScope: [
-        ["@pankod/refine-core", "RefineCore", RefineCore],
-        ["@pankod/refine-chakra-ui", "RefineChakraUI", RefineChakraUI],
+        ["@refinedev/chakra-ui", "RefineChakraUI", { Create }],
+        ["@refinedev/react-hook-form", "RefineReactHookForm", { useForm }],
         [
-            "@pankod/refine-react-hook-form",
-            "RefineReactHookForm",
-            RefineReactHookForm,
+            "@chakra-ui/react",
+            "ChakraUI",
+            {
+                FormControl,
+                FormLabel,
+                FormErrorMessage,
+                Select,
+                Input,
+                Checkbox,
+            },
         ],
     ],
-    codeViewerComponent: CodeViewerComponent,
+    codeViewerComponent: SharedCodeViewer,
     loadingComponent: LoadingComponent,
     errorComponent: ErrorComponent,
     renderer,

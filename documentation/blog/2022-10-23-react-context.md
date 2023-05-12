@@ -3,7 +3,7 @@ title: A Guide to useContext and React Context API
 description: Share data across components with React Context in TypeScript and Next.js
 slug: usecontext-and-react-context
 authors: chibuzor_otuokwu
-tags: [react, usecontext,context, nextjs]
+tags: [react]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-10-23-react-context/social.png
 hide_table_of_contents: false
 ---
@@ -520,7 +520,10 @@ In the `example.context.tsx`, we called the `useContext` hook and passed the `Ex
 
 ---
 
-<PromotionBanner title="Does your CRUD app need server state management?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/generic_banner.png" />
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
 

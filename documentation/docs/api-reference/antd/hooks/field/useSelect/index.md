@@ -77,15 +77,15 @@ const { options } = useSelect({
 
 :::
 
-### `sort`
+### `sorters`
 
-It allows to show the options in the desired order. `sort` will be passed to the `getList` method from the `dataProvider` as parameter via the `useList` hook. It is used to send sort query parameters to the API.
+It allows to show the options in the desired order. `sorters` will be passed to the `getList` method from the `dataProvider` as parameter via the `useList` hook. It is used to send sort query parameters to the API.
 
 [Refer to the `CrudSorting` interface for more information &#8594](docs/api-reference/core/interfaceReferences#crudsorting)
 
 ```tsx
 useSelect({
-    sort: [
+    sorters: [
         {
             field: "title",
             order: "asc",
@@ -104,7 +104,7 @@ It is used to show options by filtering them. `filters` will be passed to the `g
 
 ```tsx
 useSelect({
-    filter: [
+    filters: [
         {
             field: "isActive",
             operator: "eq",
@@ -179,13 +179,15 @@ useSelect({
 });
 ```
 
-### `hasPagination`
+#### `mode`
 
-`hasPagination` will be passed to the `getList` method from the `dataProvider` as parameter via the `useList` hook. It is used to determine whether to use server-side pagination or not.
+It can be `"off"`, `"client"` or `"server"`. It is used to determine whether to use server-side pagination or not.
 
 ```tsx
 useSelect({
-    hasPagination: false,
+    pagination: {
+        mode: "off",
+    },
 });
 ```
 
@@ -235,19 +237,21 @@ const { selectProps } = useSelect({
 />;
 ```
 
-### `metaData`
+### `meta`
 
-[`metaData`](/docs/api-reference/general-concepts/#metadata) is used following two purposes:
+`meta` is a special property that can be used to pass additional information to data provider methods for the following purposes:
 
--   To pass additional information to data provider methods.
--   Generate GraphQL queries using plain JavaScript Objects (JSON). Please refer [GraphQL](/docs/advanced-tutorials/data-provider/graphql/#edit-page) for more information.
+-   Customizing the data provider methods for specific use cases.
+-   Generating GraphQL queries using plain JavaScript Objects (JSON).
 
-In the following example, we pass the `headers` property in the `metaData` object to the `create` method. With similar logic, you can pass any properties to specifically handle the data provider methods.
+[Refer to the `meta` section of the General Concepts documentation for more information &#8594](/docs/api-reference/general-concepts/#meta)
+
+In the following example, we pass the `headers` property in the `meta` object to the `create` method. With similar logic, you can pass any properties to specifically handle the data provider methods.
 
 ```tsx
 useSelect({
     // highlight-start
-    metaData: {
+    meta: {
         headers: { "x-meta-data": "true" },
     },
     // highlight-end
@@ -258,14 +262,13 @@ const myDataProvider = {
     getList: async ({
         resource,
         pagination,
-        hasPagination,
-        sort,
+        sorters,
         filters,
         // highlight-next-line
-        metaData,
+        meta,
     }) => {
         // highlight-next-line
-        const headers = metaData?.headers ?? {};
+        const headers = meta?.headers ?? {};
         const url = `${apiUrl}/${resource}`;
         //...
         //...
@@ -358,6 +361,28 @@ useSelect({
 
 Params to pass to liveProvider's [subscribe](/docs/api-reference/core/providers/live-provider/#subscribe) method.
 
+### ~~`sort`~~
+
+:::caution Deprecated
+Use `sorters` instead.
+:::
+
+### ~~`hasPagination`~~
+
+:::caution Deprecated
+Use `pagination.mode` instead.
+:::
+
+> Default: `false`
+
+`hasPagination` will be passed to the `getList` method from the `dataProvider` as parameter via the `useList` hook. It is used to determine whether to use server-side pagination or not.
+
+```tsx
+useSelect({
+    hasPagination: true,
+});
+```
+
 ## FAQ
 
 ### How to add search to options (Autocomplete)?
@@ -409,7 +434,15 @@ return <Select options={options} />;
 
 ### Properties
 
-<PropsTable module="@pankod/refine-antd/useSelect"  />
+<PropsTable module="@refinedev/antd/useSelect"  />
+
+### Type Parameters
+
+| Property     | Desription                                                                                                                                                          | Type                       | Default                    |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------- |
+| TQueryFnData | Result data returned by the query function. Extends [`BaseRecord`][baserecord]                                                                                      | [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
+| TError       | Custom error object that extends [`HttpError`][httperror]                                                                                                           | [`HttpError`][httperror]   | [`HttpError`][httperror]   |
+| TData        | Result data returned by the `select` function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TQueryFnData` will be used as the default value. | [`BaseRecord`][baserecord] | `TQueryFnData`             |
 
 ### Return values
 
@@ -427,3 +460,6 @@ return <Select options={options} />;
 ## Infinite Loading Example
 
 <CodeSandboxExample path="field-antd-use-select-infinite" />
+
+[baserecord]: /api-reference/core/interfaces.md#baserecord
+[httperror]: /api-reference/core/interfaces.md#httperror

@@ -1,12 +1,13 @@
 ---
 id: useDrawerForm
 title: useDrawerForm
+sidebar_label: useDrawerForm
 ---
 
 `useDrawerForm` hook allows you to manage a form within a Drawer. It returns Ant Design [`<Form>`](https://ant.design/components/form/) and [`<Drawer>`](https://ant.design/components/drawer/) components props.
 
 :::info
-`useDrawerForm` hook is extended from [`useForm`](/api-reference/antd/hooks/form/useForm.md) from the [@pankod/refine-antd](https://github.com/refinedev/refine/tree/next/packages/antd) package. This means that you can use all the features of [`useForm`](/api-reference/antd/hooks/form/useForm.md) hook.
+`useDrawerForm` hook is extended from [`useForm`](/api-reference/antd/hooks/form/useForm.md) from the [@refinedev/antd](https://github.com/refinedev/refine/tree/next/packages/antd) package. This means that you can use all the features of [`useForm`](/api-reference/antd/hooks/form/useForm.md) hook.
 :::
 
 ## Basic Usage
@@ -29,23 +30,10 @@ setInitialRoutes(["/posts"]);
 
 // visible-block-start
 import React, { useState } from "react";
-import {
-    useShow,
-    IResourceComponentsProps,
-    HttpError,
-} from "@pankod/refine-core";
+import { useShow, HttpError } from "@refinedev/core";
 
-import {
-    List,
-    Create,
-    Table,
-    Form,
-    Select,
-    Input,
-    Drawer,
-    useTable,
-    useDrawerForm,
-} from "@pankod/refine-antd";
+import { List, Create, useTable, useDrawerForm } from "@refinedev/antd";
+import { Table, Form, Select, Input, Drawer } from "antd";
 
 interface IPost {
     id: number;
@@ -53,7 +41,7 @@ interface IPost {
     status: "published" | "draft" | "rejected";
 }
 
-const PostList: React.FC<IResourceComponentsProps> = () => {
+const PostList: React.FC = () => {
     const { tableProps } = useTable<IPost, HttpError>();
 
     // highlight-start
@@ -156,25 +144,16 @@ setInitialRoutes(["/posts"]);
 
 // visible-block-start
 import React, { useState } from "react";
-import {
-    useShow,
-    IResourceComponentsProps,
-    HttpError,
-} from "@pankod/refine-core";
+import { useShow, HttpError } from "@refinedev/core";
 
 import {
     List,
     Edit,
     EditButton,
-    Table,
-    Form,
-    Select,
-    Input,
-    Drawer,
     useTable,
     useDrawerForm,
-    Space,
-} from "@pankod/refine-antd";
+} from "@refinedev/antd";
+import { Table, Form, Select, Input, Drawer, Space } from "antd";
 
 interface IPost {
     id: number;
@@ -182,7 +161,7 @@ interface IPost {
     status: "published" | "draft" | "rejected";
 }
 
-const PostList: React.FC<IResourceComponentsProps> = () => {
+const PostList: React.FC = () => {
     const { tableProps } = useTable<IPost, HttpError>();
 
     // highlight-start
@@ -322,6 +301,20 @@ Don't forget to pass the record `"id"` to `show` to fetch the record data. This 
 All [`useForm`][antd-use-form] props also available in `useDrawerForm`. You can find descriptions on [`useForm`](/docs/api-reference/antd/hooks/form/useForm/#properties) docs.
 :::
 
+### `syncWithLocation`
+
+> Default: `false`
+
+When `true`, the drawers visibility state and the `id` of the record will be synced with the URL.
+
+This property can also be set as an object `{ key: string; syncId?: boolean }` to customize the key of the URL query parameter. `id` will be synced with the URL only if `syncId` is `true`.
+
+```tsx
+const drawerForm = useDrawerForm({
+    syncWithLocation: { key: "my-modal", syncId: true },
+});
+```
+
 ## Return values
 
 ### `show`
@@ -373,15 +366,72 @@ Current visible state of `<Drawer>`.
 
 It renders `<Drawer>` instead of lazy rendering it.
 
+## FAQ
+
+### How can I change the form data before submitting it to the API?
+
+You may need to modify the form data before it is sent to the API.
+
+For example, Let's send the values we received from the user in two separate inputs, `name` and `surname`, to the API as `fullName`.
+
+```tsx title="pages/user/create.tsx"
+import React from "react";
+import { Drawer, Create, useDrawerForm } from "@refinedev/antd";
+import { Form, Input } from "antd";
+
+export const UserCreate: React.FC = () => {
+    // highlight-start
+    const { formProps, drawerProps, saveButtonProps } = useDrawerForm({
+        action: "create",
+    });
+    // highlight-end
+
+    // highlight-start
+    const handleOnFinish = (values) => {
+        formProps.onFinish?.({
+            fullName: `${values.name} ${values.surname}`,
+        });
+    };
+    // highlight-end
+
+    return (
+        <Drawer {...drawerProps}>
+            <Create saveButtonProps={saveButtonProps}>
+                // highlight-next-line
+                <Form {...formProps} onFinish={handleOnFinish} layout="vertical">
+                    <Form.Item label="Name" name="name">
+                        <Input />
+                    </Form.Item>
+                    <Form.Item label="Surname" name="surname">
+                        <Input />
+                    </Form.Item>
+                </Form>
+            </Create>
+        </Drawer>
+    );
+};
+```
+
 ## API Parameters
 
 ### Properties
 
-<PropsTable module="@pankod/refine-antd/useDrawerForm"/>
+<PropsTable module="@refinedev/antd/useDrawerForm"/>
 
 > `*`: These props have default values in `RefineContext` and can also be set on **<[Refine](/api-reference/core/components/refine-config.md)>** component. `useDrawerForm` will use what is passed to `<Refine>` as default but a local value will override it.
 
 > `**`: If not explicitly configured, default value of `redirect` depends which `action` used. If `action` is `create`, `redirect`s default value is `edit` (created resources edit page). Otherwise if `action` is `edit`, `redirect`s default value is `list`.
+
+### Type Parameters
+
+| Property       | Desription                                                                                                                                                          | Type                       | Default                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------- |
+| TQueryFnData   | Result data returned by the query function. Extends [`BaseRecord`][baserecord]                                                                                      | [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
+| TError         | Custom error object that extends [`HttpError`][httperror]                                                                                                           | [`HttpError`][httperror]   | [`HttpError`][httperror]   |
+| TVariables     | Values for params.                                                                                                                                                  | `{}`                       |                            |
+| TData          | Result data returned by the `select` function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TQueryFnData` will be used as the default value. | [`BaseRecord`][baserecord] | `TQueryFnData`             |
+| TResponse      | Result data returned by the mutation function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TData` will be used as the default value.        | [`BaseRecord`][baserecord] | `TData`                    |
+| TResponseError | Custom error object that extends [`HttpError`][httperror]. If not specified, the value of `TError` will be used as the default value.                               | [`HttpError`][httperror]   | `TError`                   |
 
 ### Return Value
 
@@ -396,14 +446,6 @@ It renders `<Drawer>` instead of lazy rendering it.
 | submit            | Submit method, the parameter is the value of the form fields | `() => void`                                                                   |
 | open              | Whether the drawer is open or not                            | `boolean`                                                                      |
 | close             | Specify a function that can close the drawer                 | `() => void`                                                                   |
-
-### Type Parameters
-
-| Property   | Desription                                                       | Default                    |
-| ---------- | ---------------------------------------------------------------- | -------------------------- |
-| TData      | Result data of the query that extends [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
-| TError     | Custom error object that extends [`HttpError`][httperror]        | [`HttpError`][httperror]   |
-| TVariables | Values for params.                                               | `{}`                       |
 
 ## Example
 

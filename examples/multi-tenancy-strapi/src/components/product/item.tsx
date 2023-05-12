@@ -1,9 +1,9 @@
-import { Card, Icons, DeleteButton } from "@pankod/refine-antd";
+import { DeleteButton } from "@refinedev/antd";
+import { EditOutlined } from "@ant-design/icons";
+import { Card } from "antd";
 
 import { IProduct } from "interfaces";
 import { API_URL } from "../../constants";
-
-const { EditOutlined } = Icons;
 
 type ProductItemProps = {
     item: IProduct;
@@ -13,7 +13,7 @@ type ProductItemProps = {
 const { Meta } = Card;
 
 export const ProductItem: React.FC<ProductItemProps> = ({ item, editShow }) => {
-    const image = item.image ? API_URL + item.image.url : "./error.png";
+    const image = item.image ? API_URL + item.image.url : "/error.png";
 
     return (
         <Card

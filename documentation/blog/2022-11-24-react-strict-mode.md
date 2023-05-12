@@ -3,7 +3,7 @@ title: How to use React Strict Mode in React 18
 description: What is Strict Mode in React 18 and how to use it to find and fix bugs in your React application.
 slug: react-strict-mode-in-react-18
 authors: deborah_emeni
-tags: [react, react-strict-mode]
+tags: [react]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-11-24-react-strict-mode/social.png
 hide_table_of_contents: false
 ---
@@ -110,7 +110,10 @@ x = 500;
 ```
 ---
 
-<PromotionBanner title="Stop wasting your time copy/pasting your CRUD code all over your application!" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/generic_banner.png" />
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
 

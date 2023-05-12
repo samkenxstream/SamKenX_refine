@@ -3,10 +3,20 @@ title: Pilot & refine architecture
 description: We'll be taking a look at the architecture of refine and how week of refine series will be structured.
 slug: refine-pixels-1
 authors: abdullah_numan
-tags: [refine-week, refine, supabase]
+tags: [refine-week, refine, supabase, ant-design]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2023-02-04-refine-pixels-1/social.png
 hide_table_of_contents: false
 ---
+
+:::caution
+
+This post was created using version 3.x.x of **refine**. Although we plan to update it with the latest version of **refine** as soon as possible, you can still benefit from the post in the meantime.
+
+You should know that **refine** version 4.x.x is backward compatible with version 3.x.x, so there is no need to worry. If you want to see the differences between the two versions, check out the [migration guide](https://refine.dev/docs/migration-guide/).
+
+Just be aware that the source code examples in this post have been updated to version 4.x.x.
+
+:::
 
   <img  src="https://refine.ams3.cdn.digitaloceanspaces.com/blog/2023-02-04-refine-pixels-1/refine_supabase.png" alt="refine banner" />
 
@@ -16,7 +26,7 @@ hide_table_of_contents: false
 
 This post provides an introduction to [**refine**](https://github.com/refinedev/refine), a React framework used to rapidly build data heavy CRUD apps like dashboards, admin panels and e-commerce storefronts.
 
-It also presents the [AWeekOfRefine](https://refine.dev/week-of-refine/) series - which is a seven part quickfire guide that aims to help developers learn the ins-and-outs of [**refine**](https://github.com/refinedev/refine) and [**Supabase**](https://supabase.com/) powerful capabilities and get going with **refine** within a week.
+It also presents the [refineWeek](https://refine.dev/week-of-refine/) series - which is a seven part quickfire guide that aims to help developers learn the ins-and-outs of [**refine**](https://github.com/refinedev/refine) and [**Supabase**](https://supabase.com/) powerful capabilities and get going with **refine** within a week.
 
 At the end of this series, you'll be able to build a fully functional CRUD app named "**Pixels**" with **refine** and **Supabase**. 
 
@@ -59,10 +69,10 @@ In a nutshell, you can build rock-solid CRUD apps easily using refine✨.
 Everything in **refine** is centered around the [`<Refine />`](https://refine.dev/docs/api-reference/core/components/refine-config/) component, which is configured via a set of provider props that each requires a provider object to be passed in. A typical application of providers on the `<Refine />` component looks like this:
 
 ```tsx title="App.tsx"
-import { Refine } from "@pankod/refine-core";
-import dataProvider from "@pankod/refine-simple-rest";
-import routerProvider from "@pankod/refine-react-router-v6";
-import { liveProvider } from "@pankod/refine-supabase";
+import { Refine } from "@refinedev/core";
+import dataProvider from "@refinedev/simple-rest";
+import routerProvider from "@refinedev/react-router-v6";
+import { liveProvider } from "@refinedev/supabase";
 import authProvider from "./authProvider";
 
 <Refine
@@ -249,7 +259,7 @@ For a complete list of all these modules, check out [this page](https://refine.d
 
 [**Supabase**](https://supabase.com/) is an open source alternative to Firebase. It is a hosted backend that provides a realtime database, authentication, storage, and API services. 
 
-refine has a built-in data provider support for Supabase. You can find the advanced tutorial [here](https://refine.dev/docs/advanced-tutorials/data-provider/supabase/).
+refine has a built-in data provider support for Supabase. You can find the advanced tutorial [here](https://refine.dev/docs/packages/documentation/data-providers/supabase/).
 
 We'll be using **Supabase** to build our backend for **Pixels** app.
 
@@ -277,7 +287,7 @@ As far as our features and functionalities go, we will cover most of the provide
 
 Here are the detailed outlines split per day:
 
-### Day One - On AWeekOfRefine
+### Day One - On refineWeek
 
 This post. Hello! :wave: :wave: **refine** welcomes you! We are here :smile: :smile:
 
@@ -345,7 +355,7 @@ We will display these logs inside a modal for each canvas both in the client **P
 
 ## Summary
 
-In this post, we introduced the **refine** framework and the [AWeekOfRefine](https://refine.dev/week-of-refine/) series itself. We talked about **refine**'s underlying architecture which consists of providers, hooks and components that help rapidly build internal tools.
+In this post, we introduced the **refine** framework and the [refineWeek](https://refine.dev/week-of-refine/) series itself. We talked about **refine**'s underlying architecture which consists of providers, hooks and components that help rapidly build internal tools.
 
 We layed out the plans for building a **Pixels** client app and an admin dashboard app in considerable depth.
 

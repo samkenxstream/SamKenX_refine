@@ -1,7 +1,9 @@
-import { useTranslate, useApiUrl } from "@pankod/refine-core";
+import { useTranslate, useApiUrl } from "@refinedev/core";
+
+import { Create, getValueFromEvent, useSelect } from "@refinedev/antd";
 
 import {
-    Create,
+    Drawer,
     DrawerProps,
     Form,
     FormProps,
@@ -15,14 +17,11 @@ import {
     Typography,
     Upload,
     Grid,
-    getValueFromEvent,
-    useSelect,
-} from "@pankod/refine-antd";
+} from "antd";
 
 const { Text } = Typography;
 
 import { ICategory } from "interfaces";
-import { Drawer } from "./styled";
 
 type CreateProductProps = {
     drawerProps: DrawerProps;
@@ -47,10 +46,21 @@ export const CreateProduct: React.FC<CreateProductProps> = ({
         <Drawer
             {...drawerProps}
             width={breakpoint.sm ? "500px" : "100%"}
-            bodyStyle={{ padding: 0 }}
             zIndex={1001}
         >
-            <Create resource="products" saveButtonProps={saveButtonProps}>
+            <Create
+                resource="products"
+                saveButtonProps={saveButtonProps}
+                goBack={false}
+                contentProps={{
+                    style: {
+                        boxShadow: "none",
+                    },
+                    bodyStyle: {
+                        padding: 0,
+                    },
+                }}
+            >
                 <Form
                     {...formProps}
                     layout="vertical"

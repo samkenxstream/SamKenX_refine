@@ -1,4 +1,16 @@
-import * as RefineAntd from "@pankod/refine-antd";
+import {
+    Show,
+    TagField,
+    TextField,
+    ImageField,
+    EmailField,
+    UrlField,
+    BooleanField,
+    DateField,
+    MarkdownField,
+    NumberField,
+} from "@refinedev/antd";
+import { Typography } from "antd";
 
 import { createInferencer } from "@/create-inferencer";
 import {
@@ -14,7 +26,7 @@ import {
 
 import { ErrorComponent } from "./error";
 import { LoadingComponent } from "./loading";
-import { CodeViewerComponent } from "./code-viewer";
+import { SharedCodeViewer } from "@/components/shared-code-viewer";
 
 import {
     InferencerResultComponent,
@@ -22,6 +34,7 @@ import {
     ImportElement,
     RendererContext,
 } from "@/types";
+import { getMetaProps } from "@/utilities/get-meta-props";
 
 /**
  * a renderer function for show page in Ant Design
@@ -30,6 +43,7 @@ import {
 export const renderer = ({
     resource,
     fields,
+    meta,
     isCustomPage,
     id,
 }: RendererContext) => {
@@ -40,10 +54,10 @@ export const renderer = ({
     const recordName = "record";
     const imports: Array<ImportElement> = [
         ["React", "react", true],
-        ["IResourceComponentsProps", "@pankod/refine-core"],
-        ["useShow", "@pankod/refine-core"],
-        ["Show", "@pankod/refine-antd"],
-        ["Typography", "@pankod/refine-antd"],
+        ["IResourceComponentsProps", "@refinedev/core"],
+        ["useShow", "@refinedev/core"],
+        ["Show", "@refinedev/antd"],
+        ["Typography", "antd"],
     ];
 
     const relationFields: (InferField | null)[] = fields.filter(
@@ -55,7 +69,7 @@ export const renderer = ({
         .map((field) => {
             if (field?.relation && !field.fieldable && field.resource) {
                 if (field.multiple) {
-                    imports.push(["useMany", "@pankod/refine-core"]);
+                    imports.push(["useMany", "@refinedev/core"]);
                     let ids = accessor(recordName, field.key);
 
                     if (field.accessor) {
@@ -80,10 +94,15 @@ export const renderer = ({
                     queryOptions: {
                         enabled: !!${recordName},
                     },
+                    ${getMetaProps(
+                        field?.resource?.identifier ?? field?.resource?.name,
+                        meta,
+                        "getMany",
+                    )}
                 });
                 `;
                 }
-                imports.push(["useOne", "@pankod/refine-core"]);
+                imports.push(["useOne", "@refinedev/core"]);
                 return `
                 const { data: ${getVariableName(
                     field.key,
@@ -100,6 +119,11 @@ export const renderer = ({
                     queryOptions: {
                         enabled: !!${recordName},
                     },
+                    ${getMetaProps(
+                        field?.resource?.identifier ?? field?.resource?.name,
+                        meta,
+                        "getOne",
+                    )}
                 });
             `;
             }
@@ -113,7 +137,7 @@ export const renderer = ({
             const variableIsLoading = getVariableName(field.key, "IsLoading");
 
             if (field.multiple) {
-                imports.push(["TagField", "@pankod/refine-antd"]);
+                imports.push(["TagField", "@refinedev/antd"]);
                 return jsx`
                 <Title level={5}>${prettyString(field.key)}</Title>
                 {${variableIsLoading} ? <>Loading...</> : (
@@ -199,8 +223,8 @@ export const renderer = ({
     const textFields = (field: InferField) => {
         if (field.type === "text") {
             imports.push(
-                ["TagField", "@pankod/refine-antd"],
-                ["TextField", "@pankod/refine-antd"],
+                ["TagField", "@refinedev/antd"],
+                ["TextField", "@refinedev/antd"],
             );
             if (field.multiple) {
                 const val = accessor("item", undefined, field.accessor);
@@ -225,7 +249,7 @@ export const renderer = ({
 
     const imageFields = (field: InferField) => {
         if (field.type === "image") {
-            imports.push(["ImageField", "@pankod/refine-antd"]);
+            imports.push(["ImageField", "@refinedev/antd"]);
             if (field.multiple) {
                 const val = accessor("item", undefined, field.accessor);
                 return jsx`
@@ -251,8 +275,8 @@ export const renderer = ({
     const emailFields = (field: InferField) => {
         if (field.type === "email") {
             imports.push(
-                ["TagField", "@pankod/refine-antd"],
-                ["EmailField", "@pankod/refine-antd"],
+                ["TagField", "@refinedev/antd"],
+                ["EmailField", "@refinedev/antd"],
             );
             if (field.multiple) {
                 const val = accessor("item", undefined, field.accessor);
@@ -281,8 +305,8 @@ export const renderer = ({
     const urlFields = (field: InferField) => {
         if (field.type === "url") {
             imports.push(
-                ["TagField", "@pankod/refine-antd"],
-                ["UrlField", "@pankod/refine-antd"],
+                ["TagField", "@refinedev/antd"],
+                ["UrlField", "@refinedev/antd"],
             );
             if (field.multiple) {
                 const val = accessor("item", undefined, field.accessor);
@@ -309,8 +333,8 @@ export const renderer = ({
     const booleanFields = (field: InferField) => {
         if (field.type === "boolean") {
             imports.push(
-                ["TagField", "@pankod/refine-antd"],
-                ["BooleanField", "@pankod/refine-antd"],
+                ["TagField", "@refinedev/antd"],
+                ["BooleanField", "@refinedev/antd"],
             );
             if (field.multiple) {
                 const val = accessor("item", undefined, field.accessor);
@@ -339,7 +363,7 @@ export const renderer = ({
 
     const dateFields = (field: InferField) => {
         if (field.type === "date") {
-            imports.push(["DateField", "@pankod/refine-antd"]);
+            imports.push(["DateField", "@refinedev/antd"]);
             if (field.multiple) {
                 const val = accessor("item", undefined, field.accessor);
                 return jsx`
@@ -364,7 +388,7 @@ export const renderer = ({
 
     const richtextFields = (field: InferField) => {
         if (field.type === "richtext") {
-            imports.push(["MarkdownField", "@pankod/refine-antd"]);
+            imports.push(["MarkdownField", "@refinedev/antd"]);
             return jsx`
                 <Title level={5}>${prettyString(field.key)}</Title>
                 <MarkdownField value={${accessor(
@@ -381,7 +405,7 @@ export const renderer = ({
 
     const numberFields = (field: InferField) => {
         if (field.type === "number") {
-            imports.push(["NumberField", "@pankod/refine-antd"]);
+            imports.push(["NumberField", "@refinedev/antd"]);
             if (field.multiple) {
                 const val = accessor("item", undefined, field.accessor);
                 return jsx`
@@ -441,8 +465,23 @@ export const renderer = ({
             isCustomPage
                 ? `{ 
                     resource: "${resource.name}", 
-                    id: ${id}
+                    id: ${id},
+                    ${getMetaProps(
+                        resource?.identifier ?? resource?.name,
+                        meta,
+                        "getOne",
+                    )}
                 }`
+                : getMetaProps(
+                      resource?.identifier ?? resource?.name,
+                      meta,
+                      "getOne",
+                  )
+                ? `{${getMetaProps(
+                      resource?.identifier ?? resource?.name,
+                      meta,
+                      "getOne",
+                  )}}`
                 : ""
         });
         const { data, isLoading } = queryResult;
@@ -465,8 +504,26 @@ export const renderer = ({
  */
 export const ShowInferencer: InferencerResultComponent = createInferencer({
     type: "show",
-    additionalScope: [["@pankod/refine-antd", "RefineAntd", RefineAntd]],
-    codeViewerComponent: CodeViewerComponent,
+    additionalScope: [
+        [
+            "@refinedev/antd",
+            "RefineAntd",
+            {
+                Show,
+                TagField,
+                TextField,
+                ImageField,
+                EmailField,
+                UrlField,
+                BooleanField,
+                DateField,
+                MarkdownField,
+                NumberField,
+            },
+        ],
+        ["antd", "AntdPackage", { Typography }],
+    ],
+    codeViewerComponent: SharedCodeViewer,
     loadingComponent: LoadingComponent,
     errorComponent: ErrorComponent,
     renderer,

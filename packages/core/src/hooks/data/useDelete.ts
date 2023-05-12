@@ -11,12 +11,13 @@ import {
     useMutationMode,
     useCancelNotification,
     useTranslate,
-    useCheckError,
     usePublish,
     useHandleNotification,
     useDataProvider,
     useLog,
     useInvalidate,
+    useOnError,
+    useMeta,
 } from "@hooks";
 import { ActionTypes } from "@contexts/undoableQueue";
 import {
@@ -28,23 +29,32 @@ import {
     HttpError,
     GetListResponse,
     SuccessErrorNotification,
-    MetaDataQuery,
     PreviousQuery,
     IQueryKeys,
+    MetaQuery,
 } from "../../interfaces";
-import { queryKeys, pickDataProvider } from "@definitions/helpers";
+import {
+    queryKeys,
+    pickDataProvider,
+    pickNotDeprecated,
+    useActiveAuthProvider,
+} from "@definitions/helpers";
 
-export type DeleteParams<TVariables> = {
+export type DeleteParams<TData, TError, TVariables> = {
     id: BaseKey;
     resource: string;
     mutationMode?: MutationMode;
     undoableTimeout?: number;
     onCancel?: (cancelMutation: () => void) => void;
-    metaData?: MetaDataQuery;
+    meta?: MetaQuery;
+    /**
+     * @deprecated `metaData` is deprecated with refine@4, refine will pass `meta` instead, however, we still support `metaData` for backward compatibility.
+     */
+    metaData?: MetaQuery;
     dataProviderName?: string;
     invalidates?: Array<keyof IQueryKeys>;
     values?: TVariables;
-} & SuccessErrorNotification;
+} & SuccessErrorNotification<DeleteOneResponse<TData>, TError, BaseKey>;
 
 export type UseDeleteReturnType<
     TData extends BaseRecord = BaseRecord,
@@ -53,7 +63,7 @@ export type UseDeleteReturnType<
 > = UseMutationResult<
     DeleteOneResponse<TData>,
     TError,
-    DeleteParams<TVariables>,
+    DeleteParams<TData, TError, TVariables>,
     DeleteContext<TData>
 >;
 
@@ -66,7 +76,7 @@ export type UseDeleteProps<
         UseMutationOptions<
             DeleteOneResponse<TData>,
             TError,
-            DeleteParams<TVariables>,
+            DeleteParams<TData, TError, TVariables>,
             DeleteContext<TData>
         >,
         "mutationFn" | "onError" | "onSuccess" | "onSettled" | "onMutate"
@@ -96,7 +106,10 @@ export const useDelete = <
     TError,
     TVariables
 > => {
-    const { mutate: checkError } = useCheckError();
+    const authProvider = useActiveAuthProvider();
+    const { mutate: checkError } = useOnError({
+        v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+    });
     const dataProvider = useDataProvider();
 
     const { resources } = useResource();
@@ -113,11 +126,12 @@ export const useDelete = <
     const { log } = useLog();
     const handleNotification = useHandleNotification();
     const invalidateStore = useInvalidate();
+    const getMeta = useMeta();
 
     const mutation = useMutation<
         DeleteOneResponse<TData>,
         TError,
-        DeleteParams<TVariables>,
+        DeleteParams<TData, TError, TVariables>,
         DeleteContext<TData>
     >(
         ({
@@ -126,10 +140,15 @@ export const useDelete = <
             undoableTimeout,
             resource,
             onCancel,
+            meta,
             metaData,
             dataProviderName,
             values,
         }) => {
+            const combinedMeta = getMeta({
+                meta: pickNotDeprecated(meta, metaData),
+            });
+
             const mutationModePropOrContext =
                 mutationMode ?? mutationModeContext;
 
@@ -142,7 +161,8 @@ export const useDelete = <
                 ).deleteOne<TData, TVariables>({
                     resource,
                     id,
-                    metaData,
+                    meta: combinedMeta,
+                    metaData: combinedMeta,
                     variables: values,
                 });
             }
@@ -160,7 +180,8 @@ export const useDelete = <
                             .deleteOne<TData, TVariables>({
                                 resource,
                                 id,
-                                metaData,
+                                meta: combinedMeta,
+                                metaData: combinedMeta,
                                 variables: values,
                             })
                             .then((result) => resolve(result))
@@ -196,10 +217,15 @@ export const useDelete = <
                 resource,
                 mutationMode,
                 dataProviderName,
+                meta,
+                metaData,
             }) => {
+                const preferredMeta = pickNotDeprecated(meta, metaData);
                 const queryKey = queryKeys(
                     resource,
                     pickDataProvider(resource, dataProviderName, resources),
+                    preferredMeta,
+                    preferredMeta,
                 );
 
                 const mutationModePropOrContext =
@@ -296,11 +322,12 @@ export const useDelete = <
                     resource,
                     successNotification,
                     dataProviderName,
+                    meta,
                     metaData,
                 },
                 context,
             ) => {
-                const resourceSingular = pluralize.singular(resource ?? "");
+                const resourceSingular = pluralize.singular(resource);
 
                 // Remove the queries from the cache:
                 queryClient.removeQueries(context?.queryKey.detail(id));
@@ -330,13 +357,13 @@ export const useDelete = <
                     channel: `resources/${resource}`,
                     type: "deleted",
                     payload: {
-                        ids: id ? [id] : [],
+                        ids: [id],
                     },
                     date: new Date(),
                 });
 
                 const { fields, operation, variables, ...rest } =
-                    metaData || {};
+                    pickNotDeprecated(meta, metaData) || {};
 
                 log?.mutate({
                     action: "delete",
@@ -370,7 +397,7 @@ export const useDelete = <
                 if (err.message !== "mutationCancelled") {
                     checkError(err);
 
-                    const resourceSingular = pluralize.singular(resource ?? "");
+                    const resourceSingular = pluralize.singular(resource);
 
                     const notificationConfig =
                         typeof errorNotification === "function"

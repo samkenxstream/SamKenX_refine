@@ -3,7 +3,7 @@ title: How to Multipart File Upload Using FormData with HTML
 description: In this guide, I'm going to show you how to multipart files upload with using HTML and JavaScript
 slug: how-to-multipart-upload
 authors: melih
-tags: [JavaScript, multipart/form-data, multipart-upload, file-upload]
+tags: [javascript]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/placeholder.png
 hide_table_of_contents: false
 ---
@@ -134,7 +134,7 @@ The requests we created to send files by JavaScript will now be sent to our loca
 
 ---
 
-<PromotionBanner title="Does your CRUD app need server state management?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/generic_banner.png" />
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
 
 ---
 ## How to Multipart Upload with Refine?

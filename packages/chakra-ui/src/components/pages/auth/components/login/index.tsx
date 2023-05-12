@@ -2,12 +2,15 @@ import React from "react";
 import {
     LoginPageProps,
     LoginFormTypes,
+    useRouterType,
+    useLink,
     useRouterContext,
     useLogin,
     useTranslate,
     BaseRecord,
     HttpError,
-} from "@pankod/refine-core";
+    useActiveAuthProvider,
+} from "@refinedev/core";
 import {
     Box,
     Heading,
@@ -22,11 +25,14 @@ import {
     FormErrorMessage,
     HStack,
     Checkbox,
+    useColorModeValue,
 } from "@chakra-ui/react";
-import { FormProvider, useForm } from "@pankod/refine-react-hook-form";
+import { useForm } from "@refinedev/react-hook-form";
+import { FormProvider } from "react-hook-form";
 
 import { layoutProps, cardProps } from "../styles";
 import { FormPropsType } from "../..";
+import { ThemedTitle } from "@components";
 
 type LoginProps = LoginPageProps<
     BoxProps,
@@ -43,12 +49,19 @@ export const LoginPage: React.FC<LoginProps> = ({
     wrapperProps,
     renderContent,
     formProps,
+    title,
 }) => {
     const { onSubmit, ...useFormProps } = formProps || {};
 
+    const authProvider = useActiveAuthProvider();
+    const { mutate: login } = useLogin<LoginFormTypes>({
+        v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+    });
     const translate = useTranslate();
-    const { mutate: login } = useLogin<LoginFormTypes>();
-    const { Link } = useRouterContext();
+    const routerType = useRouterType();
+    const NewLink = useLink();
+    const { Link: LegacyLink } = useRouterContext();
+    const Link = routerType === "legacy" ? LegacyLink : NewLink;
     const methods = useForm<BaseRecord, HttpError, LoginFormTypes>({
         ...useFormProps,
     });
@@ -66,9 +79,10 @@ export const LoginPage: React.FC<LoginProps> = ({
                         {providers.map((provider) => (
                             <Button
                                 key={provider.name}
-                                colorScheme="green"
+                                variant="outline"
                                 width="full"
                                 leftIcon={<>{provider?.icon}</>}
+                                fontSize="sm"
                                 onClick={() =>
                                     login({
                                         providerName: provider.name,
@@ -88,10 +102,37 @@ export const LoginPage: React.FC<LoginProps> = ({
         return null;
     };
 
+    const importantTextColor = useColorModeValue("brand.500", "brand.200");
+
+    const PageTitle =
+        title === false ? null : (
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    marginBottom: "32px",
+                    fontSize: "20px",
+                }}
+            >
+                {title ?? <ThemedTitle collapsed={false} />}
+            </div>
+        );
+
     const allContentProps = { ...cardProps, ...contentProps };
     const content = (
-        <Box bg="chakra-body-bg" {...allContentProps}>
-            <Heading mb="8" textAlign="center" size="lg">
+        <Box
+            bg="chakra-body-bg"
+            borderWidth="1px"
+            borderColor={useColorModeValue("gray.200", "gray.700")}
+            backgroundColor={useColorModeValue("white", "gray.800")}
+            {...allContentProps}
+        >
+            <Heading
+                mb="8"
+                textAlign="center"
+                fontSize="2xl"
+                color={importantTextColor}
+            >
                 {translate("pages.login.title", "Sign in to your account")}
             </Heading>
             {renderProviders()}
@@ -104,12 +145,13 @@ export const LoginPage: React.FC<LoginProps> = ({
                     return login(data);
                 })}
             >
-                <FormControl mb="3" isInvalid={!!errors?.email}>
-                    <FormLabel>
+                <FormControl mt="6" isInvalid={!!errors?.email}>
+                    <FormLabel htmlFor="email">
                         {translate("pages.login.fields.email", "Email")}
                     </FormLabel>
                     <Input
-                        id="title"
+                        id="email"
+                        placeholder="Email"
                         type="text"
                         {...register("email", {
                             required: true,
@@ -127,13 +169,14 @@ export const LoginPage: React.FC<LoginProps> = ({
                     </FormErrorMessage>
                 </FormControl>
 
-                <FormControl mb="3" isInvalid={!!errors?.password}>
-                    <FormLabel>
+                <FormControl mt="6" isInvalid={!!errors?.password}>
+                    <FormLabel htmlFor="password">
                         {translate("pages.login.fields.password", "Password")}
                     </FormLabel>
                     <Input
-                        id="title"
+                        id="password"
                         type="password"
+                        placeholder="Password"
                         {...register("password", {
                             required: true,
                         })}
@@ -143,22 +186,25 @@ export const LoginPage: React.FC<LoginProps> = ({
                     </FormErrorMessage>
                 </FormControl>
 
-                <Box mb="3">
-                    <HStack justifyContent="space-between">
-                        {rememberMe ?? (
-                            <Box>
-                                <Checkbox {...register("remember")}>
-                                    {translate(
-                                        "pages.login.buttons.rememberMe",
-                                        "Remember me",
-                                    )}
-                                </Checkbox>
-                            </Box>
+                {rememberMe ?? (
+                    <Checkbox {...register("remember")} mt="6">
+                        {translate(
+                            "pages.login.buttons.rememberMe",
+                            "Remember me",
                         )}
+                    </Checkbox>
+                )}
+
+                <Button mt="6" type="submit" width="full" colorScheme="brand">
+                    {translate("pages.login.signin", "Sign in")}
+                </Button>
+
+                <Box mt="6">
+                    <HStack justifyContent="space-between" fontSize="12px">
                         {forgotPasswordLink ?? (
                             <ChakraLink
                                 as={Link}
-                                color="green"
+                                color={importantTextColor}
                                 to="/forgot-password"
                             >
                                 {translate(
@@ -167,31 +213,30 @@ export const LoginPage: React.FC<LoginProps> = ({
                                 )}
                             </ChakraLink>
                         )}
+                        {registerLink ?? (
+                            <Box>
+                                <span>
+                                    {translate(
+                                        "pages.login.buttons.noAccount",
+                                        "Don’t have an account?",
+                                    )}
+                                </span>
+                                <ChakraLink
+                                    color={importantTextColor}
+                                    ml="1"
+                                    as={Link}
+                                    fontWeight="bold"
+                                    to="/register"
+                                >
+                                    {translate(
+                                        "pages.login.register",
+                                        "Sign up",
+                                    )}
+                                </ChakraLink>
+                            </Box>
+                        )}
                     </HStack>
                 </Box>
-
-                <Button mb="3" type="submit" width="full" colorScheme="green">
-                    {translate("pages.login.signin", "Sign in")}
-                </Button>
-
-                {registerLink ?? (
-                    <Box>
-                        <span>
-                            {translate(
-                                "pages.login.buttons.noAccount",
-                                "Don’t have an account?",
-                            )}
-                        </span>
-                        <ChakraLink
-                            color="green"
-                            ml="1"
-                            as={Link}
-                            to="/register"
-                        >
-                            {translate("pages.login.register", "Sign up")}
-                        </ChakraLink>
-                    </Box>
-                )}
             </form>
         </Box>
     );
@@ -200,7 +245,14 @@ export const LoginPage: React.FC<LoginProps> = ({
     return (
         <FormProvider {...methods}>
             <Box {...allWrapperProps}>
-                {renderContent ? renderContent(content) : content}
+                {renderContent ? (
+                    renderContent(content, PageTitle)
+                ) : (
+                    <>
+                        {PageTitle}
+                        {content}
+                    </>
+                )}
             </Box>
         </FormProvider>
     );

@@ -5,10 +5,15 @@ import { Sider as DefaultSider } from "./sider";
 import { Header as DefaultHeader } from "./header";
 import { RefineLayoutLayoutProps } from "./types";
 
+/**
+ * @deprecated use `<ThemedLayout>` instead with 100% backward compatibility.
+ * @see https://refine.dev/docs/api-reference/antd/components/antd-themed-layout
+ **/
 export const Layout: React.FC<RefineLayoutLayoutProps> = ({
     children,
     Header,
     Sider,
+    Title,
     Footer,
     OffLayoutArea,
 }) => {
@@ -19,7 +24,7 @@ export const Layout: React.FC<RefineLayoutLayoutProps> = ({
 
     return (
         <AntdLayout style={{ minHeight: "100vh" }}>
-            <SiderToRender />
+            <SiderToRender Title={Title} />
             <AntdLayout>
                 <HeaderToRender />
                 <AntdLayout.Content>

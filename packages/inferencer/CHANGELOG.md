@@ -1,5 +1,267 @@
 # @pankod/refine-mantine
 
+## 3.3.4
+
+### Patch Changes
+
+-   [#4293](https://github.com/refinedev/refine/pull/4293) [`7fa008b7ff7`](https://github.com/refinedev/refine/commit/7fa008b7ff7a46d34bbd513f1ac654ccebed9cf3) Thanks [@salihozdemir](https://github.com/salihozdemir)! - refactor: minimized the packages scope
+
+## 3.3.3
+
+### Patch Changes
+
+-   [#4293](https://github.com/refinedev/refine/pull/4293) [`7fa008b7ff7`](https://github.com/refinedev/refine/commit/7fa008b7ff7a46d34bbd513f1ac654ccebed9cf3) Thanks [@salihozdemir](https://github.com/salihozdemir)! - refactor: minimized the packages scope
+
+## 3.3.2
+
+### Patch Changes
+
+-   [#4265](https://github.com/refinedev/refine/pull/4265) [`ff43684f787`](https://github.com/refinedev/refine/commit/ff43684f787880d120a66d5747bb3e4cbade5ea6) Thanks [@salihozdemir](https://github.com/salihozdemir)! - fix: fixed an issue that caused the duplicate field error
+
+## 3.3.1
+
+### Patch Changes
+
+-   [#4265](https://github.com/refinedev/refine/pull/4265) [`ff43684f787`](https://github.com/refinedev/refine/commit/ff43684f787880d120a66d5747bb3e4cbade5ea6) Thanks [@salihozdemir](https://github.com/salihozdemir)! - fix: fixed an issue that caused the duplicate field error
+
+## 3.3.0
+
+### Minor Changes
+
+-   [#4141](https://github.com/refinedev/refine/pull/4141) [`e7188abba8b`](https://github.com/refinedev/refine/commit/e7188abba8baa8d19c93496fe0deb724bd492406) Thanks [@aliemir](https://github.com/aliemir)! - ## `meta` property for inferencer components
+
+    Added `meta` property to the inferencer components. This allows you to pass `meta` to the data hooks included in the inferencer's generated code. This is useful when your data provider relies on the `meta` property which made `@refinedev/inferencer` unusable before. Now you will be able to pass `meta` properties and generate code that will work with your data provider.
+
+    `meta` property of the inferencer components has a nested structure unlike the rest of the refine codebase. This is because the inferencer components are designed to infer the relational data as well which may require different `meta` values for each of their methods (such as `getList` and `getOne`).
+
+    ### Type
+
+    ```tsx
+    <AntdListInferencer
+        meta={{
+            [resourceNameOrIdentifier: string]: {
+                [methodName: "default" | "getList" | "getMany" | "getOne" | "update"]: Record<string, unknown>,
+            }
+        }}
+    />
+    ```
+
+    `default` is the default `meta` value for all the methods. In the absence of a specific `meta` value for a method for a resource, the `default` value will be used.
+
+    ### Example Usage
+
+    ```tsx
+    <AntdListInferencer
+        meta={{
+            posts: {
+                getList: {
+                    fields: [
+                        "id",
+                        "title",
+                        "content",
+                        "category_id",
+                        "created_at",
+                    ],
+                },
+            },
+            categories: {
+                default: {
+                    fields: ["id", "title"],
+                },
+            },
+        }}
+    />
+    ```
+
+    ## Using the appropriate method to infer the relational data
+
+    The inferencer components were using the `getOne` method of the data providers to infer the relational field data in a record. This has a chance of breaking the generated code and the preview if the data provider implements a `getMany` and `getOne` in a different manner which may not be compatible with each other.
+
+    In the generated code, fields with multiple values are handled via `useMany` hook but the inference was using the `getOne` method regardless of the field's cardinality. This has been fixed and the inferencer components will now use the `getMany` method for fields with multiple values and `getOne` method for fields with single values.
+
+    ## Redesigned code viewer components
+
+    Updated the code viewers components and the bottom buttons and unified the design. The code viewers now use the same components.
+
+    ## Sortable actions in Material UI list inferencer
+
+    Fixed the actions column in the Material UI list inferencer to be sortable.
+
+    ## Repeated relational fields
+
+    Added a check for repeated relational fields and excluded the duplicate fields from the generated code according to the context of the inferencer. In `list` and `show` actions fields with displayable values are preferred over the fields with relational values. In `edit` and `create` actions, fields with relational values are preferred over the fields with displayable values.
+
+    For example, if a `posts` resource item has both `category_id` (`number` or `string`) and `category` (record with key `title` and `id`) fields. The `list` and `show` actions will use the `category` field and the `edit` and `create` actions will use the `category_id` field.
+
+    ## Ability to hide code viewer in production
+
+    Added an option `hideCodeViewerInProduction` to hide code viewer components in production environments. This is added for presentational purposes and keep in mind that the Inferencer components are not meant for production use and may generate broken code.
+
+## 3.2.0
+
+### Minor Changes
+
+-   [#4141](https://github.com/refinedev/refine/pull/4141) [`e7188abba8b`](https://github.com/refinedev/refine/commit/e7188abba8baa8d19c93496fe0deb724bd492406) Thanks [@aliemir](https://github.com/aliemir)! - ## `meta` property for inferencer components
+
+    Added `meta` property to the inferencer components. This allows you to pass `meta` to the data hooks included in the inferencer's generated code. This is useful when your data provider relies on the `meta` property which made `@refinedev/inferencer` unusable before. Now you will be able to pass `meta` properties and generate code that will work with your data provider.
+
+    `meta` property of the inferencer components has a nested structure unlike the rest of the refine codebase. This is because the inferencer components are designed to infer the relational data as well which may require different `meta` values for each of their methods (such as `getList` and `getOne`).
+
+    ### Type
+
+    ```tsx
+    <AntdListInferencer
+        meta={{
+            [resourceNameOrIdentifier: string]: {
+                [methodName: "default" | "getList" | "getMany" | "getOne" | "update"]: Record<string, unknown>,
+            }
+        }}
+    />
+    ```
+
+    `default` is the default `meta` value for all the methods. In the absence of a specific `meta` value for a method for a resource, the `default` value will be used.
+
+    ### Example Usage
+
+    ```tsx
+    <AntdListInferencer
+        meta={{
+            posts: {
+                getList: {
+                    fields: [
+                        "id",
+                        "title",
+                        "content",
+                        "category_id",
+                        "created_at",
+                    ],
+                },
+            },
+            categories: {
+                default: {
+                    fields: ["id", "title"],
+                },
+            },
+        }}
+    />
+    ```
+
+    ## Using the appropriate method to infer the relational data
+
+    The inferencer components were using the `getOne` method of the data providers to infer the relational field data in a record. This has a chance of breaking the generated code and the preview if the data provider implements a `getMany` and `getOne` in a different manner which may not be compatible with each other.
+
+    In the generated code, fields with multiple values are handled via `useMany` hook but the inference was using the `getOne` method regardless of the field's cardinality. This has been fixed and the inferencer components will now use the `getMany` method for fields with multiple values and `getOne` method for fields with single values.
+
+    ## Redesigned code viewer components
+
+    Updated the code viewers components and the bottom buttons and unified the design. The code viewers now use the same components.
+
+    ## Sortable actions in Material UI list inferencer
+
+    Fixed the actions column in the Material UI list inferencer to be sortable.
+
+    ## Repeated relational fields
+
+    Added a check for repeated relational fields and excluded the duplicate fields from the generated code according to the context of the inferencer. In `list` and `show` actions fields with displayable values are preferred over the fields with relational values. In `edit` and `create` actions, fields with relational values are preferred over the fields with displayable values.
+
+    For example, if a `posts` resource item has both `category_id` (`number` or `string`) and `category` (record with key `title` and `id`) fields. The `list` and `show` actions will use the `category` field and the `edit` and `create` actions will use the `category_id` field.
+
+    ## Ability to hide code viewer in production
+
+    Added an option `hideCodeViewerInProduction` to hide code viewer components in production environments. This is added for presentational purposes and keep in mind that the Inferencer components are not meant for production use and may generate broken code.
+
+## 3.1.7
+
+### Patch Changes
+
+-   [#4093](https://github.com/refinedev/refine/pull/4093) [`c6637089837`](https://github.com/refinedev/refine/commit/c6637089837dfc0e27629afa763e4a8d2b6847c8) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - Fixed the warning about using the `isOptionEqualToValue` props of the `Autocomplete` component.
+
+## 3.1.6
+
+### Patch Changes
+
+-   [#4092](https://github.com/refinedev/refine/pull/4092) [`f973878dc47`](https://github.com/refinedev/refine/commit/f973878dc47b4d27293df96f6cdea3d1f81ae420) Thanks [@salihozdemir](https://github.com/salihozdemir)! - Fix the wrong import path for Mui `Checkbox` component.
+
+## 3.1.5
+
+### Patch Changes
+
+-   [#4092](https://github.com/refinedev/refine/pull/4092) [`f973878dc47`](https://github.com/refinedev/refine/commit/f973878dc47b4d27293df96f6cdea3d1f81ae420) Thanks [@salihozdemir](https://github.com/salihozdemir)! - Fix the wrong import path for Mui `Checkbox` component.
+
+## 3.1.4
+
+### Patch Changes
+
+-   [#4025](https://github.com/refinedev/refine/pull/4025) [`a82937e9296`](https://github.com/refinedev/refine/commit/a82937e92961f380c85e62d7edf327c8f2a9e18d) Thanks [@aliemir](https://github.com/aliemir)! - Fix wrong resource data usage and key conflicts on route change.
+
+## 3.1.3
+
+### Patch Changes
+
+-   [#4025](https://github.com/refinedev/refine/pull/4025) [`a82937e9296`](https://github.com/refinedev/refine/commit/a82937e92961f380c85e62d7edf327c8f2a9e18d) Thanks [@aliemir](https://github.com/aliemir)! - Fix wrong resource data usage and key conflicts on route change.
+
+## 3.1.2
+
+### Patch Changes
+
+-   [#3871](https://github.com/refinedev/refine/pull/3871) [`2a0cb4ed5a0`](https://github.com/refinedev/refine/commit/2a0cb4ed5a0f065a5dccba50fc7abecfa1167682) Thanks [@BatuhanW](https://github.com/BatuhanW)! - fix: wrong import for controller
+
+-   Updated dependencies [[`5ed083a8050`](https://github.com/refinedev/refine/commit/5ed083a805082f2c24c3afe0eb285c8f8485e3df)]:
+    -   @refinedev/core@4.1.2
+
+## 3.1.1
+
+### Patch Changes
+
+-   [#3871](https://github.com/refinedev/refine/pull/3871) [`2a0cb4ed5a0`](https://github.com/refinedev/refine/commit/2a0cb4ed5a0f065a5dccba50fc7abecfa1167682) Thanks [@BatuhanW](https://github.com/BatuhanW)! - fix: wrong import for controller
+
+-   Updated dependencies [[`5ed083a8050`](https://github.com/refinedev/refine/commit/5ed083a805082f2c24c3afe0eb285c8f8485e3df)]:
+    -   @refinedev/core@4.1.1
+
+## 3.1.0
+
+### Minor Changes
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    Inferecer uses the resource `meta` instead of `options` to pick which data provider to use. If `meta` is not defined, it will use `options` as fallback.
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    Upgrade `@ant-design/icons` to `^5.0.1` for consistency.
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    `AuthProvider` is renamed to `LegacyAuthProvider` with refine@4. Components and functions are updated to support `LegacyAuthProvider`.
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    **Moving to the `@refinedev` scope 🎉🎉**
+
+    Moved to the `@refinedev` scope and updated our packages to use the new scope. From now on, all packages will be published under the `@refinedev` scope with their new names.
+
+    Now, we're also removing the `refine` prefix from all packages. So, the `@pankod/refine-core` package is now `@refinedev/core`, `@pankod/refine-antd` is now `@refinedev/antd`, and so on.
+
+### Patch Changes
+
+## 2.10.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
+### Patch Changes
+
+-   Updated dependencies [[`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb)]:
+    -   @pankod/refine-core@3.103.0
+
+## 2.9.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
+### Patch Changes
+
+-   Updated dependencies [[`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb)]:
+    -   @pankod/refine-core@3.102.0
+
 ## 2.8.2
 
 ### Patch Changes
@@ -262,11 +524,7 @@
     Components for UI integrations are exported in sub directories. For example, to use the components for Ant Design integration, you can import them like this:
 
     ```tsx
-    import {
-        AntdListInferencer,
-        AntdShowInferencer,
-        AntdEditInferencer,
-    } from "@pankod/refine-inferencer/antd";
+
     ```
 
     After importing the component, you can directly use it in `<Refine/>` component's `resources` prop.
@@ -305,11 +563,7 @@
     Components for UI integrations are exported in sub directories. For example, to use the components for Ant Design integration, you can import them like this:
 
     ```tsx
-    import {
-        AntdListInferencer,
-        AntdShowInferencer,
-        AntdEditInferencer,
-    } from "@pankod/refine-inferencer/antd";
+
     ```
 
     After importing the component, you can directly use it in `<Refine/>` component's `resources` prop.

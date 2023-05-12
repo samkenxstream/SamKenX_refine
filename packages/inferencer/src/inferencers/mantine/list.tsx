@@ -1,5 +1,18 @@
-import * as RefineMantine from "@pankod/refine-mantine";
-import * as RefineReactTable from "@pankod/refine-react-table";
+import {
+    List,
+    EditButton,
+    ShowButton,
+    DeleteButton,
+    TagField,
+    EmailField,
+    UrlField,
+    BooleanField,
+    DateField,
+    MarkdownField,
+} from "@refinedev/mantine";
+import { useTable } from "@refinedev/react-table";
+import { ScrollArea, Table, Pagination, Group, Image } from "@mantine/core";
+import { flexRender } from "@tanstack/react-table";
 
 import { createInferencer } from "@/create-inferencer";
 import {
@@ -15,13 +28,14 @@ import {
 
 import { ErrorComponent } from "./error";
 import { LoadingComponent } from "./loading";
-import { CodeViewerComponent } from "./code-viewer";
+import { SharedCodeViewer } from "@/components/shared-code-viewer";
 
 import {
     InferencerResultComponent,
     InferField,
     RendererContext,
 } from "@/types";
+import { getMetaProps } from "@/utilities/get-meta-props";
 
 const getAccessorKey = (field: InferField) => {
     return Array.isArray(field.accessor) || field.multiple
@@ -38,6 +52,7 @@ const getAccessorKey = (field: InferField) => {
 export const renderer = ({
     resource,
     fields,
+    meta,
     isCustomPage,
 }: RendererContext) => {
     const COMPONENT_NAME = componentName(
@@ -46,18 +61,18 @@ export const renderer = ({
     );
     const recordName = "tableData?.data";
     const imports: Array<[element: string, module: string]> = [
-        ["IResourceComponentsProps", "@pankod/refine-core"],
-        ["useTable", "@pankod/refine-react-table"],
-        ["ColumnDef", "@pankod/refine-react-table"],
-        ["flexRender", "@pankod/refine-react-table"],
-        ["ScrollArea", "@pankod/refine-mantine"],
-        ["List", "@pankod/refine-mantine"],
-        ["Table", "@pankod/refine-mantine"],
-        ["Pagination", "@pankod/refine-mantine"],
-        ["Group", "@pankod/refine-mantine"],
-        ["EditButton", "@pankod/refine-mantine"],
-        ["ShowButton", "@pankod/refine-mantine"],
-        ["DeleteButton", "@pankod/refine-mantine"],
+        ["IResourceComponentsProps", "@refinedev/core"],
+        ["useTable", "@refinedev/react-table"],
+        ["ColumnDef", "@tanstack/react-table"],
+        ["flexRender", "@tanstack/react-table"],
+        ["ScrollArea", "@mantine/core"],
+        ["List", "@refinedev/mantine"],
+        ["Table", "@mantine/core"],
+        ["Pagination", "@mantine/core"],
+        ["Group", "@mantine/core"],
+        ["EditButton", "@refinedev/mantine"],
+        ["ShowButton", "@refinedev/mantine"],
+        ["DeleteButton", "@refinedev/mantine"],
     ];
 
     const relationFields: (InferField | null)[] = fields.filter(
@@ -68,8 +83,8 @@ export const renderer = ({
         .filter(Boolean)
         .map((field) => {
             if (field?.relation && !field.fieldable && field.resource) {
-                imports.push(["GetManyResponse", "@pankod/refine-core"]);
-                imports.push(["useMany", "@pankod/refine-core"]);
+                imports.push(["GetManyResponse", "@refinedev/core"]);
+                imports.push(["useMany", "@refinedev/core"]);
 
                 let idsString = "";
 
@@ -97,6 +112,11 @@ export const renderer = ({
                     queryOptions: {
                         enabled: !!${recordName},
                     },
+                    ${getMetaProps(
+                        field?.resource?.identifier ?? field?.resource?.name,
+                        meta,
+                        "getMany",
+                    )}
                 });
                 `;
             }
@@ -132,7 +152,7 @@ export const renderer = ({
             // if not, then just show the value
 
             if (field.multiple) {
-                imports.push(["TagField", "@pankod/refine-mantine"]);
+                imports.push(["TagField", "@refinedev/mantine"]);
                 let val = "item";
 
                 // for multiple
@@ -216,7 +236,7 @@ export const renderer = ({
 
     const imageFields = (field: InferField) => {
         if (field.type === "image") {
-            imports.push(["Image", "@pankod/refine-mantine"]);
+            imports.push(["Image", "@mantine/core"]);
 
             const id = `id: "${field.key}"`;
             const accessorKey = getAccessorKey(field);
@@ -278,7 +298,7 @@ export const renderer = ({
 
     const emailFields = (field: InferField) => {
         if (field.type === "email") {
-            imports.push(["EmailField", "@pankod/refine-mantine"]);
+            imports.push(["EmailField", "@refinedev/mantine"]);
 
             const id = `id: "${field.key}"`;
             const accessorKey = getAccessorKey(field);
@@ -298,7 +318,7 @@ export const renderer = ({
             `;
 
             if (field.multiple) {
-                imports.push(["TagField", "@pankod/refine-mantine"]);
+                imports.push(["TagField", "@refinedev/mantine"]);
 
                 const val = accessor("item", undefined, field.accessor, " + ");
 
@@ -329,7 +349,7 @@ export const renderer = ({
 
     const urlFields = (field: InferField) => {
         if (field.type === "url") {
-            imports.push(["UrlField", "@pankod/refine-mantine"]);
+            imports.push(["UrlField", "@refinedev/mantine"]);
 
             const id = `id: "${field.key}"`;
             const accessorKey = getAccessorKey(field);
@@ -349,7 +369,7 @@ export const renderer = ({
             `;
 
             if (field.multiple) {
-                imports.push(["TagField", "@pankod/refine-mantine"]);
+                imports.push(["TagField", "@refinedev/mantine"]);
 
                 const val = accessor("item", undefined, field.accessor, " + ");
 
@@ -380,7 +400,7 @@ export const renderer = ({
 
     const booleanFields = (field: InferField) => {
         if (field?.type === "boolean") {
-            imports.push(["BooleanField", "@pankod/refine-mantine"]);
+            imports.push(["BooleanField", "@refinedev/mantine"]);
 
             const id = `id: "${field.key}"`;
             const accessorKey = getAccessorKey(field);
@@ -430,7 +450,7 @@ export const renderer = ({
 
     const dateFields = (field: InferField) => {
         if (field.type === "date") {
-            imports.push(["DateField", "@pankod/refine-mantine"]);
+            imports.push(["DateField", "@refinedev/mantine"]);
 
             const id = `id: "${field.key}"`;
             const accessorKey = getAccessorKey(field);
@@ -479,7 +499,7 @@ export const renderer = ({
 
     const richtextFields = (field: InferField) => {
         if (field?.type === "richtext") {
-            imports.push(["MarkdownField", "@pankod/refine-mantine"]);
+            imports.push(["MarkdownField", "@refinedev/mantine"]);
 
             const id = `id: "${field.key}"`;
             const accessorKey = getAccessorKey(field);
@@ -535,7 +555,7 @@ export const renderer = ({
             let cell = "";
 
             if (field.multiple) {
-                imports.push(["TagField", "@pankod/refine-mantine"]);
+                imports.push(["TagField", "@refinedev/mantine"]);
 
                 const val = accessor(
                     "item",
@@ -586,13 +606,13 @@ export const renderer = ({
     const { canEdit, canShow, canDelete } = resource ?? {};
 
     if (canEdit) {
-        imports.push(["EditButton", "@pankod/refine-mantine"]);
+        imports.push(["EditButton", "@refinedev/mantine"]);
     }
     if (canShow) {
-        imports.push(["ShowButton", "@pankod/refine-mantine"]);
+        imports.push(["ShowButton", "@refinedev/mantine"]);
     }
     if (canDelete) {
-        imports.push(["DeleteButton", "@pankod/refine-mantine"]);
+        imports.push(["DeleteButton", "@refinedev/mantine"]);
     }
 
     const actionButtons =
@@ -692,8 +712,23 @@ export const renderer = ({
                     ? `
             refineCoreProps: {
                 resource: "${resource.name}",
+                ${getMetaProps(
+                    resource?.identifier ?? resource?.name,
+                    meta,
+                    "getList",
+                )}
             }
             `
+                    : getMetaProps(
+                          resource?.identifier ?? resource?.name,
+                          meta,
+                          "getList",
+                      )
+                    ? `refineCoreProps: { ${getMetaProps(
+                          resource?.identifier ?? resource?.name,
+                          meta,
+                          "getList",
+                      )} },`
                     : ""
             }
         });
@@ -771,10 +806,31 @@ export const renderer = ({
 export const ListInferencer: InferencerResultComponent = createInferencer({
     type: "list",
     additionalScope: [
-        ["@pankod/refine-mantine", "RefineMantine", RefineMantine],
-        ["@pankod/refine-react-table", "RefineReactTable", RefineReactTable],
+        [
+            "@refinedev/mantine",
+            "RefineMantine",
+            {
+                List,
+                EditButton,
+                ShowButton,
+                DeleteButton,
+                TagField,
+                EmailField,
+                UrlField,
+                BooleanField,
+                DateField,
+                MarkdownField,
+            },
+        ],
+        ["@refinedev/react-table", "RefineReactTable", { useTable }],
+        [
+            "@mantine/core",
+            "MantineCore",
+            { ScrollArea, Table, Pagination, Group, Image },
+        ],
+        ["@tanstack/react-table", "TanstackReactTable", { flexRender }],
     ],
-    codeViewerComponent: CodeViewerComponent,
+    codeViewerComponent: SharedCodeViewer,
     loadingComponent: LoadingComponent,
     errorComponent: ErrorComponent,
     renderer,

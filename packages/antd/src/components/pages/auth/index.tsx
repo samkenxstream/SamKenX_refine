@@ -1,6 +1,6 @@
 import React from "react";
 import { CardProps, FormProps, LayoutProps } from "antd";
-import { AuthPageProps } from "@pankod/refine-core";
+import { AuthPageProps } from "@refinedev/core";
 
 import {
     LoginPage,
@@ -9,7 +9,13 @@ import {
     UpdatePasswordPage,
 } from "./components";
 
-export type AuthProps = AuthPageProps<LayoutProps, CardProps, FormProps>;
+export type AuthProps = AuthPageProps<LayoutProps, CardProps, FormProps> & {
+    renderContent?: (
+        content: React.ReactNode,
+        title: React.ReactNode,
+    ) => React.ReactNode;
+    title?: React.ReactNode;
+};
 
 /**
  * **refine** has a default auth page form served on the `/login` route when the `authProvider` configuration is provided.

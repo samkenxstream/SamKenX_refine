@@ -1,4 +1,12 @@
-import * as RefineMantine from "@pankod/refine-mantine";
+import { Create, useForm, useSelect } from "@refinedev/mantine";
+import {
+    MultiSelect,
+    Select,
+    TextInput,
+    Checkbox,
+    Textarea,
+    NumberInput,
+} from "@mantine/core";
 
 import { createInferencer } from "@/create-inferencer";
 import {
@@ -15,13 +23,14 @@ import {
 
 import { ErrorComponent } from "./error";
 import { LoadingComponent } from "./loading";
-import { CodeViewerComponent } from "./code-viewer";
+import { SharedCodeViewer } from "@/components/shared-code-viewer";
 
 import {
     InferencerResultComponent,
     InferField,
     RendererContext,
 } from "@/types";
+import { getMetaProps } from "@/utilities/get-meta-props";
 
 /**
  * a renderer function for create page in Mantine
@@ -30,6 +39,7 @@ import {
 export const renderer = ({
     resource,
     fields,
+    meta,
     isCustomPage,
 }: RendererContext) => {
     const COMPONENT_NAME = componentName(
@@ -39,8 +49,8 @@ export const renderer = ({
     const imports: Array<
         [element: string, module: string, isDefaultImport?: boolean]
     > = [
-        ["Create", "@pankod/refine-mantine"],
-        ["useForm", "@pankod/refine-mantine"],
+        ["Create", "@refinedev/mantine"],
+        ["useForm", "@refinedev/mantine"],
     ];
     let initialValues: Record<string, any> = {};
 
@@ -52,7 +62,7 @@ export const renderer = ({
         .filter(Boolean)
         .map((field) => {
             if (field?.relation && !field.fieldable && field.resource) {
-                imports.push(["useSelect", "@pankod/refine-mantine"]);
+                imports.push(["useSelect", "@refinedev/mantine"]);
 
                 return `
                 const { selectProps: ${getVariableName(
@@ -62,6 +72,11 @@ export const renderer = ({
                 useSelect({
                     resource: "${field.resource.name}",
                     ${getOptionLabel(field)}
+                    ${getMetaProps(
+                        field?.resource?.identifier ?? field?.resource?.name,
+                        meta,
+                        "getList",
+                    )}
                 });
             `;
             }
@@ -87,7 +102,7 @@ export const renderer = ({
             const variableName = getVariableName(field.key, "SelectProps");
 
             if (field.multiple) {
-                imports.push(["MultiSelect", "@pankod/refine-mantine"]);
+                imports.push(["MultiSelect", "@mantine/core"]);
 
                 return jsx`
                     <MultiSelect mt="sm" label="${prettyString(
@@ -99,7 +114,7 @@ export const renderer = ({
                 `;
             }
 
-            imports.push(["Select", "@pankod/refine-mantine"]);
+            imports.push(["Select", "@mantine/core"]);
 
             return jsx`
                 <Select mt="sm" label="${prettyString(
@@ -125,7 +140,7 @@ export const renderer = ({
                 return undefined;
             }
 
-            imports.push(["TextInput", "@pankod/refine-mantine"]);
+            imports.push(["TextInput", "@mantine/core"]);
 
             initialValues = {
                 ...initialValues,
@@ -153,7 +168,7 @@ export const renderer = ({
         if (field.type === "image") {
             return jsx`
             {/* 
-                Dropzone component is not included in "@pankod/refine-mantine" package.
+                Dropzone component is not included in "@refinedev/mantine" package.
                 To use a <Dropzone> component, you can follow the official documentation for Mantine.
                 
                 Docs: https://mantine.dev/others/dropzone/
@@ -165,7 +180,7 @@ export const renderer = ({
 
     const booleanFields = (field: InferField) => {
         if (field.type === "boolean") {
-            imports.push(["Checkbox", "@pankod/refine-mantine"]);
+            imports.push(["Checkbox", "@mantine/core"]);
 
             initialValues = {
                 ...initialValues,
@@ -195,7 +210,7 @@ export const renderer = ({
 
             return `
                 {/* 
-                    DatePicker component is not included in "@pankod/refine-mantine" package.
+                    DatePicker component is not included in "@refinedev/mantine" package.
                     To use a <DatePicker> component, you can follow the official documentation for Mantine.
                     
                     Docs: https://mantine.dev/dates/date-picker/
@@ -208,7 +223,7 @@ export const renderer = ({
 
     const richtextFields = (field: InferField) => {
         if (field.type === "richtext") {
-            imports.push(["Textarea", "@pankod/refine-mantine"]);
+            imports.push(["Textarea", "@mantine/core"]);
 
             initialValues = {
                 ...initialValues,
@@ -239,7 +254,7 @@ export const renderer = ({
                 return undefined;
             }
 
-            imports.push(["NumberInput", "@pankod/refine-mantine"]);
+            imports.push(["NumberInput", "@mantine/core"]);
 
             initialValues = {
                 ...initialValues,
@@ -308,8 +323,25 @@ export const renderer = ({
                 isCustomPage
                     ? `refineCoreProps: {
                         resource: "${resource.name}",
-                        action: "create",  
+                        action: "create",
+                        ${getMetaProps(
+                            resource.identifier ?? resource.name,
+                            meta,
+                            "getOne",
+                        )}
                     }`
+                    : getMetaProps(
+                          resource.identifier ?? resource.name,
+                          meta,
+                          "getOne",
+                      )
+                    ? `{
+                      refineCoreProps: { ${getMetaProps(
+                          resource.identifier ?? resource.name,
+                          meta,
+                          "getOne",
+                      )} }
+                      }`
                     : ""
             }
         });
@@ -331,9 +363,14 @@ export const renderer = ({
 export const CreateInferencer: InferencerResultComponent = createInferencer({
     type: "create",
     additionalScope: [
-        ["@pankod/refine-mantine", "RefineMantine", RefineMantine],
+        ["@refinedev/mantine", "RefineMantine", { Create, useForm, useSelect }],
+        [
+            "@mantine/core",
+            "MantineCore",
+            { MultiSelect, Select, TextInput, Checkbox, Textarea, NumberInput },
+        ],
     ],
-    codeViewerComponent: CodeViewerComponent,
+    codeViewerComponent: SharedCodeViewer,
     loadingComponent: LoadingComponent,
     errorComponent: ErrorComponent,
     renderer,

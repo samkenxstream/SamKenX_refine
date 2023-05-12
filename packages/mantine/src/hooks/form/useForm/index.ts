@@ -11,7 +11,7 @@ import {
     useWarnAboutChange,
     UseFormProps as UseFormCoreProps,
     UseFormReturnType as UseFormReturnTypeCore,
-} from "@pankod/refine-core";
+} from "@refinedev/core";
 
 type FormVariableType<TVariables, TTransformed> = ReturnType<
     NonNullable<
@@ -23,18 +23,24 @@ type FormVariableType<TVariables, TTransformed> = ReturnType<
 >;
 
 export type UseFormReturnType<
-    TData extends BaseRecord,
-    TError extends HttpError,
-    TVariables,
+    TQueryFnData extends BaseRecord = BaseRecord,
+    TError extends HttpError = HttpError,
+    TVariables = Record<string, unknown>,
     TTransformed = TVariables,
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
 > = UseMantineFormReturnType<
     TVariables,
     (values: TVariables) => TTransformed
 > & {
     refineCore: UseFormReturnTypeCore<
-        TData,
+        TQueryFnData,
         TError,
-        FormVariableType<TVariables, TTransformed>
+        FormVariableType<TVariables, TTransformed>,
+        TData,
+        TResponse,
+        TResponseError
     >;
     saveButtonProps: {
         disabled: boolean;
@@ -43,34 +49,54 @@ export type UseFormReturnType<
 };
 
 export type UseFormProps<
-    TData extends BaseRecord,
-    TError extends HttpError,
-    TVariables,
+    TQueryFnData extends BaseRecord = BaseRecord,
+    TError extends HttpError = HttpError,
+    TVariables = Record<string, unknown>,
     TTransformed = TVariables,
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
 > = {
     refineCoreProps?: UseFormCoreProps<
-        TData,
+        TQueryFnData,
         TError,
-        FormVariableType<TVariables, TTransformed>
+        FormVariableType<TVariables, TTransformed>,
+        TData,
+        TResponse,
+        TResponseError
     > & {
         warnWhenUnsavedChanges?: boolean;
     };
 } & UseFormInput<TVariables, (values: TVariables) => TTransformed>;
 
 export const useForm = <
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = Record<string, unknown>,
     TTransformed = TVariables,
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
 >({
     refineCoreProps,
     ...rest
 }: UseFormProps<
-    TData,
+    TQueryFnData,
     TError,
     TVariables,
-    TTransformed
-> = {}): UseFormReturnType<TData, TError, TVariables, TTransformed> => {
+    TTransformed,
+    TData,
+    TResponse,
+    TResponseError
+> = {}): UseFormReturnType<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TTransformed,
+    TData,
+    TResponse,
+    TResponseError
+> => {
     const warnWhenUnsavedChangesProp = refineCoreProps?.warnWhenUnsavedChanges;
 
     const {
@@ -81,9 +107,12 @@ export const useForm = <
         warnWhenUnsavedChangesProp ?? warnWhenUnsavedChangesRefine;
 
     const useFormCoreResult = useFormCore<
-        TData,
+        TQueryFnData,
         TError,
-        FormVariableType<TVariables, TTransformed>
+        FormVariableType<TVariables, TTransformed>,
+        TData,
+        TResponse,
+        TResponseError
     >({
         ...refineCoreProps,
     });
@@ -101,6 +130,7 @@ export const useForm = <
         setValues,
         onSubmit: onMantineSubmit,
         isDirty,
+        resetDirty,
     } = useMantineFormResult;
 
     useEffect(() => {
@@ -114,16 +144,16 @@ export const useForm = <
                     }
                 },
             );
-
             setValues(fields);
+            resetDirty(fields);
         }
     }, [queryResult?.data]);
 
     const isValuesChanged = isDirty();
 
     useEffect(() => {
-        if (warnWhenUnsavedChanges && isValuesChanged) {
-            setWarnWhen(true);
+        if (warnWhenUnsavedChanges) {
+            setWarnWhen(isValuesChanged);
         }
     }, [isValuesChanged]);
 

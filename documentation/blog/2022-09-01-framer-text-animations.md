@@ -3,7 +3,7 @@ title: Framer Motion examples for React animations
 description: Framer Motion tutorial - Create text and image animations in React apps easily.
 slug: framer-motion-react-animations
 authors: joel_ezimorah
-tags: [css, react, animation, framer-motion]
+tags: [css, react, dev-tools]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-09-01-framer-text-animations/social.png
 hide_table_of_contents: false
 ---
@@ -52,7 +52,7 @@ We are going to break this article into two sections first, the text animation, 
 
 ---
 
-<PromotionBanner title="Not confident with your frontend skills?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/generic_banner.png" />
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
 
 ---
 

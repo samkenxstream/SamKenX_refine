@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Box, Modal, IconButton } from "@pankod/refine-mui";
+import { Button, Box, Modal, IconButton } from "@mui/material";
 import {
     IconCode,
     IconMessageCircle,
@@ -12,6 +12,9 @@ import { prettierFormat } from "@/utilities";
 import { CreateInferencerConfig } from "@/types";
 import { CodeHighlight } from "@/components";
 
+/**
+ * @deprecated Please use `SharedCodeViewer` instead
+ */
 export const CodeViewerComponent: CreateInferencerConfig["codeViewerComponent"] =
     ({ code: rawCode, loading }) => {
         const code = React.useMemo(() => {

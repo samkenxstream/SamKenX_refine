@@ -7,22 +7,18 @@ import {
     Scripts,
     ScrollRestoration,
 } from "@remix-run/react";
-import { Refine } from "@pankod/refine-core";
-import {
-    AuthPage,
-    ErrorComponent,
-    Layout,
-    notificationProvider,
-    ReadyPage,
-} from "@pankod/refine-antd";
+import { GitHubBanner, Refine } from "@refinedev/core";
+import { notificationProvider, RefineThemes } from "@refinedev/antd";
+import dataProvider from "@refinedev/simple-rest";
+import routerProvider, {
+    UnsavedChangesNotifier,
+} from "@refinedev/remix-router";
 
-import dataProvider from "@pankod/refine-simple-rest";
-import routerProvider from "@pankod/refine-remix-router";
-
-import resetStyle from "@pankod/refine-antd/dist/reset.css";
+import { ConfigProvider } from "antd";
+import resetStyle from "@refinedev/antd/dist/reset.css";
 
 import { authProvider } from "./authProvider";
-import { PostCreate, PostEdit, PostList, PostShow } from "./pages/posts";
+import { API_URL } from "./constants";
 
 export const meta: MetaFunction = () => ({
     charset: "utf-8",
@@ -30,7 +26,6 @@ export const meta: MetaFunction = () => ({
     viewport: "width=device-width,initial-scale=1",
 });
 
-const API_URL = "https://api.fake-rest.refine.dev";
 export default function App(): JSX.Element {
     return (
         <html lang="en">
@@ -39,37 +34,32 @@ export default function App(): JSX.Element {
                 <Links />
             </head>
             <body>
-                <Refine
-                    dataProvider={dataProvider(API_URL)}
-                    routerProvider={routerProvider}
-                    authProvider={authProvider}
-                    notificationProvider={notificationProvider}
-                    Layout={Layout}
-                    LoginPage={() => (
-                        <AuthPage
-                            formProps={{
-                                initialValues: {
-                                    email: "admin@refine.dev",
-                                    password: "password",
-                                },
-                            }}
-                        />
-                    )}
-                    ReadyPage={ReadyPage}
-                    catchAll={<ErrorComponent />}
-                    resources={[
-                        {
-                            name: "posts",
-                            list: PostList,
-                            create: PostCreate,
-                            edit: PostEdit,
-                            show: PostShow,
-                        },
-                    ]}
-                    options={{ syncWithLocation: true }}
-                >
-                    <Outlet />
-                </Refine>
+                <GitHubBanner />
+                <ConfigProvider theme={RefineThemes.Blue}>
+                    <Refine
+                        dataProvider={dataProvider(API_URL)}
+                        routerProvider={routerProvider}
+                        authProvider={authProvider}
+                        notificationProvider={notificationProvider}
+                        resources={[
+                            {
+                                name: "posts",
+                                list: "/posts",
+                                create: "/posts/create",
+                                edit: "/posts/edit/:id",
+                                show: "/posts/show/:id",
+                            },
+                        ]}
+                        options={{
+                            syncWithLocation: true,
+                            warnWhenUnsavedChanges: true,
+                        }}
+                    >
+                        <Outlet />
+                        <UnsavedChangesNotifier />
+                    </Refine>
+                </ConfigProvider>
+
                 <ScrollRestoration />
                 <Scripts />
                 <LiveReload />

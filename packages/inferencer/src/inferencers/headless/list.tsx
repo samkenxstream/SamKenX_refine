@@ -1,4 +1,5 @@
-import * as RefineReactTable from "@pankod/refine-react-table";
+import { useTable } from "@refinedev/react-table";
+import { flexRender } from "@tanstack/react-table";
 
 import { createInferencer } from "@/create-inferencer";
 import {
@@ -14,7 +15,7 @@ import {
 
 import { ErrorComponent } from "./error";
 import { LoadingComponent } from "./loading";
-import { CodeViewerComponent } from "./code-viewer";
+import { SharedCodeViewer } from "@/components/shared-code-viewer";
 
 import {
     InferencerResultComponent,
@@ -22,6 +23,7 @@ import {
     ImportElement,
     RendererContext,
 } from "@/types";
+import { getMetaProps } from "@/utilities/get-meta-props";
 
 const getAccessorKey = (field: InferField) => {
     return Array.isArray(field.accessor) || field.multiple
@@ -38,6 +40,7 @@ const getAccessorKey = (field: InferField) => {
 export const renderer = ({
     resource,
     fields,
+    meta,
     isCustomPage,
 }: RendererContext) => {
     const COMPONENT_NAME = componentName(
@@ -47,11 +50,11 @@ export const renderer = ({
     const recordName = "tableData?.data";
     const imports: Array<ImportElement> = [
         ["React", "react", true],
-        ["IResourceComponentsProps", "@pankod/refine-core"],
-        ["useNavigation", "@pankod/refine-core"],
-        ["useTable", "@pankod/refine-react-table"],
-        ["ColumnDef", "@pankod/refine-react-table"],
-        ["flexRender", "@pankod/refine-react-table"],
+        ["IResourceComponentsProps", "@refinedev/core"],
+        ["useNavigation", "@refinedev/core"],
+        ["useTable", "@refinedev/react-table"],
+        ["ColumnDef", "@tanstack/react-table"],
+        ["flexRender", "@tanstack/react-table"],
     ];
 
     const relationFields: (InferField | null)[] = fields.filter(
@@ -62,8 +65,8 @@ export const renderer = ({
         .filter(Boolean)
         .map((field) => {
             if (field?.relation && !field.fieldable && field.resource) {
-                imports.push(["GetManyResponse", "@pankod/refine-core"]);
-                imports.push(["useMany", "@pankod/refine-core"]);
+                imports.push(["GetManyResponse", "@refinedev/core"]);
+                imports.push(["useMany", "@refinedev/core"]);
 
                 let idsString = "";
 
@@ -91,6 +94,11 @@ export const renderer = ({
                     queryOptions: {
                         enabled: !!${recordName},
                     },
+                    ${getMetaProps(
+                        field?.resource?.identifier ?? field?.resource?.name,
+                        meta,
+                        "getMany",
+                    )}
                 });
                 `;
             }
@@ -674,8 +682,23 @@ export const renderer = ({
                     ? `
             refineCoreProps: {
                 resource: "${resource.name}",
+                ${getMetaProps(
+                    resource?.identifier ?? resource?.name,
+                    meta,
+                    "getList",
+                )}
             }
             `
+                    : getMetaProps(
+                          resource?.identifier ?? resource?.name,
+                          meta,
+                          "getList",
+                      )
+                    ? `refineCoreProps: { ${getMetaProps(
+                          resource?.identifier ?? resource?.name,
+                          meta,
+                          "getList",
+                      )} },`
                     : ""
             }
             
@@ -803,9 +826,10 @@ export const renderer = ({
 export const ListInferencer: InferencerResultComponent = createInferencer({
     type: "list",
     additionalScope: [
-        ["@pankod/refine-react-table", "RefineReactTable", RefineReactTable],
+        ["@refinedev/react-table", "RefineReactTable", { useTable }],
+        ["@tanstack/react-table", "TanstackReactTable", { flexRender }],
     ],
-    codeViewerComponent: CodeViewerComponent,
+    codeViewerComponent: SharedCodeViewer,
     loadingComponent: LoadingComponent,
     errorComponent: ErrorComponent,
     renderer,

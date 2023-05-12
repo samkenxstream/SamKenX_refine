@@ -3,7 +3,7 @@ title: Comparing the best headless CMS solutions
 description: We compared best headless CMS solutions -  Strapi, Hasura, and Hygraph. We'll highlight their pros and cons.
 slug: best-headless-cms
 authors: joseph_mawa
-tags: [comparison, strapi, headless-cms]
+tags: [comparison, strapi]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog%2F2023-02-08-compare-cms%2Fsocial.png
 hide_table_of_contents: false
 ---
@@ -87,7 +87,7 @@ A [data provider](https://refine.dev/docs/api-reference/core/providers/data-prov
 You can install the Strapi data provider in a refine application like so:
 
 ```sh
-npm install @pankod/refine-strapi-v4
+npm install @refinedev/strapi-v4
 ```
 
 The refine documentation has comprehensive guides on [data providers](https://refine.dev/docs/api-reference/core/providers/data-provider/).
@@ -148,7 +148,7 @@ As highlighted above, refine has data providers for most CMS and platforms. You 
 You can install the Hasura data provider in your refine application like so:
 
 ```sh
-npm install @pankod/refine-hasura
+npm install @refinedev/hasura
 ```
 
 Check the [refine documentation](https://refine.dev/docs/api-reference/core/providers/data-provider/) on using data providers in a refine application.
@@ -173,7 +173,10 @@ Check the [refine documentation](https://refine.dev/docs/api-reference/core/prov
 
 ---
 
-<PromotionBanner title="Building a side project?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/generic_banner.png" />
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
  

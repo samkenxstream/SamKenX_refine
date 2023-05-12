@@ -3,7 +3,7 @@ title: React memo guide with examples
 description: Improve the app performance with React.memo()
 slug: react-memo-guide
 authors: abdullah_numan
-tags: [react, memoization, react-memo, performance]
+tags: [react]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-09-13-react-memo/social.png
 hide_table_of_contents: false
 ---
@@ -58,7 +58,8 @@ The focus of this article will be the `<Post />` component, but `<App />`, `<Blo
 
 ---
 
-<PromotionBanner title="Still building from scratch in 2022?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/mui_banner.png" />
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
 
 ---
 

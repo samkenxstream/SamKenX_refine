@@ -1,63 +1,71 @@
-import { Refine } from "@pankod/refine-core";
+import { GitHubBanner, Refine } from "@refinedev/core";
 import {
-    BackTop,
-    AntdLayout,
-    Grid,
     notificationProvider,
     ErrorComponent,
-} from "@pankod/refine-antd";
-import dataProvider from "@pankod/refine-simple-rest";
-import routerProvider from "@pankod/refine-react-router-v6";
+    RefineThemes,
+} from "@refinedev/antd";
+import dataProvider from "@refinedev/simple-rest";
+import routerProvider, {
+    NavigateToResource,
+    UnsavedChangesNotifier,
+} from "@refinedev/react-router-v6";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 
-import "@pankod/refine-antd/dist/reset.css";
+import { ConfigProvider } from "antd";
+import "@refinedev/antd/dist/reset.css";
 
 import { PostList } from "pages/posts";
-import { FixedSider } from "components";
+import { Layout, FixedSider, OffLayoutArea } from "components";
 
 const API_URL = "https://api.fake-rest.refine.dev";
 
 const App: React.FC = () => {
-    const breakpoint = Grid.useBreakpoint();
     return (
-        <Refine
-            dataProvider={dataProvider(API_URL)}
-            routerProvider={routerProvider}
-            Layout={({ children, Header, Footer, OffLayoutArea }) => (
-                <AntdLayout
-                    style={{ minHeight: "100vh", flexDirection: "row" }}
+        <BrowserRouter>
+            <GitHubBanner />
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    dataProvider={dataProvider(API_URL)}
+                    routerProvider={routerProvider}
+                    notificationProvider={notificationProvider}
+                    resources={[
+                        {
+                            name: "posts",
+                            list: "/posts",
+                        },
+                    ]}
+                    options={{
+                        syncWithLocation: true,
+                        warnWhenUnsavedChanges: true,
+                    }}
                 >
-                    <FixedSider />
-                    <AntdLayout style={{ marginLeft: 200 }}>
-                        {Header && <Header />}
-                        <AntdLayout.Content>
-                            <div
-                                style={{
-                                    padding: breakpoint.sm ? 24 : 12,
-                                    minHeight: 360,
-                                }}
-                            >
-                                {children}
-                            </div>
-                        </AntdLayout.Content>
-                        {Footer && <Footer />}
-                    </AntdLayout>
-                    {OffLayoutArea && <OffLayoutArea />}
-                </AntdLayout>
-            )}
-            OffLayoutArea={() => (
-                <>
-                    <BackTop />
-                </>
-            )}
-            resources={[
-                {
-                    name: "posts",
-                    list: PostList,
-                },
-            ]}
-            notificationProvider={notificationProvider}
-            catchAll={<ErrorComponent />}
-        />
+                    <Routes>
+                        <Route
+                            element={
+                                <Layout
+                                    Sider={FixedSider}
+                                    OffLayoutArea={OffLayoutArea}
+                                >
+                                    <Outlet />
+                                </Layout>
+                            }
+                        >
+                            <Route
+                                index
+                                element={
+                                    <NavigateToResource resource="posts" />
+                                }
+                            />
+
+                            <Route path="/posts" element={<PostList />} />
+
+                            <Route path="*" element={<ErrorComponent />} />
+                        </Route>
+                    </Routes>
+                    <UnsavedChangesNotifier />
+                </Refine>
+            </ConfigProvider>
+        </BrowserRouter>
     );
 };
 

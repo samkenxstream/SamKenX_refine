@@ -3,7 +3,7 @@ title: A Guide on TypeScript Omit Type
 description: We'll dive into the TypeScript Omit utility type with examples
 slug: typescript-omit-utility-type
 authors: abdullah_numan
-tags: [typescript, typescript-omit, typescript-utility-types]
+tags: [typescript]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-10-03-typescript-omit/social.png
 hide_table_of_contents: false
 ---
@@ -106,7 +106,7 @@ So, caution there, as it is an important distinction that TypeScript is applying
 
 ---
 
-<PromotionBanner title="Backend devs love this React framework!" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/generic_banner.png" />
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
 
 ---
 

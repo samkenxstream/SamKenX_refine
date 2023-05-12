@@ -1,21 +1,24 @@
 import React from "react";
-import { Refine } from "@pankod/refine-core";
+import { GitHubBanner, Refine } from "@refinedev/core";
 import { AppProps } from "next/app";
 
 import { appWithTranslation, useTranslation } from "next-i18next";
 
 import {
     notificationProvider,
-    Layout,
-    ErrorComponent,
-} from "@pankod/refine-antd";
-import dataProvider from "@pankod/refine-simple-rest";
-import routerProvider from "@pankod/refine-nextjs-router";
+    RefineThemes,
+    ThemedLayoutV2,
+} from "@refinedev/antd";
+import dataProvider from "@refinedev/simple-rest";
+import routerProvider, {
+    UnsavedChangesNotifier,
+} from "@refinedev/nextjs-router";
 
-import { PostList, PostCreate, PostEdit, PostShow, Header } from "@components";
+import { Header } from "@components";
 
-import "@pankod/refine-antd/dist/reset.css";
+import "@refinedev/antd/dist/reset.css";
 import "@styles/global.css";
+import { ConfigProvider } from "antd";
 
 const API_URL = "https://api.fake-rest.refine.dev";
 
@@ -28,27 +31,38 @@ function MyApp({ Component, pageProps }: AppProps): JSX.Element {
     };
 
     return (
-        <Refine
-            routerProvider={routerProvider}
-            dataProvider={dataProvider(API_URL)}
-            i18nProvider={i18nProvider}
-            Header={Header}
-            resources={[
-                {
-                    name: "posts",
-                    list: PostList,
-                    create: PostCreate,
-                    edit: PostEdit,
-                    show: PostShow,
-                    canDelete: true,
-                },
-            ]}
-            notificationProvider={notificationProvider}
-            Layout={Layout}
-            catchAll={<ErrorComponent />}
-        >
-            <Component {...pageProps} />
-        </Refine>
+        <>
+            <GitHubBanner />
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    routerProvider={routerProvider}
+                    dataProvider={dataProvider(API_URL)}
+                    i18nProvider={i18nProvider}
+                    resources={[
+                        {
+                            name: "posts",
+                            list: "/posts",
+                            create: "/posts/create",
+                            edit: "/posts/edit/:id",
+                            show: "/posts/show/:id",
+                            meta: {
+                                canDelete: true,
+                            },
+                        },
+                    ]}
+                    notificationProvider={notificationProvider}
+                    options={{
+                        syncWithLocation: true,
+                        warnWhenUnsavedChanges: true,
+                    }}
+                >
+                    <ThemedLayoutV2 Header={Header}>
+                        <Component {...pageProps} />
+                    </ThemedLayoutV2>
+                    <UnsavedChangesNotifier />
+                </Refine>
+            </ConfigProvider>
+        </>
     );
 }
 

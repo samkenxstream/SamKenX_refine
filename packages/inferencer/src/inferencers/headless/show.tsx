@@ -13,7 +13,7 @@ import {
 
 import { ErrorComponent } from "./error";
 import { LoadingComponent } from "./loading";
-import { CodeViewerComponent } from "./code-viewer";
+import { SharedCodeViewer } from "@/components/shared-code-viewer";
 
 import {
     ImportElement,
@@ -21,6 +21,7 @@ import {
     InferField,
     RendererContext,
 } from "@/types";
+import { getMetaProps } from "@/utilities/get-meta-props";
 
 /**
  * a renderer function for show page with unstyled html elements
@@ -29,6 +30,7 @@ import {
 export const renderer = ({
     resource,
     fields,
+    meta,
     isCustomPage,
     id,
 }: RendererContext) => {
@@ -39,9 +41,9 @@ export const renderer = ({
     const recordName = "record";
     const imports: Array<ImportElement> = [
         ["React", "react", true],
-        ["useShow", "@pankod/refine-core"],
-        ["useResource", "@pankod/refine-core"],
-        ["useNavigation", "@pankod/refine-core"],
+        ["useShow", "@refinedev/core"],
+        ["useResource", "@refinedev/core"],
+        ["useNavigation", "@refinedev/core"],
     ];
 
     const relationFields: (InferField | null)[] = fields.filter(
@@ -53,7 +55,7 @@ export const renderer = ({
         .map((field) => {
             if (field?.relation && !field.fieldable && field.resource) {
                 if (field.multiple) {
-                    imports.push(["useMany", "@pankod/refine-core"]);
+                    imports.push(["useMany", "@refinedev/core"]);
                     let ids = accessor(recordName, field.key);
 
                     if (field.accessor) {
@@ -78,10 +80,15 @@ export const renderer = ({
                     queryOptions: {
                         enabled: !!${recordName},
                     },
+                    ${getMetaProps(
+                        field?.resource?.identifier ?? field?.resource?.name,
+                        meta,
+                        "getMany",
+                    )}
                 });
                 `;
                 }
-                imports.push(["useOne", "@pankod/refine-core"]);
+                imports.push(["useOne", "@refinedev/core"]);
                 return `
                 const { data: ${getVariableName(
                     field.key,
@@ -98,6 +105,11 @@ export const renderer = ({
                     queryOptions: {
                         enabled: !!${recordName},
                     },
+                    ${getMetaProps(
+                        field?.resource?.identifier ?? field?.resource?.name,
+                        meta,
+                        "getOne",
+                    )}
                 });
             `;
             }
@@ -520,8 +532,23 @@ export const renderer = ({
             isCustomPage
                 ? `{ 
                     resource: "${resource.name}", 
-                    id: ${id}
+                    id: ${id},
+                    ${getMetaProps(
+                        resource?.identifier ?? resource?.name,
+                        meta,
+                        "getOne",
+                    )}
                 }`
+                : getMetaProps(
+                      resource?.identifier ?? resource?.name,
+                      meta,
+                      "getOne",
+                  )
+                ? `{ ${getMetaProps(
+                      resource?.identifier ?? resource?.name,
+                      meta,
+                      "getOne",
+                  )} }`
                 : ""
         });
         const { data, isLoading } = queryResult;
@@ -571,7 +598,7 @@ export const renderer = ({
 export const ShowInferencer: InferencerResultComponent = createInferencer({
     type: "show",
     additionalScope: [],
-    codeViewerComponent: CodeViewerComponent,
+    codeViewerComponent: SharedCodeViewer,
     loadingComponent: LoadingComponent,
     errorComponent: ErrorComponent,
     renderer,

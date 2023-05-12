@@ -1,12 +1,13 @@
 import React from "react";
 import { Layout, Typography, Avatar, Space } from "antd";
 
-import { useGetIdentity } from "@pankod/refine-core";
+import { useGetIdentity } from "@refinedev/core";
+import { IIdentity } from "interfaces";
 
 const { Text } = Typography;
 
 export const Header: React.FC = () => {
-    const { data: user } = useGetIdentity();
+    const { data: user } = useGetIdentity<IIdentity>();
 
     const shouldRenderHeader = user && (user.name || user.avatar);
 
@@ -19,6 +20,9 @@ export const Header: React.FC = () => {
                 padding: "0px 24px",
                 height: "64px",
                 backgroundColor: "#FFF",
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
             }}
         >
             <Space>

@@ -1,15 +1,27 @@
-import { Refine, AuthProvider } from "@pankod/refine-core";
+import {
+    GitHubBanner,
+    Refine,
+    AuthBindings,
+    Authenticated,
+} from "@refinedev/core";
 import {
     notificationProvider,
-    Layout,
+    ThemedLayoutV2,
     ErrorComponent,
-} from "@pankod/refine-antd";
-import dataProvider from "@pankod/refine-simple-rest";
-import routerProvider from "@pankod/refine-react-router-v6";
+    RefineThemes,
+} from "@refinedev/antd";
+import dataProvider from "@refinedev/simple-rest";
+import routerProvider, {
+    NavigateToResource,
+    CatchAllNavigate,
+    UnsavedChangesNotifier,
+} from "@refinedev/react-router-v6";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { ConfigProvider } from "antd";
 
 import axios from "axios";
 
-import "@pankod/refine-antd/dist/reset.css";
+import "@refinedev/antd/dist/reset.css";
 
 import { PostList, PostCreate, PostEdit, PostShow } from "pages/posts";
 import { Login } from "pages/login";
@@ -24,67 +36,158 @@ const App: React.FC = () => {
         return <div>Loading...</div>;
     }
 
-    const authProvider: AuthProvider = {
+    const authProvider: AuthBindings = {
         login: async () => {
             const urlSearchParams = new URLSearchParams(window.location.search);
             const { to } = Object.fromEntries(urlSearchParams.entries());
             await keycloak.login({
                 redirectUri: to ? `${window.location.origin}${to}` : undefined,
             });
-            return Promise.resolve(false);
+            return {
+                success: false,
+                error: new Error("Login failed"),
+            };
         },
         logout: async () => {
-            await keycloak.logout({
-                redirectUri: window.location.origin,
-            });
-            return Promise.resolve();
+            try {
+                await keycloak.logout({
+                    redirectUri: window.location.origin,
+                });
+                return {
+                    success: true,
+                    redirectTo: "/login",
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    error: new Error("Logout failed"),
+                };
+            }
         },
-        checkError: () => Promise.resolve(),
-        checkAuth: async () => {
+        onError: async (error) => {
+            console.error(error);
+            return { error };
+        },
+        check: async () => {
             try {
                 const { token } = keycloak;
                 if (token) {
                     axios.defaults.headers.common = {
                         Authorization: `Bearer ${token}`,
                     };
-                    return Promise.resolve();
+                    return {
+                        authenticated: true,
+                    };
                 } else {
-                    return Promise.reject();
+                    return {
+                        authenticated: false,
+                        logout: true,
+                        redirectTo: "/login",
+                        error: {
+                            message: "Check failed",
+                            name: "Token not found",
+                        },
+                    };
                 }
             } catch (error) {
-                return Promise.reject();
+                return {
+                    authenticated: false,
+                    logout: true,
+                    redirectTo: "/login",
+                    error: {
+                        message: "Check failed",
+                        name: "Token not found",
+                    },
+                };
             }
         },
-        getPermissions: () => Promise.resolve(),
-        getUserIdentity: async () => {
+        getPermissions: async () => null,
+        getIdentity: async () => {
             if (keycloak?.tokenParsed) {
-                return Promise.resolve({
+                return {
                     name: keycloak.tokenParsed.family_name,
-                });
+                };
             }
-            return Promise.reject();
+            return null;
         },
     };
 
     return (
-        <Refine
-            LoginPage={Login}
-            authProvider={authProvider}
-            dataProvider={dataProvider(API_URL, axios)}
-            routerProvider={routerProvider}
-            resources={[
-                {
-                    name: "posts",
-                    list: PostList,
-                    create: PostCreate,
-                    edit: PostEdit,
-                    show: PostShow,
-                },
-            ]}
-            notificationProvider={notificationProvider}
-            Layout={Layout}
-            catchAll={<ErrorComponent />}
-        />
+        <BrowserRouter>
+            <GitHubBanner />
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    authProvider={authProvider}
+                    dataProvider={dataProvider(API_URL, axios)}
+                    routerProvider={routerProvider}
+                    resources={[
+                        {
+                            name: "posts",
+                            list: "/posts",
+                            show: "/posts/show/:id",
+                            create: "/posts/create",
+                            edit: "/posts/edit/:id",
+                        },
+                    ]}
+                    notificationProvider={notificationProvider}
+                    options={{
+                        syncWithLocation: true,
+                        warnWhenUnsavedChanges: true,
+                    }}
+                >
+                    <Routes>
+                        <Route
+                            element={
+                                <Authenticated
+                                    fallback={<CatchAllNavigate to="/login" />}
+                                >
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route
+                                index
+                                element={
+                                    <NavigateToResource resource="posts" />
+                                }
+                            />
+
+                            <Route path="/posts">
+                                <Route index element={<PostList />} />
+                                <Route path="create" element={<PostCreate />} />
+                                <Route path="edit/:id" element={<PostEdit />} />
+                                <Route path="show/:id" element={<PostShow />} />
+                            </Route>
+                        </Route>
+
+                        <Route
+                            element={
+                                <Authenticated fallback={<Outlet />}>
+                                    <NavigateToResource resource="posts" />
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="/login" element={<Login />} />
+                        </Route>
+
+                        <Route
+                            element={
+                                <Authenticated>
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="*" element={<ErrorComponent />} />
+                        </Route>
+                    </Routes>
+                    <UnsavedChangesNotifier />
+                </Refine>
+            </ConfigProvider>
+        </BrowserRouter>
     );
 };
 

@@ -3,7 +3,7 @@ title: How to use the useParams hook in React Router
 description: We'll discover how to access the parameters of the current route with the useParams hook in React Router.
 slug: react-router-useparams
 authors: joseph_mawa
-tags: [react, react-router, useparams]
+tags: [react]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-09-24-router-use-params/social.jpg
 hide_table_of_contents: false
 ---
@@ -94,7 +94,10 @@ function App() {
 
 ---
 
-<PromotionBanner title="CRUD apps are just boring!" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/diagram.png" />
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
 

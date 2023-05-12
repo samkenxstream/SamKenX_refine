@@ -1,13 +1,25 @@
-import { AuthProvider, Refine } from "@pankod/refine-core";
+import {
+    AuthBindings,
+    Authenticated,
+    GitHubBanner,
+    Refine,
+} from "@refinedev/core";
 import {
     notificationProvider,
-    Layout,
+    ThemedLayoutV2,
     ErrorComponent,
-} from "@pankod/refine-antd";
-import dataProvider, { GraphQLClient } from "@pankod/refine-strapi-graphql";
-import routerProvider from "@pankod/refine-react-router-v6";
+    RefineThemes,
+} from "@refinedev/antd";
+import dataProvider, { GraphQLClient } from "@refinedev/strapi-graphql";
+import routerProvider, {
+    CatchAllNavigate,
+    NavigateToResource,
+    UnsavedChangesNotifier,
+} from "@refinedev/react-router-v6";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 
-import "@pankod/refine-antd/dist/reset.css";
+import { ConfigProvider } from "antd";
+import "@refinedev/antd/dist/reset.css";
 
 import { Login } from "pages/login";
 import { PostList, PostCreate, PostEdit, PostShow } from "pages/posts";
@@ -17,14 +29,14 @@ const API_URL = "https://api.strapi.refine.dev/graphql";
 const client = new GraphQLClient(API_URL);
 const gqlDataProvider = dataProvider(client);
 
-const authProvider: AuthProvider = {
+const authProvider: AuthBindings = {
     login: async ({ email, password }) => {
         try {
             // eslint-disable-next-line
             const { data } = await gqlDataProvider.custom!({
                 url: "",
                 method: "post",
-                metaData: {
+                meta: {
                     operation: "login",
                     variables: {
                         input: {
@@ -40,27 +52,48 @@ const authProvider: AuthProvider = {
             localStorage.setItem("token", data.jwt);
             client.setHeader("Authorization", `Bearer ${data.jwt}`);
 
-            return Promise.resolve();
-        } catch (error) {
-            return Promise.reject(error);
+            return {
+                success: true,
+                redirectTo: "/",
+            };
+        } catch (error: any) {
+            return {
+                success: false,
+                error: new Error(error),
+            };
         }
     },
     logout: async () => {
         localStorage.removeItem("token");
         client.setHeader("Authorization", "");
-        return Promise.resolve("/");
+        return {
+            success: true,
+            redirectTo: "/login",
+        };
     },
-    checkError: () => Promise.resolve(),
-    checkAuth: () => {
+    onError: async (error) => {
+        console.error(error);
+        return { error };
+    },
+    check: async () => {
         const jwt = localStorage.getItem("token");
 
         if (!jwt) {
-            return Promise.reject();
+            return {
+                authenticated: false,
+                error: {
+                    message: "Check failed",
+                    name: "Token not found",
+                },
+                redirectTo: "/login",
+            };
         }
 
         client.setHeader("Authorization", `Bearer ${jwt}`);
 
-        return Promise.resolve();
+        return {
+            authenticated: true,
+        };
     },
     getPermissions: async () => {
         try {
@@ -68,7 +101,7 @@ const authProvider: AuthProvider = {
             const { data } = await gqlDataProvider.custom!({
                 url: "",
                 method: "get",
-                metaData: {
+                meta: {
                     operation: "me",
                     fields: [
                         {
@@ -79,55 +112,114 @@ const authProvider: AuthProvider = {
             });
             const { role } = data;
 
-            return Promise.resolve(role);
+            return role;
         } catch (error) {
-            return Promise.reject(error);
+            return null;
         }
     },
-    getUserIdentity: async () => {
+    getIdentity: async () => {
         try {
             // eslint-disable-next-line
             const { data } = await gqlDataProvider.custom!({
                 url: "",
                 method: "get",
-                metaData: {
+                meta: {
                     operation: "me",
                     fields: ["id", "username", "email"],
                 },
             });
             const { id, username, email } = data;
-            return Promise.resolve({
+            return {
                 id,
                 name: username,
                 email,
-            });
+            };
         } catch (error) {
-            return Promise.reject(error);
+            return error;
         }
     },
 };
 
 const App: React.FC = () => {
     return (
-        <Refine
-            dataProvider={gqlDataProvider}
-            routerProvider={routerProvider}
-            authProvider={authProvider}
-            LoginPage={Login}
-            resources={[
-                {
-                    name: "posts",
-                    list: PostList,
-                    create: PostCreate,
-                    edit: PostEdit,
-                    show: PostShow,
-                    canDelete: true,
-                },
-            ]}
-            notificationProvider={notificationProvider}
-            Layout={Layout}
-            catchAll={<ErrorComponent />}
-        />
+        <BrowserRouter>
+            <GitHubBanner />
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    dataProvider={gqlDataProvider}
+                    authProvider={authProvider}
+                    routerProvider={routerProvider}
+                    resources={[
+                        {
+                            name: "posts",
+                            list: "/posts",
+                            create: "/posts/create",
+                            edit: "/posts/edit/:id",
+                            show: "/posts/show/:id",
+                            meta: {
+                                canDelete: true,
+                            },
+                        },
+                    ]}
+                    notificationProvider={notificationProvider}
+                    options={{
+                        syncWithLocation: true,
+                        warnWhenUnsavedChanges: true,
+                    }}
+                >
+                    <Routes>
+                        <Route
+                            element={
+                                <Authenticated
+                                    fallback={<CatchAllNavigate to="/login" />}
+                                >
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route
+                                index
+                                element={
+                                    <NavigateToResource resource="posts" />
+                                }
+                            />
+
+                            <Route path="/posts">
+                                <Route index element={<PostList />} />
+                                <Route path="create" element={<PostCreate />} />
+                                <Route path="edit/:id" element={<PostEdit />} />
+                                <Route path="show/:id" element={<PostShow />} />
+                            </Route>
+                        </Route>
+
+                        <Route
+                            element={
+                                <Authenticated fallback={<Outlet />}>
+                                    <NavigateToResource resource="posts" />
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="/login" element={<Login />} />
+                        </Route>
+
+                        <Route
+                            element={
+                                <Authenticated>
+                                    <ThemedLayoutV2>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="*" element={<ErrorComponent />} />
+                        </Route>
+                    </Routes>
+                    <UnsavedChangesNotifier />
+                </Refine>
+            </ConfigProvider>
+        </BrowserRouter>
     );
 };
 

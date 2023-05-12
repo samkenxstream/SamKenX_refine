@@ -3,7 +3,7 @@ title: Memoization in React - How useCallback Works
 description: Improve the APP performance with React useCallback() hook
 slug: react-usecallback-guide
 authors: abdullah_numan
-tags: [react, memoization, usecallback, performance]
+tags: [react]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-09-20-react-use-callback/social.png
 hide_table_of_contents: false
 ---
@@ -150,7 +150,10 @@ We already memoized `<UserPostsList />` with `React.memo()`. We don't see any re
 
 ---
 
-<PromotionBanner title="Building a side project?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/generic_banner.png" />
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
 

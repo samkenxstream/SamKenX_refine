@@ -1,27 +1,13 @@
 import React from "react";
-import { IResourceComponentsProps } from "@pankod/refine-core";
-import {
-    Edit,
-    Form,
-    Input,
-    Select,
-    useForm,
-    useSelect,
-    Upload,
-    Radio,
-} from "@pankod/refine-antd";
-import {
-    useStrapiUpload,
-    getValueProps,
-    mediaUploadMapper,
-} from "@pankod/refine-strapi-v4";
-
+import { Edit, useForm, useSelect } from "@refinedev/antd";
+import { getValueProps, mediaUploadMapper } from "@refinedev/strapi-v4";
+import { Form, Input, Select, Upload, Radio } from "antd";
 import MDEditor from "@uiw/react-md-editor";
 
 import { TOKEN_KEY, API_URL } from "../../constants";
 import { ICategory, IPost } from "interfaces";
 
-export const PostEdit: React.FC<IResourceComponentsProps> = () => {
+export const PostEdit: React.FC = () => {
     const { formProps, saveButtonProps, queryResult } = useForm<IPost>({
         metaData: { populate: ["category", "cover"] },
     });
@@ -32,18 +18,13 @@ export const PostEdit: React.FC<IResourceComponentsProps> = () => {
         metaData: { locale: queryResult?.data?.data.locale },
     });
 
-    const { ...uploadProps } = useStrapiUpload({
-        maxCount: 1,
-    });
-
     return (
         <Edit saveButtonProps={saveButtonProps}>
             <Form
                 {...formProps}
                 layout="vertical"
-                // eslint-disable-next-line
-                onFinish={(values: any) => {
-                    return formProps.onFinish?.(mediaUploadMapper(values));
+                onFinish={(values) => {
+                    formProps.onFinish?.(mediaUploadMapper(values));
                 }}
             >
                 <Form.Item label="Locale" name="locale">
@@ -104,7 +85,6 @@ export const PostEdit: React.FC<IResourceComponentsProps> = () => {
                             }}
                             listType="picture"
                             multiple
-                            {...uploadProps}
                         >
                             <p className="ant-upload-text">
                                 Drag & drop a file in this area

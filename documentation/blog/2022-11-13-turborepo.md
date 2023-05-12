@@ -3,7 +3,7 @@ title: What is Turborepo and Why Should You Care?
 description: The advantages of using Turborepo for monorepo development.
 slug: how-to-use-turborepo
 authors: muhammad_khabbab
-tags: [nextjs, turborepo, dev-tools]
+tags: [nextjs, dev-tools]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-11-13-turborepo/social.png
 hide_table_of_contents: false
 ---
@@ -46,7 +46,7 @@ Turborepo's magic lies in the execution of its tasks. For package installation, 
 
 ---
 
-<PromotionBanner title="Tired of repeating your form logic in every place you need it?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/diagram.png" />
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
 
 ---
 

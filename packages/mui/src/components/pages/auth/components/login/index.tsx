@@ -1,6 +1,11 @@
 import * as React from "react";
-import { LoginPageProps, LoginFormTypes } from "@pankod/refine-core";
-import { FormProvider, useForm } from "@pankod/refine-react-hook-form";
+import {
+    LoginPageProps,
+    LoginFormTypes,
+    useActiveAuthProvider,
+} from "@refinedev/core";
+import { useForm } from "@refinedev/react-hook-form";
+import { FormProvider } from "react-hook-form";
 import {
     Button,
     BoxProps,
@@ -16,17 +21,21 @@ import {
     Divider,
     Link as MuiLink,
 } from "@mui/material";
-
 import {
     BaseRecord,
     HttpError,
     useLogin,
     useTranslate,
     useRouterContext,
-} from "@pankod/refine-core";
+    useRouterType,
+    useLink,
+} from "@refinedev/core";
 import { layoutStyles, titleStyles } from "../styles";
 
 import { FormPropsType } from "../../index";
+import { ThemedTitle } from "@components";
+import { Stack } from "@mui/system";
+
 type LoginProps = LoginPageProps<BoxProps, CardContentProps, FormPropsType>;
 
 /**
@@ -42,6 +51,7 @@ export const LoginPage: React.FC<LoginProps> = ({
     wrapperProps,
     renderContent,
     formProps,
+    title,
 }) => {
     const { onSubmit, ...useFormProps } = formProps || {};
     const methods = useForm<BaseRecord, HttpError, LoginFormTypes>({
@@ -53,34 +63,70 @@ export const LoginPage: React.FC<LoginProps> = ({
         formState: { errors },
     } = methods;
 
-    const { mutate: login, isLoading } = useLogin<LoginFormTypes>();
+    const authProvider = useActiveAuthProvider();
+    const { mutate: login, isLoading } = useLogin<LoginFormTypes>({
+        v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+    });
     const translate = useTranslate();
-    const { Link } = useRouterContext();
+    const routerType = useRouterType();
+    const Link = useLink();
+    const { Link: LegacyLink } = useRouterContext();
+
+    const ActiveLink = routerType === "legacy" ? LegacyLink : Link;
+
+    const PageTitle =
+        title === false ? null : (
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    marginBottom: "32px",
+                    fontSize: "20px",
+                }}
+            >
+                {title ?? (
+                    <ThemedTitle
+                        collapsed={false}
+                        wrapperStyles={{
+                            gap: "8px",
+                        }}
+                    />
+                )}
+            </div>
+        );
 
     const renderProviders = () => {
         if (providers && providers.length > 0) {
             return (
                 <>
-                    {providers.map((provider: any) => {
-                        return (
-                            <Button
-                                key={provider.name}
-                                fullWidth
-                                variant="outlined"
-                                sx={{
-                                    my: "8px",
-                                    textTransform: "none",
-                                }}
-                                onClick={() =>
-                                    login({ providerName: provider.name })
-                                }
-                                startIcon={provider.icon}
-                            >
-                                {provider.label}
-                            </Button>
-                        );
-                    })}
-                    <Divider style={{ fontSize: 12 }}>
+                    <Stack spacing={1}>
+                        {providers.map((provider: any) => {
+                            return (
+                                <Button
+                                    key={provider.name}
+                                    variant="outlined"
+                                    fullWidth
+                                    sx={{
+                                        color: "primary.light",
+                                        borderColor: "primary.light",
+                                        textTransform: "none",
+                                    }}
+                                    onClick={() =>
+                                        login({ providerName: provider.name })
+                                    }
+                                    startIcon={provider.icon}
+                                >
+                                    {provider.label}
+                                </Button>
+                            );
+                        })}
+                    </Stack>
+                    <Divider
+                        sx={{
+                            fontSize: "12px",
+                            marginY: "16px",
+                        }}
+                    >
                         {translate("pages.login.divider", "or")}
                     </Divider>
                 </>
@@ -91,13 +137,14 @@ export const LoginPage: React.FC<LoginProps> = ({
 
     const Content = (
         <Card {...(contentProps ?? {})}>
-            <CardContent sx={{ paddingX: "32px" }}>
+            <CardContent sx={{ p: "32px", "&:last-child": { pb: "32px" } }}>
                 <Typography
                     component="h1"
                     variant="h5"
                     align="center"
                     style={titleStyles}
                     color="primary"
+                    fontWeight={700}
                 >
                     {translate("pages.login.title", "Sign in to your account")}
                 </Typography>
@@ -110,7 +157,6 @@ export const LoginPage: React.FC<LoginProps> = ({
 
                         return login(data);
                     })}
-                    gap="16px"
                 >
                     {renderProviders()}
                     <TextField
@@ -125,6 +171,9 @@ export const LoginPage: React.FC<LoginProps> = ({
                         name="email"
                         type="email"
                         autoComplete="email"
+                        sx={{
+                            mt: 0,
+                        }}
                     />
                     <TextField
                         {...register("password", {
@@ -143,11 +192,15 @@ export const LoginPage: React.FC<LoginProps> = ({
                         type="password"
                         placeholder="●●●●●●●●"
                         autoComplete="current-password"
+                        sx={{
+                            mb: 0,
+                        }}
                     />
 
                     <Box
                         component="div"
                         sx={{
+                            mt: "24px",
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center",
@@ -178,7 +231,9 @@ export const LoginPage: React.FC<LoginProps> = ({
                         {forgotPasswordLink ?? (
                             <MuiLink
                                 variant="body2"
-                                component={Link}
+                                color="primary"
+                                fontSize="12px"
+                                component={ActiveLink}
                                 underline="none"
                                 to="/forgot-password"
                             >
@@ -193,25 +248,37 @@ export const LoginPage: React.FC<LoginProps> = ({
                         type="submit"
                         fullWidth
                         variant="contained"
-                        sx={{
-                            mt: "8px",
-                        }}
                         disabled={isLoading}
+                        sx={{ mt: "24px" }}
                     >
                         {translate("pages.login.signin", "Sign in")}
                     </Button>
                     {registerLink ?? (
-                        <Box style={{ marginTop: 8 }}>
-                            <Typography variant="body2" component="span">
+                        <Box
+                            sx={{
+                                mt: "24px",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                            }}
+                        >
+                            <Typography
+                                textAlign="center"
+                                variant="body2"
+                                component="span"
+                                fontSize="12px"
+                            >
                                 {translate(
                                     "pages.login.buttons.noAccount",
                                     "Don’t have an account?",
                                 )}
                             </Typography>
                             <MuiLink
-                                ml="8px"
+                                ml="4px"
+                                fontSize="12px"
                                 variant="body2"
-                                component={Link}
+                                color="primary"
+                                component={ActiveLink}
                                 underline="none"
                                 to="/register"
                                 fontWeight="bold"
@@ -246,7 +313,14 @@ export const LoginPage: React.FC<LoginProps> = ({
                             alignItems: "center",
                         }}
                     >
-                        {renderContent ? renderContent(Content) : Content}
+                        {renderContent ? (
+                            renderContent(Content, PageTitle)
+                        ) : (
+                            <>
+                                {PageTitle}
+                                {Content}
+                            </>
+                        )}
                     </Box>
                 </Container>
             </Box>

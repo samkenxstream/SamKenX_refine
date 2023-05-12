@@ -3,7 +3,7 @@ title: How to Use Docker EntryPoint
 description: We'll discuss how to use Docker ENTRYPOINT instruction to configure the executables run after the container is initiated.
 slug: docker-entrypoint
 authors: muhammad_khabbab
-tags: [docker]
+tags: [docker, dev-tools]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2023-01-10-docker-entrypoint/social.png
 hide_table_of_contents: false
 ---
@@ -40,9 +40,10 @@ You can override the entrypoint instruction when initiating the container using 
 •	CMD: exec form
 
 
+
 ---
 
-<PromotionBanner title="Building a side project?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/diagram.png" />
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
 
 ---
  

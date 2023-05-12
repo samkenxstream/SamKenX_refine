@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useSelect, useForm, useNavigation } from "@pankod/refine-core";
+import { useSelect, useForm, useNavigation } from "@refinedev/core";
 import { IPost } from "interfaces";
 
 export const PostEdit: React.FC = () => {
@@ -13,7 +13,7 @@ export const PostEdit: React.FC = () => {
     });
 
     const [formValues, setFormValues] = useState({
-        title: result?.title,
+        title: result?.title ?? "",
         content: result?.content,
         status: result?.status,
         category: {
@@ -23,7 +23,7 @@ export const PostEdit: React.FC = () => {
 
     useEffect(() => {
         setFormValues({
-            title: result?.title,
+            title: result?.title ?? "",
             content: result?.content,
             status: result?.status,
             category: {

@@ -13,12 +13,15 @@ import {
     HttpError,
     useShow,
     useNavigation,
-} from "@pankod/refine-core";
-import { Layout } from "components";
-import { PostList, PostCreate, PostEdit, PostShow } from "pages/posts";
-import routerProvider from "@pankod/refine-react-router-v6";
+} from "@refinedev/core";
 
-const { Link } = routerProvider;
+import { Layout } from "components";
+
+import { PostList, PostCreate, PostEdit, PostShow } from "pages/posts";
+
+import routerProvider from "@refinedev/react-router-v6";
+
+import { BrowserRouter, Routes, Route, Outlet, Link } from "react-router-dom";
 
 type FormValues = Omit<IPost, "id">;
 
@@ -45,15 +48,14 @@ const PAGE_SIZE = 10;
 
 const PostList: React.FC = () => {
     const [page, setPage] = React.useState(1);
+
     const { edit, create, clone } = useNavigation();
 
     const { data } = useList<IPost>({
         resource: "posts",
-        config: {
-            pagination: {
-                current: page,
-                pageSize: PAGE_SIZE,
-            },
+        pagination: {
+            current: page,
+            pageSize: PAGE_SIZE,
         },
     });
 
@@ -357,7 +359,7 @@ We'll show the basic usage of `useForm` by adding an creating form.
 
 ```tsx
 import { useState } from "react";
-import { useForm } from "@pankod/refine-core";
+import { useForm } from "@refinedev/core";
 
 const PostCreate = () => {
     const [title, setTitle] = useState();
@@ -386,17 +388,7 @@ const PostCreate = () => {
 
 ### `action`
 
-`useForm` can handle `edit`, `create` and `clone` actions.
-
-:::tip
-By default, it determines the `action` from route.
-
--   If the route is `/posts/create` thus the hook will be called with `action: "create"`.
--   If the route is `/posts/edit/1`, the hook will be called with `action: "edit"`.
--   If the route is `/posts/clone/1`, the hook will be called with `action: "clone"`.
-
-It can be overridden by passing the `action` prop where it isn't possible to determine the action from the route (e.g. when using form in a modal or using a custom route).
-:::
+`useForm` can handle `edit`, `create` and `clone` actions. By default the `action` is inferred from the active route. It can be overridden by passing the `action` explicitly.
 
 <Tabs
 defaultValue="create"
@@ -418,7 +410,7 @@ setInitialRoutes(["/posts/create"]);
 
 // visible-block-start
 import React, { useState } from "react";
-import { useForm } from "@pankod/refine-core";
+import { useForm } from "@refinedev/core";
 
 interface FormValues {
     id: number;
@@ -483,19 +475,39 @@ const PostCreatePage: React.FC = () => {
 };
 // visible-block-end
 
-setRefineProps({
-    Layout: (props: LayoutProps) => <Layout {...props} />,
-    resources: [
-        {
-            name: "posts",
-            list: PostList,
-            create: PostCreatePage,
-            edit: PostEdit,
-        },
-    ],
-});
+const App = () => {
+    return (
+        <BrowserRouter>
+            <Refine
+                dataProvider={RefineSimpleRest.default(
+                    "https://api.fake-rest.refine.dev",
+                )}
+                routerProvider={routerProvider}
+                resources={[
+                    {
+                        name: "posts",
+                        list: "/posts",
+                        create: "/posts/create",
+                        edit: "/posts/edit/:id",
+                    },
+                ]}
+            >
+                <Layout>
+                    <Routes>
+                        <Route path="/posts" element={<PostList />} />
+                        <Route
+                            path="/posts/create"
+                            element={<PostCreatePage />}
+                        />
+                        <Route path="/posts/edit/:id" element={<PostEdit />} />
+                    </Routes>
+                </Layout>
+            </Refine>
+        </BrowserRouter>
+    );
+};
 
-render(<RefineHeadlessDemo />);
+render(<App />);
 ```
 
 </TabItem>
@@ -513,7 +525,7 @@ setInitialRoutes(["/posts/edit/123"]);
 
 // visible-block-start
 import React, { useState, useEffect } from "react";
-import { useForm } from "@pankod/refine-core";
+import { useForm } from "@refinedev/core";
 
 interface FormValues {
     id: number;
@@ -587,19 +599,39 @@ const PostEditPage: React.FC = () => {
 };
 // visible-block-end
 
-setRefineProps({
-    Layout: (props: LayoutProps) => <Layout {...props} />,
-    resources: [
-        {
-            name: "posts",
-            list: PostList,
-            create: PostCreate,
-            edit: PostEditPage,
-        },
-    ],
-});
+const App = () => {
+    return (
+        <BrowserRouter>
+            <Refine
+                dataProvider={RefineSimpleRest.default(
+                    "https://api.fake-rest.refine.dev",
+                )}
+                routerProvider={routerProvider}
+                resources={[
+                    {
+                        name: "posts",
+                        list: "/posts",
+                        create: "/posts/create",
+                        edit: "/posts/edit/:id",
+                    },
+                ]}
+            >
+                <Layout>
+                    <Routes>
+                        <Route path="/posts" element={<PostList />} />
+                        <Route path="/posts/create" element={<PostCreate />} />
+                        <Route
+                            path="/posts/edit/:id"
+                            element={<PostEditPage />}
+                        />
+                    </Routes>
+                </Layout>
+            </Refine>
+        </BrowserRouter>
+    );
+};
 
-render(<RefineHeadlessDemo />);
+render(<App />);
 ```
 
 </TabItem>
@@ -619,7 +651,7 @@ setInitialRoutes(["/posts/clone/123"]);
 
 // visible-block-start
 import React, { useState, useEffect } from "react";
-import { useForm } from "@pankod/refine-core";
+import { useForm } from "@refinedev/core";
 
 interface FormValues {
     id: number;
@@ -693,19 +725,40 @@ const PostCreatePage: React.FC = () => {
 };
 // visible-block-end
 
-setRefineProps({
-    Layout: (props: LayoutProps) => <Layout {...props} />,
-    resources: [
-        {
-            name: "posts",
-            list: PostList,
-            create: PostCreatePage,
-            edit: PostEdit,
-        },
-    ],
-});
+const App = () => {
+    return (
+        <BrowserRouter>
+            <Refine
+                dataProvider={RefineSimpleRest.default(
+                    "https://api.fake-rest.refine.dev",
+                )}
+                routerProvider={routerProvider}
+                resources={[
+                    {
+                        name: "posts",
+                        list: "/posts",
+                        create: "/posts/create",
+                        edit: "/posts/edit/:id",
+                        clone: "/posts/clone/:id",
+                    },
+                ]}
+            >
+                <Layout>
+                    <Routes>
+                        <Route path="/posts" element={<PostList />} />
+                        <Route
+                            path="/posts/clone/:id"
+                            element={<PostCreatePage />}
+                        />
+                        <Route path="/posts/edit/:id" element={<PostEdit />} />
+                    </Routes>
+                </Layout>
+            </Refine>
+        </BrowserRouter>
+    );
+};
 
-render(<RefineHeadlessDemo />);
+render(<App />);
 ```
 
 </TabItem>
@@ -727,6 +780,35 @@ useForm({
     resource: "categories",
 });
 ```
+
+:::caution
+
+If the `resource` is passed, the `id` from the current URL will be ignored because it may belong to a different resource. To retrieve the `id` value from the current URL, use the `useParsed` hook and pass the `id` value to the `useForm` hook.
+
+```tsx
+import { useForm, useParsed } from "@refinedev/core";
+
+const { id } = useParsed();
+
+useForm({
+    resource: "custom-resource",
+    id,
+});
+```
+
+Or you can use the `setId` function to set the `id` value.
+
+```tsx
+import { useForm } from "@refinedev/core";
+
+const { setId } = useForm({
+    resource: "custom-resource",
+});
+
+setId("123");
+```
+
+:::
 
 ### `id`
 
@@ -879,18 +961,22 @@ useForm({
 }
 ```
 
-### `metaData`
+### `meta`
 
-[`metaData`](/docs/api-reference/general-concepts/#metadata) is used following two purposes:
+`meta` is a special property that can be used to pass additional information to data provider methods for the following purposes:
 
--   To pass additional information to data provider methods.
--   Generate GraphQL queries using plain JavaScript Objects (JSON). Please refer [GraphQL](/docs/advanced-tutorials/data-provider/graphql/#edit-page) for more information.
+-   Customizing the data provider methods for specific use cases.
+-   Generating GraphQL queries using plain JavaScript Objects (JSON).
+-   Filling the path parameters when generating the redirection path.
+-   Providing additional parameters to the redirection path after the form is submitted.
 
-In the following example, we pass the `headers` property in the `metaData` object to the `create` method. With similar logic, you can pass any properties to specifically handle the data provider methods.
+[Refer to the `meta` section of the General Concepts documentation for more information &#8594](/docs/api-reference/general-concepts/#meta)
+
+In the following example, we pass the `headers` property in the `meta` object to the `create` method. With similar logic, you can pass any properties to specifically handle the data provider methods.
 
 ```tsx
 useForm({
-    metaData: {
+    meta: {
         headers: { "x-meta-data": "true" },
     },
 });
@@ -898,8 +984,8 @@ useForm({
 const myDataProvider = {
     //...
     // highlight-start
-    create: async ({ resource, variables, metaData }) => {
-        const headers = metaData?.headers ?? {};
+    create: async ({ resource, variables, meta }) => {
+        const headers = meta?.headers ?? {};
         // highlight-end
         const url = `${apiUrl}/${resource}`;
 
@@ -1063,7 +1149,7 @@ You can invalidate other resources with help of [`useInvalidate`](/docs/api-refe
 It is useful when you want to `invalidate` other resources don't have relation with the current resource.
 
 ```tsx
-import { useInvalidate, useForm } from "@pankod/refine-core";
+import { useInvalidate, useForm } from "@refinedev/core";
 
 const PostEdit = () => {
     const invalidate = useInvalidate();
@@ -1089,7 +1175,7 @@ For example, Let's send the values we received from the user in two separate inp
 
 ```tsx title="src/users/create.tsx"
 import React, { useState } from "react";
-import { useForm } from "@pankod/refine-core";
+import { useForm } from "@refinedev/core";
 
 export const UserCreate: React.FC = () => {
     const [name, setName] = useState();
@@ -1121,17 +1207,20 @@ export const UserCreate: React.FC = () => {
 
 ### Properties
 
-<PropsTable module="@pankod/refine-core/useForm" />
+<PropsTable module="@refinedev/core/useForm" />
 
 > `*`: These props have default values in `RefineContext` and can also be set on **<[Refine](/api-reference/core/components/refine-config.md)>** component. `useForm` will use what is passed to `<Refine>` as default but a local value will override it.
 
 ### Type Parameters
 
-| Property   | Desription                                                       | Default                    |
-| ---------- | ---------------------------------------------------------------- | -------------------------- |
-| TData      | Result data of the query that extends [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
-| TError     | Custom error object that extends [`HttpError`][httperror]        | [`HttpError`][httperror]   |
-| TVariables | Values for params.                                               | `{}`                       |
+| Property       | Desription                                                                                                                                                          | Type                       | Default                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------- |
+| TQueryFnData   | Result data returned by the query function. Extends [`BaseRecord`][baserecord]                                                                                      | [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
+| TError         | Custom error object that extends [`HttpError`][httperror]                                                                                                           | [`HttpError`][httperror]   | [`HttpError`][httperror]   |
+| TVariables     | Values for params.                                                                                                                                                  | `{}`                       |                            |
+| TData          | Result data returned by the `select` function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TQueryFnData` will be used as the default value. | [`BaseRecord`][baserecord] | `TQueryFnData`             |
+| TResponse      | Result data returned by the mutation function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TData` will be used as the default value.        | [`BaseRecord`][baserecord] | `TData`                    |
+| TResponseError | Custom error object that extends [`HttpError`][httperror]. If not specified, the value of `TError` will be used as the default value.                               | [`HttpError`][httperror]   | `TError`                   |
 
 ### Return values
 
@@ -1145,9 +1234,6 @@ export const UserCreate: React.FC = () => {
 | setId          | `id` setter                                            | `Dispatch<SetStateAction<` `string` \| `number` \| `undefined>>`                                                                                               |
 | redirect       | Redirect function for custom redirections              | (redirect: `"list"`\|`"edit"`\|`"show"`\|`"create"`\| `false` ,idFromFunction?: [`BaseKey`](/api-reference/core/interfaces.md#basekey)\|`undefined`) => `data` |
 
-[baserecord]: /api-reference/core/interfaces.md#baserecord
-[httperror]: /api-reference/core/interfaces.md#httperror
-
 ## Example
 
 <CodeSandboxExample path="form-core-use-form" />
@@ -1157,3 +1243,5 @@ export const UserCreate: React.FC = () => {
 [create]: /docs/api-reference/core/providers/data-provider/#create-
 [update]: /docs/api-reference/core/providers/data-provider/#update-
 [data-provider]: /docs/api-reference/core/providers/data-provider
+[baserecord]: /api-reference/core/interfaces.md#baserecord
+[httperror]: /api-reference/core/interfaces.md#httperror

@@ -2,13 +2,13 @@ import React from "react";
 
 import {
     useNavigation,
-    useResourceWithRoute,
-    useRouterContext,
     useTranslate,
     userFriendlyResourceName,
-    ResourceRouterParams,
     useRefineContext,
-} from "@pankod/refine-core";
+    useRouterType,
+    useBack,
+    useResource,
+} from "@refinedev/core";
 
 import {
     Card,
@@ -21,8 +21,9 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
-import { Breadcrumb, SaveButton } from "@components";
+import { Breadcrumb, SaveButton, SaveButtonProps } from "@components";
 import { CreateProps } from "../types";
+import { RefinePageHeaderClassNames } from "@refinedev/ui-types";
 
 /**
  * `<Create>` provides us a layout to display the page.
@@ -32,15 +33,10 @@ import { CreateProps } from "../types";
  */
 export const Create: React.FC<CreateProps> = ({
     title,
-    actionButtons,
     children,
-    saveButtonProps,
+    saveButtonProps: saveButtonPropsFromProps,
     resource: resourceFromProps,
     isLoading = false,
-    cardProps,
-    cardHeaderProps,
-    cardContentProps,
-    cardActionsProps,
     breadcrumb: breadcrumbFromProps,
     wrapperProps,
     headerProps,
@@ -51,23 +47,19 @@ export const Create: React.FC<CreateProps> = ({
     footerButtons,
     goBack: goBackFromProps,
 }) => {
+    const translate = useTranslate();
+    const { options: { breadcrumb: globalBreadcrumb } = {} } =
+        useRefineContext();
+
+    const routerType = useRouterType();
+    const back = useBack();
     const { goBack } = useNavigation();
 
-    const translate = useTranslate();
+    const { resource, action } = useResource(resourceFromProps);
 
-    const { useParams } = useRouterContext();
-
-    const { resource: routeResourceName, action: routeFromAction } =
-        useParams<ResourceRouterParams>();
-
-    const resourceWithRoute = useResourceWithRoute();
-
-    const resource = resourceWithRoute(resourceFromProps ?? routeResourceName);
-
-    const { options } = useRefineContext();
     const breadcrumb =
         typeof breadcrumbFromProps === "undefined"
-            ? options?.breadcrumb
+            ? globalBreadcrumb
             : breadcrumbFromProps;
 
     const breadcrumbComponent =
@@ -77,25 +69,31 @@ export const Create: React.FC<CreateProps> = ({
             <Breadcrumb />
         );
 
-    const defaultFooterButtons = (
-        <SaveButton
-            {...(isLoading ? { disabled: true } : {})}
-            {...saveButtonProps}
-        />
-    );
+    const saveButtonProps: SaveButtonProps = {
+        ...(isLoading ? { disabled: true } : {}),
+        ...saveButtonPropsFromProps,
+    };
+
+    const defaultFooterButtons = <SaveButton {...saveButtonProps} />;
 
     return (
-        <Card {...(cardProps ?? {})} {...(wrapperProps ?? {})}>
+        <Card {...(wrapperProps ?? {})}>
             {breadcrumbComponent}
             <CardHeader
                 sx={{ display: "flex", flexWrap: "wrap" }}
                 title={
                     title ?? (
-                        <Typography variant="h5">
+                        <Typography
+                            variant="h5"
+                            className={RefinePageHeaderClassNames.Title}
+                        >
                             {translate(
-                                `${resource.name}.titles.create`,
+                                `${resource?.name}.titles.create`,
                                 `Create ${userFriendlyResourceName(
-                                    resource.label ?? resource.name,
+                                    resource?.meta?.label ??
+                                        resource?.options?.label ??
+                                        resource?.label ??
+                                        resource?.name,
                                     "singular",
                                 )}`,
                             )}
@@ -107,7 +105,14 @@ export const Create: React.FC<CreateProps> = ({
                         goBackFromProps
                     ) : (
                         <IconButton
-                            onClick={routeFromAction ? goBack : undefined}
+                            onClick={
+                                action !== "list" ||
+                                typeof action !== "undefined"
+                                    ? routerType === "legacy"
+                                        ? goBack
+                                        : back
+                                    : undefined
+                            }
                         >
                             <ArrowBackIcon />
                         </IconButton>
@@ -130,15 +135,9 @@ export const Create: React.FC<CreateProps> = ({
                         </Box>
                     ) : undefined
                 }
-                {...(cardHeaderProps ?? {})}
                 {...(headerProps ?? {})}
             />
-            <CardContent
-                {...(cardContentProps ?? {})}
-                {...(contentProps ?? {})}
-            >
-                {children}
-            </CardContent>
+            <CardContent {...(contentProps ?? {})}>{children}</CardContent>
             <CardActions
                 sx={{
                     display: "flex",
@@ -146,17 +145,15 @@ export const Create: React.FC<CreateProps> = ({
                     gap: "16px",
                     padding: "16px",
                 }}
-                {...(cardActionsProps ?? {})}
                 {...(footerButtonProps ?? {})}
             >
                 {footerButtons
                     ? typeof footerButtons === "function"
                         ? footerButtons({
                               defaultButtons: defaultFooterButtons,
+                              saveButtonProps,
                           })
                         : footerButtons
-                    : actionButtons
-                    ? actionButtons
                     : defaultFooterButtons}
             </CardActions>
         </Card>

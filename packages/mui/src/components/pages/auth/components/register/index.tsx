@@ -1,6 +1,10 @@
 import * as React from "react";
-import { RegisterFormTypes, RegisterPageProps } from "@pankod/refine-core";
-import { useForm } from "@pankod/refine-react-hook-form";
+import {
+    RegisterFormTypes,
+    RegisterPageProps,
+    useActiveAuthProvider,
+} from "@refinedev/core";
+import { useForm } from "@refinedev/react-hook-form";
 
 import {
     Button,
@@ -14,6 +18,7 @@ import {
     CardContentProps,
     Divider,
     Link as MuiLink,
+    Stack,
 } from "@mui/material";
 
 import {
@@ -21,11 +26,14 @@ import {
     HttpError,
     useTranslate,
     useRouterContext,
+    useRouterType,
+    useLink,
     useRegister,
-} from "@pankod/refine-core";
+} from "@refinedev/core";
 
 import { layoutStyles, titleStyles } from "../styles";
 import { FormPropsType } from "../../index";
+import { ThemedTitle } from "@components/themedLayout/title";
 
 type RegisterProps = RegisterPageProps<
     BoxProps,
@@ -44,6 +52,7 @@ export const RegisterPage: React.FC<RegisterProps> = ({
     renderContent,
     providers,
     formProps,
+    title,
 }) => {
     const { onSubmit, ...useFormProps } = formProps || {};
     const {
@@ -54,37 +63,69 @@ export const RegisterPage: React.FC<RegisterProps> = ({
         ...useFormProps,
     });
 
+    const authProvider = useActiveAuthProvider();
     const { mutate: registerMutate, isLoading } =
-        useRegister<RegisterFormTypes>();
+        useRegister<RegisterFormTypes>({
+            v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+        });
     const translate = useTranslate();
-    const { Link } = useRouterContext();
+    const routerType = useRouterType();
+    const Link = useLink();
+    const { Link: LegacyLink } = useRouterContext();
+
+    const ActiveLink = routerType === "legacy" ? LegacyLink : Link;
+
+    const PageTitle =
+        title === false ? null : (
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    marginBottom: "32px",
+                    fontSize: "20px",
+                }}
+            >
+                {title ?? (
+                    <ThemedTitle
+                        collapsed={false}
+                        wrapperStyles={{
+                            gap: "8px",
+                        }}
+                    />
+                )}
+            </div>
+        );
 
     const renderProviders = () => {
         if (providers && providers.length > 0) {
             return (
                 <>
-                    {providers.map((provider: any) => {
-                        return (
-                            <Button
-                                key={provider.name}
-                                fullWidth
-                                variant="outlined"
-                                sx={{
-                                    my: "8px",
-                                    textTransform: "none",
-                                }}
-                                onClick={() =>
-                                    registerMutate({
-                                        providerName: provider.name,
-                                    })
-                                }
-                                startIcon={provider.icon}
-                            >
-                                {provider.label}
-                            </Button>
-                        );
-                    })}
-                    <Divider style={{ fontSize: 12 }}>
+                    <Stack spacing={1}>
+                        {providers.map((provider: any) => {
+                            return (
+                                <Button
+                                    key={provider.name}
+                                    color="secondary"
+                                    fullWidth
+                                    variant="outlined"
+                                    sx={{
+                                        color: "primary.light",
+                                        borderColor: "primary.light",
+                                        textTransform: "none",
+                                    }}
+                                    onClick={() =>
+                                        registerMutate({
+                                            providerName: provider.name,
+                                        })
+                                    }
+                                    startIcon={provider.icon}
+                                >
+                                    {provider.label}
+                                </Button>
+                            );
+                        })}
+                    </Stack>
+                    <Divider sx={{ fontSize: 12, marginY: "16px" }}>
                         {translate("pages.login.divider", "or")}
                     </Divider>
                 </>
@@ -95,13 +136,14 @@ export const RegisterPage: React.FC<RegisterProps> = ({
 
     const Content = (
         <Card {...(contentProps ?? {})}>
-            <CardContent sx={{ paddingX: "32px" }}>
+            <CardContent sx={{ p: "32px", "&:last-child": { pb: "32px" } }}>
                 <Typography
                     component="h1"
                     variant="h5"
                     align="center"
                     style={titleStyles}
                     color="primary"
+                    fontWeight={700}
                 >
                     {translate(
                         "pages.register.title",
@@ -118,7 +160,6 @@ export const RegisterPage: React.FC<RegisterProps> = ({
 
                         return registerMutate(data);
                     })}
-                    gap="16px"
                 >
                     <TextField
                         {...register("email", {
@@ -141,6 +182,9 @@ export const RegisterPage: React.FC<RegisterProps> = ({
                         }
                         name="email"
                         autoComplete="email"
+                        sx={{
+                            mt: 0,
+                        }}
                     />
                     <TextField
                         {...register("password", {
@@ -161,40 +205,57 @@ export const RegisterPage: React.FC<RegisterProps> = ({
                         type="password"
                         placeholder="●●●●●●●●"
                         autoComplete="current-password"
+                        sx={{
+                            mb: 0,
+                        }}
                     />
-
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        disabled={isLoading}
+                        sx={{
+                            mt: "24px",
+                        }}
+                    >
+                        {translate("pages.register.signup", "Sign up")}
+                    </Button>
                     {loginLink ?? (
-                        <Box display="flex" justifyContent="flex-end">
-                            <Typography variant="body2" component="span">
+                        <Box
+                            display="flex"
+                            justifyContent="flex-end"
+                            alignItems="center"
+                            sx={{
+                                mt: "24px",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                            }}
+                        >
+                            <Typography
+                                variant="body2"
+                                component="span"
+                                fontSize="12px"
+                            >
                                 {translate(
                                     "pages.login.buttons.haveAccount",
                                     "Have an account?",
                                 )}
                             </Typography>
                             <MuiLink
-                                ml="6px"
+                                ml="4px"
                                 variant="body2"
-                                component={Link}
+                                color="primary"
+                                component={ActiveLink}
                                 underline="none"
                                 to="/login"
+                                fontSize="12px"
                                 fontWeight="bold"
                             >
                                 {translate("pages.login.signin", "Sign in")}
                             </MuiLink>
                         </Box>
                     )}
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        sx={{
-                            my: "8px",
-                            color: "white",
-                        }}
-                        disabled={isLoading}
-                    >
-                        {translate("pages.register.signup", "Sign up")}
-                    </Button>
                 </Box>
             </CardContent>
         </Card>
@@ -212,7 +273,14 @@ export const RegisterPage: React.FC<RegisterProps> = ({
                     height: "100vh",
                 }}
             >
-                {renderContent ? renderContent(Content) : Content}
+                {renderContent ? (
+                    renderContent(Content, PageTitle)
+                ) : (
+                    <>
+                        {PageTitle}
+                        {Content}
+                    </>
+                )}
             </Container>
         </Box>
     );

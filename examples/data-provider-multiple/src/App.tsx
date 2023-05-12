@@ -1,12 +1,19 @@
-import { Refine } from "@pankod/refine-core";
+import { GitHubBanner, Refine } from "@refinedev/core";
 import {
     notificationProvider,
-    Layout,
+    ThemedLayoutV2,
     ErrorComponent,
-} from "@pankod/refine-antd";
-import dataProvider from "@pankod/refine-simple-rest";
-import routerProvider from "@pankod/refine-react-router-v6";
-import "@pankod/refine-antd/dist/reset.css";
+    RefineThemes,
+} from "@refinedev/antd";
+import dataProvider from "@refinedev/simple-rest";
+import routerProvider, {
+    NavigateToResource,
+    UnsavedChangesNotifier,
+} from "@refinedev/react-router-v6";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+
+import { ConfigProvider } from "antd";
+import "@refinedev/antd/dist/reset.css";
 
 import { PostList } from "pages/posts";
 
@@ -16,29 +23,56 @@ const FINE_FOODS_API_URL = "https://api.finefoods.refine.dev";
 
 const App: React.FC = () => {
     return (
-        <Refine
-            routerProvider={routerProvider}
-            dataProvider={{
-                default: dataProvider(API_URL),
-                categories: dataProvider(CATEGORIES_API_URL),
-                fineFoods: dataProvider(FINE_FOODS_API_URL),
-            }}
-            resources={[
-                {
-                    name: "posts",
-                    list: PostList,
-                },
-                {
-                    name: "categories",
-                    options: {
-                        dataProviderName: "categories",
-                    },
-                },
-            ]}
-            notificationProvider={notificationProvider}
-            Layout={Layout}
-            catchAll={<ErrorComponent />}
-        />
+        <BrowserRouter>
+            <GitHubBanner />
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    routerProvider={routerProvider}
+                    dataProvider={{
+                        default: dataProvider(API_URL),
+                        categories: dataProvider(CATEGORIES_API_URL),
+                        fineFoods: dataProvider(FINE_FOODS_API_URL),
+                    }}
+                    resources={[
+                        {
+                            name: "posts",
+                            list: "/posts",
+                        },
+                        {
+                            name: "categories",
+                            meta: {
+                                dataProviderName: "categories",
+                            },
+                        },
+                    ]}
+                    notificationProvider={notificationProvider}
+                    options={{
+                        syncWithLocation: true,
+                        warnWhenUnsavedChanges: true,
+                    }}
+                >
+                    <Routes>
+                        <Route
+                            element={
+                                <ThemedLayoutV2>
+                                    <Outlet />
+                                </ThemedLayoutV2>
+                            }
+                        >
+                            <Route
+                                index
+                                element={
+                                    <NavigateToResource resource="posts" />
+                                }
+                            />
+                            <Route path="/posts" element={<PostList />} />
+                            <Route path="*" element={<ErrorComponent />} />
+                        </Route>
+                    </Routes>
+                    <UnsavedChangesNotifier />
+                </Refine>
+            </ConfigProvider>
+        </BrowserRouter>
     );
 };
 

@@ -20,6 +20,7 @@ If you're looking for a complete select library, refine has out-of-the-box suppo
 -   refine's `useSelect` (for Headless users) - [Documentation](/docs/api-reference/core/hooks/useSelect/) - [Example](/docs/examples/core/useSelect)
 -   [Ant Design Select](https://ant.design/components/select) (for Ant Design users) - [Documentation](/docs/api-reference/antd/hooks/field/useSelect) - [Example](/docs/examples/field/useSelect)
 -   [Mantine Select](https://mantine.dev/core/select/) (for Mantine users) - [Documentation](/docs/api-reference/mantine/hooks/useSelect)
+
 :::
 
 ## Basic Usage
@@ -30,14 +31,15 @@ Here is a basic example of how to use `useAutocomplete` hook.
 
 ## Realtime Updates
 
-> This feature is only available if you use a [Live Provider](docs/api-reference/core/providers/live-provider) 
+> This feature is only available if you use a [Live Provider](docs/api-reference/core/providers/live-provider)
 
-When `useAutocomplete` hook is mounted, it passes some parameters (`channel`, `resource` etc.) to the `subscribe` method from the `liveProvider`. 
+When `useAutocomplete` hook is mounted, it passes some parameters (`channel`, `resource` etc.) to the `subscribe` method from the `liveProvider`.
 It is useful when you want to subscribe to the live updates.
 
 [Refer to the `liveProvider` documentation for more information &#8594](/docs/api-reference/core/providers/live-provider)
 
 ## Properties
+
 ### `resource` <PropTag required />
 
 It will be passed to the `getList` method from the `dataProvider` as parameter via the `useList` hook. The parameter is usually used as an API endpoint path. It all depends on how to handle the `resource` in the `getList` method. See the [creating a data provider](/docs/api-reference/core/providers/data-provider#creating-a-data-provider) section for an example of how resources are handled.
@@ -48,17 +50,15 @@ useAutocomplete({
 });
 ```
 
+### `sorters`
 
-### `sort`
-
-It allows to show the options in the desired order. `sort` will be passed to the `getList` method from the `dataProvider` as parameter via the `useList` hook. It is used to send sort query parameters to the API.
+It allows to show the options in the desired order. `sorters` will be passed to the `getList` method from the `dataProvider` as parameter via the `useList` hook. It is used to send `sorters` query parameters to the API.
 
 [Refer to the `CrudSorting` interface for more information &#8594](docs/api-reference/core/interfaceReferences#crudsorting)
 
-
 ```tsx
 useAutocomplete({
-    sort: [
+    sorters: [
         {
             field: "title",
             order: "asc",
@@ -77,7 +77,7 @@ It is used to show options by filtering them. `filters` will be passed to the `g
 
 ```tsx
 useAutocomplete({
-    filter: [
+    filters: [
         {
             field: "isActive",
             operator: "eq",
@@ -86,6 +86,7 @@ useAutocomplete({
     ],
 });
 ```
+
 ### `defaultValue`
 
 Allows to make options selected by default. Adds extra options to `<select>` component. In some cases like there are many entries for the `<select>` and pagination is required, `defaultValue` may not be present in the current visible options and this can break the `<select>` component. To avoid such cases, A seperate `useMany` query is sent to the backend with the `defaultValue` and appended to the options of `<select>`, ensuring the default values exist in the current options array. Since it uses `useMany` to query the necessary data, the `defaultValue` can be a single value or an array of values like the following:
@@ -100,7 +101,7 @@ useAutocomplete({
 
 ### `debounce`
 
-It allows us to `debounce` the `onSearch` function.  
+It allows us to `debounce` the `onSearch` function.
 
 ```tsx
 useAutocomplete({
@@ -150,15 +151,15 @@ useAutocomplete({
 });
 ```
 
-### `hasPagination`
+#### `mode`
 
-> Default: `false` 
-
-`hasPagination` will be passed to the `getList` method from the `dataProvider` as parameter via the `useList` hook. It is used to determine whether to use server-side pagination or not.
+It can be `"off"`, `"client"` or `"server"`. It is used to determine whether to use server-side pagination or not.
 
 ```tsx
 useAutocomplete({
-    hasPagination: false,
+    pagination: {
+        mode: "off",
+    },
 });
 ```
 
@@ -179,7 +180,7 @@ useAutocomplete({
 
 ### `onSearch`
 
-It allows us to `AutoComplete` the `options`.  
+It allows us to `AutoComplete` the `options`.
 
 [Refer to the `CrudFilters` interface for more information &#8594](/docs/api-reference/core/interfaceReferences#crudfilters)
 
@@ -191,11 +192,11 @@ If `onSearch` is used, it will override the existing `filters`.
 
 #### Client-side filtering
 
-Sometimes, you may want to filter the options on the client-side. You can do this by passing `onSearch` function as `undefined`. This will disable the server-side filtering and will filter the options on the client-side. 
+Sometimes, you may want to filter the options on the client-side. You can do this by passing `onSearch` function as `undefined`. This will disable the server-side filtering and will filter the options on the client-side.
 
 ```tsx
 // highlight-next-line
-import { createFilterOptions } from "@pankod/refine-mui";
+import { createFilterOptions } from "@mui/material";
 
 const { autocompleteProps } = useAutocomplete({
     resource: "categories",
@@ -216,7 +217,8 @@ const filterOptions = createFilterOptions({
     filterOptions={filterOptions}
     // highlight-end
     isOptionEqualToValue={(option, value) =>
-        value === undefined || option.id.toString() === value.toString()
+        value === undefined ||
+        option?.id?.toString() === (value?.id ?? value)?.toString()
     }
     placeholder="Select a category"
     renderInput={(params) => (
@@ -227,23 +229,25 @@ const filterOptions = createFilterOptions({
             variant="outlined"
             required
         />
-    )}  
-/>
+    )}
+/>;
 ```
 
-### `metaData`
+### `meta`
 
-[`metaData`](/docs/api-reference/general-concepts/#metadata) is used following two purposes:
+`meta` is a special property that can be used to pass additional information to data provider methods for the following purposes:
 
--   To pass additional information to data provider methods.
--   Generate GraphQL queries using plain JavaScript Objects (JSON). Please refer [GraphQL](/docs/advanced-tutorials/data-provider/graphql/#edit-page) for more information.
+-   Customizing the data provider methods for specific use cases.
+-   Generating GraphQL queries using plain JavaScript Objects (JSON).
 
-In the following example, we pass the `headers` property in the `metaData` object to the `create` method. With similar logic, you can pass any properties to specifically handle the data provider methods.
+[Refer to the `meta` section of the General Concepts documentation for more information &#8594](/docs/api-reference/general-concepts/#meta)
+
+In the following example, we pass the `headers` property in the `meta` object to the `create` method. With similar logic, you can pass any properties to specifically handle the data provider methods.
 
 ```tsx
 useAutocomplete({
     // highlight-start
-    metaData: {
+    meta: {
         headers: { "x-meta-data": "true" },
     },
     // highlight-end
@@ -254,14 +258,13 @@ const myDataProvider = {
     getList: async ({
         resource,
         pagination,
-        hasPagination,
-        sort,
+        sorters,
         filters,
         // highlight-next-line
-        metaData,
+        meta,
     }) => {
         // highlight-next-line
-        const headers = metaData?.headers ?? {};
+        const headers = meta?.headers ?? {};
         const url = `${apiUrl}/${resource}`;
         //...
         //...
@@ -287,7 +290,7 @@ useAutocomplete({
 
 ### `successNotification`
 
-> [`NotificationProvider`](/docs/api-reference/core/providers/notification-provider/) is required for this prop to work.  
+> [`NotificationProvider`](/docs/api-reference/core/providers/notification-provider/) is required for this prop to work.
 
 After data is fetched successfully, `useAutocomplete` can call `open` function from `NotificationProvider` to show a success notification. With this prop, you can customize the success notification.
 
@@ -305,7 +308,7 @@ useAutocomplete({
 
 ### `errorNotification`
 
-> [`NotificationProvider`](/docs/api-reference/core/providers/notification-provider/) is required for this prop to work.  
+> [`NotificationProvider`](/docs/api-reference/core/providers/notification-provider/) is required for this prop to work.
 
 After data fetching is failed, `useAutocomplete` will call `open` function from `NotificationProvider` to show a error notification. With this prop, you can customize the error notification.
 
@@ -323,7 +326,7 @@ useAutocomplete({
 
 ### `liveMode`
 
-> [`LiveProvider`](/docs/api-reference/core/providers/live-provider/) is required for this prop to work.  
+> [`LiveProvider`](/docs/api-reference/core/providers/live-provider/) is required for this prop to work.
 
 Determines whether to update data automatically ("auto") or not ("manual") if a related live event is received. It can be used to update and show data in Realtime throughout your app.
 For more information about live mode, please check [Live / Realtime](/docs/api-reference/core/providers/live-provider/#livemode) page.
@@ -336,7 +339,7 @@ useAutocomplete({
 
 ### `onLiveEvent`
 
-> [`LiveProvider`](/docs/api-reference/core/providers/live-provider/) is required for this prop to work.  
+> [`LiveProvider`](/docs/api-reference/core/providers/live-provider/) is required for this prop to work.
 
 The callback function that is executed when new events from a subscription are arrived.
 
@@ -347,15 +350,38 @@ useAutocomplete({
     },
 });
 ```
+
 ### `liveParams`
 
-> [`LiveProvider`](/docs/api-reference/core/providers/live-provider/) is required for this prop to work.  
+> [`LiveProvider`](/docs/api-reference/core/providers/live-provider/) is required for this prop to work.
 
 Params to pass to liveProvider's [subscribe](/docs/api-reference/core/providers/live-provider/#subscribe) method.
 
+### ~~`sort`~~
+
+:::caution Deprecated
+Use `sorters` instead.
+:::
+
+### ~~`hasPagination`~~
+
+:::caution Deprecated
+Use `pagination.mode` instead.
+:::
+
+> Default: `false`
+
+`hasPagination` will be passed to the `getList` method from the `dataProvider` as parameter via the `useList` hook. It is used to determine whether to use server-side pagination or not.
+
+```tsx
+useAutocomplete({
+    hasPagination: true,
+});
+```
+
 ## FAQ
 
-### How to ensure `defaultValue` is included in the options? 
+### How to ensure `defaultValue` is included in the options?
 
 In some cases we only have `id`, it may be necessary to show it selected in the selection box. This hook sends the request via [`useMany`](/docs/api-reference/core/hooks/data/useMany/), gets the data and mark as seleted.
 
@@ -371,11 +397,9 @@ const { autocompleteProps, queryResult } = useAutocomplete();
 const options = queryResult.data?.data.map((item) => ({
     title: item.title,
     value: item.id,
-  }));
+}));
 
-return (
-    <Autocomplete {...autocompleteProps} options={options || []} />
-);
+return <Autocomplete {...autocompleteProps} options={options || []} />;
 ```
 
 ### How do I use it with `CRUD` components and `useForm`?
@@ -392,7 +416,15 @@ By default, refine does the search using the [`useList`](/docs/api-reference/cor
 
 ### Properties
 
-<PropsTable module="@pankod/refine-mui/useAutocomplete"/>
+<PropsTable module="@refinedev/mui/useAutocomplete"/>
+
+### Type Parameters
+
+| Property     | Desription                                                                                                                                                          | Type                       | Default                    |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------- |
+| TQueryFnData | Result data returned by the query function. Extends [`BaseRecord`][baserecord]                                                                                      | [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
+| TError       | Custom error object that extends [`HttpError`][httperror]                                                                                                           | [`HttpError`][httperror]   | [`HttpError`][httperror]   |
+| TData        | Result data returned by the `select` function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TQueryFnData` will be used as the default value. | [`BaseRecord`][baserecord] | `TQueryFnData`             |
 
 ### Return values
 
@@ -412,7 +444,9 @@ By default, refine does the search using the [`useList`](/docs/api-reference/cor
 > | onInputChange | Callback fired when the input value changes               | `(event: React.SyntheticEvent, value: string, reason: string) => void` |
 > | filterOptions | Determines the filtered options to be rendered on search. | `(options: TData, state: object) => TData`                             |
 
-
 ## Example
 
-<CodeSandboxExample path="field-mui-use-autocomplete" />
+<CodeSandboxExample path="field-material-ui-use-autocomplete" />
+
+[baserecord]: /api-reference/core/interfaces.md#baserecord
+[httperror]: /api-reference/core/interfaces.md#httperror

@@ -23,7 +23,7 @@ If you need to custom query request, use the [useCustom](/docs/api-reference/cor
 The `useCustomMutation` hook returns many useful properties and methods. One of them is the `mutate` method which expects `values`, `method`, and `url` as parameters. These parameters will be passed to the `custom` method from the `dataProvider` as parameters.
 
 ```tsx
-import { useCustomMutation, useApiUrl } from "@pankod/refine-core";
+import { useCustomMutation, useApiUrl } from "@refinedev/core";
 
 interface ICategory {
     id: number;
@@ -154,7 +154,7 @@ After data is fetched successfully, `useCustomMutation` can call `open` function
 const { mutate } = useCustomMutation();
 
 mutate({
-    successNotification: (data, values, resource) => {
+    successNotification: (data, values) => {
         return {
             message: `${data.title} Successfully fetched.`,
             description: "Success with no errors",
@@ -174,7 +174,7 @@ After data fetching is failed, `useCustomMutation` will call `open` function fro
 const { mutate } = useCustomMutation();
 
 mutate({
-    errorNotification: (data, values, resource) => {
+    errorNotification: (data, values) => {
         return {
             message: `Something went wrong when getting ${data.id}`,
             description: "Error",
@@ -184,20 +184,22 @@ mutate({
 });
 ```
 
-### `metaData`
+### `meta`
 
-[`metaData`](/docs/api-reference/general-concepts/#metadata) is used following two purposes:
+`meta` is a special property that can be used to pass additional information to data provider methods for the following purposes:
 
--   To pass additional information to data provider methods.
--   Generate GraphQL queries using plain JavaScript Objects (JSON). Please refer [GraphQL](/docs/advanced-tutorials/data-provider/graphql/#edit-page) for more information.
+-   Customizing the data provider methods for specific use cases.
+-   Generating GraphQL queries using plain JavaScript Objects (JSON).
 
-In the following example, `metaData` is passed to the `custom` method from the `dataProvider` as a parameter.
+[Refer to the `meta` section of the General Concepts documentation for more information &#8594](/docs/api-reference/general-concepts/#meta)
+
+In the following example, `meta` is passed to the `custom` method from the `dataProvider` as a parameter.
 
 ```tsx
 const { mutate } = useCustomMutation();
 
 mutate({
-    metaData: {
+    meta: {
         foo: "bar",
     },
 });
@@ -212,9 +214,9 @@ const myDataProvider = {
         payload,
         query,
         headers,
-        metaData,
+        meta,
     }) => {
-        const foo = metaData?.foo;
+        const foo = meta?.foo;
 
         console.log(foo); // "bar"
 
@@ -254,7 +256,7 @@ Returns an object with TanStack Query's `useMutation` return values.
 | config                                           | The config of your request. You can send `headers` using this field.                               | { headers?: {}; }                                                                        |
 | successNotification                              | Successful mutation notification                                                                   | [`SuccessErrorNotification`](/api-reference/core/interfaces.md#successerrornotification) |
 | errorNotification                                | Unsuccessful mutation notification                                                                 | [`SuccessErrorNotification`](/api-reference/core/interfaces.md#successerrornotification) |
-| metaData                                         | Metadata query for `dataProvider`                                                                  | [`MetaDataQuery`](/api-reference/core/interfaces.md#metadataquery)                       |
+| meta                                             | Meta data query for `dataProvider`                                                                 | [`MetaDataQuery`](/api-reference/core/interfaces.md#metadataquery)                       |
 | dataProviderName                                 | If there is more than one `dataProvider`, you should use the `dataProviderName` that you will use. | `string`                                                                                 |
 
 ### Type Parameters
@@ -268,6 +270,6 @@ Returns an object with TanStack Query's `useMutation` return values.
 
 ### Return value
 
-| Description                               | Type                                                                                                                                                                                          |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Description                                | Type                                                                                                                                                                                          |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Result of the TanStack Query's useMutation | [`UseMutationResult<`<br/>`{ data: TData },`<br/>`TError,`<br/>` { resource: string; values: TVariables; },`<br/>` unknown>`](https://tanstack.com/query/v4/docs/react/reference/useMutation) |

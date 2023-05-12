@@ -5,8 +5,13 @@ import {
     useTranslate,
     useResource,
     useRouterContext,
-} from "@pankod/refine-core";
-import { RefineButtonTestIds } from "@pankod/refine-ui-types";
+    useRouterType,
+    useLink,
+} from "@refinedev/core";
+import {
+    RefineButtonClassNames,
+    RefineButtonTestIds,
+} from "@refinedev/ui-types";
 import { ActionIcon, Anchor, Button } from "@mantine/core";
 import { IconSquarePlus } from "@tabler/icons";
 
@@ -22,33 +27,36 @@ import { CloneButtonProps } from "../types";
  *
  */
 export const CloneButton: React.FC<CloneButtonProps> = ({
+    resource: resourceNameFromProps,
     resourceNameOrRouteName,
     recordItemId,
     hideText = false,
     accessControl,
-    ignoreAccessControlProvider = false,
     svgIconProps,
+    meta,
     children,
     onClick,
     ...rest
 }) => {
-    const accessControlEnabled =
-        accessControl?.enabled ?? !ignoreAccessControlProvider;
+    const accessControlEnabled = accessControl?.enabled ?? true;
     const hideIfUnauthorized = accessControl?.hideIfUnauthorized ?? false;
-    const { resourceName, resource, id } = useResource({
-        resourceNameOrRouteName,
-        recordItemId,
-    });
-
     const { cloneUrl: generateCloneUrl } = useNavigation();
-    const { Link } = useRouterContext();
+    const routerType = useRouterType();
+    const Link = useLink();
+    const { Link: LegacyLink } = useRouterContext();
+
+    const ActiveLink = routerType === "legacy" ? LegacyLink : Link;
 
     const translate = useTranslate();
 
+    const { id, resource } = useResource(
+        resourceNameFromProps ?? resourceNameOrRouteName,
+    );
+
     const { data } = useCan({
-        resource: resourceName,
+        resource: resource?.name,
         action: "create",
-        params: { id, resource },
+        params: { id: recordItemId ?? id, resource },
         queryOptions: {
             enabled: accessControlEnabled,
         },
@@ -64,7 +72,10 @@ export const CloneButton: React.FC<CloneButtonProps> = ({
             );
     };
 
-    const cloneUrl = generateCloneUrl(resource.route!, id!);
+    const cloneUrl =
+        resource && (recordItemId || id)
+            ? generateCloneUrl(resource, recordItemId! ?? id!, meta)
+            : "";
 
     const { variant, styles, ...commonProps } = rest;
 
@@ -74,7 +85,7 @@ export const CloneButton: React.FC<CloneButtonProps> = ({
 
     return (
         <Anchor
-            component={Link}
+            component={ActiveLink as any}
             to={cloneUrl}
             replace={false}
             onClick={(e: React.PointerEvent<HTMLButtonElement>) => {
@@ -99,6 +110,7 @@ export const CloneButton: React.FC<CloneButtonProps> = ({
                           }
                         : { variant: "default" })}
                     data-testid={RefineButtonTestIds.CloneButton}
+                    className={RefineButtonClassNames.CloneButton}
                     {...commonProps}
                 >
                     <IconSquarePlus size={18} {...svgIconProps} />
@@ -110,6 +122,7 @@ export const CloneButton: React.FC<CloneButtonProps> = ({
                     leftIcon={<IconSquarePlus size={18} {...svgIconProps} />}
                     title={disabledTitle()}
                     data-testid={RefineButtonTestIds.CloneButton}
+                    className={RefineButtonClassNames.CloneButton}
                     {...rest}
                 >
                     {children ?? translate("buttons.clone", "Clone")}

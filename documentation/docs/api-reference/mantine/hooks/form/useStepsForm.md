@@ -5,27 +5,27 @@ title: useStepsForm
 
 ```tsx live shared
 import React from "react";
-import {
-    useTable,
-    ColumnDef,
-    flexRender,
-    Column,
-} from "@pankod/refine-react-table";
-import { GetManyResponse, useMany } from "@pankod/refine-core";
+import { useTable } from "@refinedev/react-table";
+import { ColumnDef, flexRender, Column } from "@tanstack/react-table";
+
+import { GetManyResponse, useMany } from "@refinedev/core";
 import {
     Button as MantineButton,
-    Code as MantineCode,
     Edit as MantineEdit,
     Create as MantineCreate,
     List as MantineList,
-    Group as MantineGroup,
-    Select as MantineSelect,
-    Stepper as MantineStepper,
-    TextInput as MantineTextInput,
     useStepsForm as MantineUseStepsForm,
     useSelect as MantineUseSelect,
     DeleteButton as MantineDeleteButton,
     SaveButton as MantineSaveButton,
+    EditButton as MantineEditButton,
+} from "@refinedev/mantine";
+import {
+    Code as MantineCode,
+    Group as MantineGroup,
+    Select as MantineSelect,
+    Stepper as MantineStepper,
+    TextInput as MantineTextInput,
     Text as MantineText,
     Textarea as MantineTextarea,
     Space as MantineSpace,
@@ -33,8 +33,7 @@ import {
     ScrollArea as MantineScrollArea,
     Table as MantineTable,
     Box as MantineBox,
-    EditButton as MantineEditButton,
-} from "@pankod/refine-mantine";
+} from "@mantine/core";
 
 interface ICategory {
     id: number;
@@ -471,7 +470,7 @@ const PostEdit: React.FC = () => {
 `useStepsForm` allows you to manage a form with multiple steps. It provides features such as which step is currently active, the ability to go to a specific step and validation when changing steps etc.
 
 :::info
-`useStepsForm` hook is extended from [`useForm`][use-form-refine-mantine] from the [`@pankod/refine-mantine`](https://github.com/refinedev/refine/tree/next/packages/mantine) package. This means that you can use all the functionalities of [`useForm`][use-form-refine-mantine] in your `useStepsForm`.
+`useStepsForm` hook is extended from [`useForm`][use-form-refine-mantine] from the [`@refinedev/mantine`](https://github.com/refinedev/refine/tree/next/packages/mantine) package. This means that you can use all the functionalities of [`useForm`][use-form-refine-mantine] in your `useStepsForm`.
 :::
 
 ## Basic Usage
@@ -494,21 +493,19 @@ setInitialRoutes(["/posts/create"]);
 
 // visible-block-start
 import React from "react";
-import { HttpError } from "@pankod/refine-core";
+import { HttpError } from "@refinedev/core";
+import { Create, useStepsForm, SaveButton } from "@refinedev/mantine";
 import {
     Button,
     Code,
-    Create,
     Group,
     Select,
     Stepper,
     TextInput,
-    useStepsForm,
-    SaveButton,
     Text,
     Space,
     Textarea,
-} from "@pankod/refine-mantine";
+} from "@mantine/core";
 
 type FormValues = Omit<IPost, "id">;
 
@@ -654,21 +651,19 @@ setInitialRoutes(["/posts/edit/123"]);
 
 // visible-block-start
 import React from "react";
-import { HttpError } from "@pankod/refine-core";
+import { HttpError } from "@refinedev/core";
+import { Edit, useStepsForm, SaveButton } from "@refinedev/mantine";
 import {
-    Edit,
     Button,
     Code,
     Group,
     Select,
     Stepper,
     TextInput,
-    useStepsForm,
-    SaveButton,
     Text,
     Space,
     Textarea,
-} from "@pankod/refine-mantine";
+} from "@mantine/core";
 
 type FormValues = Omit<IPost, "id">;
 
@@ -813,8 +808,8 @@ To show your form inputs step by step, first import and use `useStepsForm` hook 
 
 ```tsx
 import React from "react";
-import { HttpError } from "@pankod/refine-core";
-import { Create } from "@pankod/refine-mantine";
+import { HttpError } from "@refinedev/core";
+import { Create } from "@refinedev/mantine";
 
 type FormValues = Omit<IPost, "id">;
 
@@ -861,8 +856,8 @@ Here, we're going to use a [`<Stepper/>`](https://mantine.dev/core/stepper/) com
 
 ```tsx
 import React from "react";
-import { HttpError } from "@pankod/refine-core";
-import { Create } from "@pankod/refine-mantine";
+import { HttpError } from "@refinedev/core";
+import { Create } from "@refinedev/mantine";
 
 type FormValues = Omit<IPost, "id">;
 
@@ -1052,16 +1047,62 @@ Current step, counting from `0`.
 Is a function that allows you to programmatically change the current step of a form.
 It takes in one argument, step, which is a number representing the index of the step you want to navigate to.
 
+## FAQ
+### How can I change the form data before submitting it to the API?
+
+You may need to modify the form data before it is sent to the API.
+
+For example, Let's send the values we received from the user in two separate inputs, `name` and `surname`, to the API as `fullName`.
+
+```tsx title="pages/user/create.tsx"
+import React from "react";
+import { useStepsForm } from "@refinedev/mantine";
+
+const UserCreate: React.FC = () => {
+    const {
+        saveButtonProps,
+        getInputProps,
+        values,
+        steps: { currentStep, gotoStep },
+    } = useStepsForm({
+        refineCoreProps: { action: "create" },
+        initialValues: {
+            name: "",
+            surname: "",
+        },
+        // highlight-start
+        transformValues: (values) => ({
+            fullName: `${values.name} ${values.surname}`,
+        }),
+        // highlight-end
+    });
+    
+    // ...
+};
+```
+
 ## API Reference
 
 ### Properties
 
-<PropsTable module="@pankod/refine-mantine/useStepsForm" 
+<PropsTable module="@refinedev/mantine/useStepsForm" 
 refineCoreProps-type="[`UseFormCoreProps<TData, TError, TVariables>`](/docs/api-reference/core/hooks/useForm/#properties)"
 refineCoreProps-description="Configuration object for the core of the [useForm](/docs/api-reference/core/hooks/useForm/)"
 stepsProps-description="Configuration object for the steps. `defaultStep`: Allows you to set the initial step. `isBackValidate`: Whether to validation the current step when going back."
 stepsProps-default="`defaultStep = 0` `isBackValidate = false`"
  />
+
+### Type Parameters
+
+| Property       | Desription                                                                                                                                                          | Type                       | Default                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------- |
+| TQueryFnData   | Result data returned by the query function. Extends [`BaseRecord`][baserecord]                                                                                      | [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
+| TError         | Custom error object that extends [`HttpError`][httperror]                                                                                                           | [`HttpError`][httperror]   | [`HttpError`][httperror]   |
+| TVariables     | Form values for mutation function                                                                                                                                   | `{}`                       | `Record<string, unknown>`  |
+| TTransformed   | Form values after transformation for mutation function                                                                                                              | `{}`                       | `TVariables`               |
+| TData          | Result data returned by the `select` function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TQueryFnData` will be used as the default value. | [`BaseRecord`][baserecord] | `TQueryFnData`             |
+| TResponse      | Result data returned by the mutation function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TData` will be used as the default value.        | [`BaseRecord`][baserecord] | `TData`                    |
+| TResponseError | Custom error object that extends [`HttpError`][httperror]. If not specified, the value of `TError` will be used as the default value.                               | [`HttpError`][httperror]   | `TError`                   |
 
 ### Return values
 
@@ -1077,3 +1118,5 @@ stepsProps-default="`defaultStep = 0` `isBackValidate = false`"
 
 [use-form-refine-mantine]: /api-reference/mantine/hooks/form/useForm.md
 [use-form-core]: /api-reference/core/hooks/useForm.md
+[baserecord]: /api-reference/core/interfaces.md#baserecord
+[httperror]: /api-reference/core/interfaces.md#httperror

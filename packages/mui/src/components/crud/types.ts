@@ -1,8 +1,11 @@
 import {
     CreateButtonProps,
     DeleteButtonProps,
+    EditButtonProps,
+    RefreshButtonProps,
+    ListButtonProps,
     SaveButtonProps,
-} from "@components/buttons";
+} from "../buttons/types";
 import {
     BoxProps,
     CardActionsProps,
@@ -15,7 +18,7 @@ import {
     RefineCrudEditProps,
     RefineCrudListProps,
     RefineCrudShowProps,
-} from "@pankod/refine-ui-types";
+} from "@refinedev/ui-types";
 
 export type CreateProps = RefineCrudCreateProps<
     SaveButtonProps,
@@ -24,28 +27,7 @@ export type CreateProps = RefineCrudCreateProps<
     CardProps,
     CardHeaderProps,
     CardContentProps,
-    {
-        /**
-         * @deprecated use `headerButtons` or `footerButtons` instead.
-         */
-        actionButtons?: React.ReactNode;
-        /**
-         * @deprecated use `wrapperProps` instead.
-         */
-        cardProps?: CardProps;
-        /**
-         * @deprecated use `headerProps` instead.
-         */
-        cardHeaderProps?: CardHeaderProps;
-        /**
-         * @deprecated use `contentProps` instead.
-         */
-        cardContentProps?: CardContentProps;
-        /**
-         * @deprecated use `footerButtonProps` instead.
-         */
-        cardActionsProps?: CardActionsProps;
-    }
+    {}
 >;
 
 export type EditProps = RefineCrudEditProps<
@@ -56,28 +38,9 @@ export type EditProps = RefineCrudEditProps<
     CardProps,
     CardHeaderProps,
     CardContentProps,
-    {
-        /**
-         * @deprecated use `headerButtons` or `footerButtons` instead.
-         */
-        actionButtons?: React.ReactNode;
-        /**
-         * @deprecated use `wrapperProps` instead.
-         */
-        cardProps?: CardProps;
-        /**
-         * @deprecated use `headerProps` instead.
-         */
-        cardHeaderProps?: CardHeaderProps;
-        /**
-         * @deprecated use `contentProps` instead.
-         */
-        cardContentProps?: CardContentProps;
-        /**
-         * @deprecated use `footerButtonProps` instead.
-         */
-        cardActionsProps?: CardActionsProps;
-    }
+    {},
+    RefreshButtonProps,
+    ListButtonProps
 >;
 
 export type ListProps = RefineCrudListProps<
@@ -86,20 +49,7 @@ export type ListProps = RefineCrudListProps<
     CardProps,
     CardHeaderProps,
     CardContentProps,
-    {
-        /**
-         * @deprecated use `wrapperProps` instead.
-         */
-        cardProps?: CardProps;
-        /**
-         * @deprecated use `headerProps` instead.
-         */
-        cardHeaderProps?: CardHeaderProps;
-        /**
-         * @deprecated use `contentProps` instead.
-         */
-        cardContentProps?: CardContentProps;
-    }
+    {}
 >;
 
 export type ShowProps = RefineCrudShowProps<
@@ -108,26 +58,9 @@ export type ShowProps = RefineCrudShowProps<
     CardProps,
     CardHeaderProps,
     CardContentProps,
-    {
-        /**
-         * @deprecated use `headerButtons` or `footerButtons` instead.
-         */
-        actionButtons?: React.ReactNode;
-        /**
-         * @deprecated use `wrapperProps` instead.
-         */
-        cardProps?: CardProps;
-        /**
-         * @deprecated use `headerProps` instead.
-         */
-        cardHeaderProps?: CardHeaderProps;
-        /**
-         * @deprecated use `contentProps` instead.
-         */
-        cardContentProps?: CardContentProps;
-        /**
-         * @deprecated use `footerButtonProps` instead.
-         */
-        cardActionsProps?: CardActionsProps;
-    }
+    {},
+    EditButtonProps,
+    DeleteButtonProps,
+    RefreshButtonProps,
+    ListButtonProps
 >;

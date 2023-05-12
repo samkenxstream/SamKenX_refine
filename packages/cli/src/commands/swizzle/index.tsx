@@ -22,6 +22,7 @@ import { reorderImports } from "@utils/swizzle/import";
 import { SWIZZLE_CODES } from "@utils/swizzle/codes";
 import boxen from "boxen";
 import { getPathPrefix } from "@utils/swizzle/getPathPrefix";
+import { installRequiredPackages } from "./install-required-packages";
 
 const swizzle = (program: Command) => {
     return program
@@ -77,7 +78,10 @@ const action = async (_options: OptionValues) => {
     await Promise.all(
         installedPackages.map(async (pkg) => {
             const hasConfig = await isPackageHaveRefineConfig(pkg.path);
-            if (hasConfig) {
+            const isNotDuplicate =
+                packagesWithConfig.findIndex((el) => el.name === pkg.name) ===
+                -1;
+            if (hasConfig && isNotDuplicate) {
                 packagesWithConfig.push(pkg);
             }
         }),
@@ -107,9 +111,10 @@ const action = async (_options: OptionValues) => {
 
     const packageConfigs = await Promise.all(
         packagesWithConfig.map(async (pkg) => {
-            const config = (await getRefineConfig(pkg.path)) ?? {
-                swizzle: { items: [] },
-            };
+            const config = (await getRefineConfig(pkg.path, true)) ??
+                (await getRefineConfig(pkg.path, false)) ?? {
+                    swizzle: { items: [] },
+                };
             return {
                 ...pkg,
                 config,
@@ -263,13 +268,18 @@ const action = async (_options: OptionValues) => {
     );
 
     if (createdFiles.length > 0) {
-        render(
+        const { unmount } = render(
             <SwizzleMessage
                 label={selectedComponent.label}
                 files={createdFiles}
                 message={selectedComponent.message}
             />,
         );
+        unmount();
+
+        if (selectedComponent?.requiredPackages?.length) {
+            await installRequiredPackages(selectedComponent.requiredPackages);
+        }
     }
 };
 

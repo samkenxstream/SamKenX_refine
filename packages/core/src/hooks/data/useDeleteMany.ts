@@ -16,7 +16,7 @@ import {
     GetListResponse,
     PrevContext as DeleteContext,
     SuccessErrorNotification,
-    MetaDataQuery,
+    MetaQuery,
     IQueryKeys,
 } from "../../interfaces";
 import {
@@ -24,26 +24,38 @@ import {
     useTranslate,
     useMutationMode,
     useCancelNotification,
-    useCheckError,
     usePublish,
     useHandleNotification,
     useDataProvider,
     useInvalidate,
+    useLog,
+    useOnError,
+    useMeta,
 } from "@hooks";
 import { ActionTypes } from "@contexts/undoableQueue";
-import { queryKeys, pickDataProvider, handleMultiple } from "@definitions";
+import {
+    queryKeys,
+    pickDataProvider,
+    handleMultiple,
+    pickNotDeprecated,
+    useActiveAuthProvider,
+} from "@definitions";
 
-export type DeleteManyParams<TVariables> = {
+export type DeleteManyParams<TData, TError, TVariables> = {
     ids: BaseKey[];
     resource: string;
     mutationMode?: MutationMode;
     undoableTimeout?: number;
     onCancel?: (cancelMutation: () => void) => void;
-    metaData?: MetaDataQuery;
+    meta?: MetaQuery;
+    /**
+     * @deprecated `metaData` is deprecated with refine@4, refine will pass `meta` instead, however, we still support `metaData` for backward compatibility.
+     */
+    metaData?: MetaQuery;
     dataProviderName?: string;
     invalidates?: Array<keyof IQueryKeys>;
     values?: TVariables;
-} & SuccessErrorNotification;
+} & SuccessErrorNotification<DeleteManyResponse<TData>, TError, BaseKey[]>;
 
 export type UseDeleteManyReturnType<
     TData extends BaseRecord = BaseRecord,
@@ -52,7 +64,7 @@ export type UseDeleteManyReturnType<
 > = UseMutationResult<
     DeleteManyResponse<TData>,
     TError,
-    DeleteManyParams<TVariables>,
+    DeleteManyParams<TData, TError, TVariables>,
     unknown
 >;
 
@@ -65,7 +77,7 @@ export type UseDeleteManyProps<
         UseMutationOptions<
             DeleteManyResponse<TData>,
             TError,
-            DeleteManyParams<TVariables>,
+            DeleteManyParams<TData, TError, TVariables>,
             DeleteContext<TData>
         >,
         "mutationFn" | "onError" | "onSuccess" | "onSettled" | "onMutate"
@@ -95,27 +107,30 @@ export const useDeleteMany = <
     TError,
     TVariables
 > => {
-    const { mutate: checkError } = useCheckError();
+    const authProvider = useActiveAuthProvider();
+    const { mutate: checkError } = useOnError({
+        v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+    });
 
     const {
         mutationMode: mutationModeContext,
         undoableTimeout: undoableTimeoutContext,
     } = useMutationMode();
     const dataProvider = useDataProvider();
-
     const { notificationDispatch } = useCancelNotification();
     const translate = useTranslate();
     const publish = usePublish();
     const handleNotification = useHandleNotification();
     const invalidateStore = useInvalidate();
-
+    const { log } = useLog();
     const { resources } = useResource();
     const queryClient = useQueryClient();
+    const getMeta = useMeta();
 
     const mutation = useMutation<
         DeleteManyResponse<TData>,
         TError,
-        DeleteManyParams<TVariables>,
+        DeleteManyParams<TData, TError, TVariables>,
         DeleteContext<TData>
     >(
         ({
@@ -124,10 +139,15 @@ export const useDeleteMany = <
             mutationMode,
             undoableTimeout,
             onCancel,
+            meta,
             metaData,
             dataProviderName,
             values,
-        }: DeleteManyParams<TVariables>) => {
+        }: DeleteManyParams<TData, TError, TVariables>) => {
+            const combinedMeta = getMeta({
+                meta: pickNotDeprecated(meta, metaData),
+            });
+
             const mutationModePropOrContext =
                 mutationMode ?? mutationModeContext;
 
@@ -143,7 +163,8 @@ export const useDeleteMany = <
                     return selectedDataProvider.deleteMany<TData, TVariables>({
                         resource,
                         ids,
-                        metaData,
+                        meta: combinedMeta,
+                        metaData: combinedMeta,
                         variables: values,
                     });
                 } else {
@@ -152,7 +173,8 @@ export const useDeleteMany = <
                             selectedDataProvider.deleteOne<TData, TVariables>({
                                 resource,
                                 id,
-                                metaData,
+                                meta: combinedMeta,
+                                metaData: combinedMeta,
                                 variables: values,
                             }),
                         ),
@@ -201,10 +223,15 @@ export const useDeleteMany = <
                 resource,
                 mutationMode,
                 dataProviderName,
+                meta,
+                metaData,
             }) => {
+                const preferredMeta = pickNotDeprecated(meta, metaData);
                 const queryKey = queryKeys(
                     resource,
                     pickDataProvider(resource, dataProviderName, resources),
+                    preferredMeta,
+                    preferredMeta,
                 );
 
                 const mutationModePropOrContext =
@@ -319,7 +346,14 @@ export const useDeleteMany = <
             },
             onSuccess: (
                 _data,
-                { ids, resource, successNotification },
+                {
+                    ids,
+                    resource,
+                    meta,
+                    metaData,
+                    dataProviderName,
+                    successNotification,
+                },
                 context,
             ) => {
                 // Remove the queries from the cache:
@@ -353,6 +387,23 @@ export const useDeleteMany = <
                     type: "deleted",
                     payload: { ids },
                     date: new Date(),
+                });
+
+                const { fields, operation, variables, ...rest } =
+                    pickNotDeprecated(meta, metaData) || {};
+
+                log?.mutate({
+                    action: "deleteMany",
+                    resource,
+                    meta: {
+                        ids,
+                        dataProviderName: pickDataProvider(
+                            resource,
+                            dataProviderName,
+                            resources,
+                        ),
+                        ...rest,
+                    },
                 });
 
                 // Remove the queries from the cache:

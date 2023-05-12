@@ -1,6 +1,9 @@
 import React from "react";
-import { useTranslate } from "@pankod/refine-core";
-import { RefineButtonTestIds } from "@pankod/refine-ui-types";
+import { useTranslate } from "@refinedev/core";
+import {
+    RefineButtonClassNames,
+    RefineButtonTestIds,
+} from "@refinedev/ui-types";
 import { LoadingButton } from "@mui/lab";
 import { SaveOutlined } from "@mui/icons-material";
 
@@ -28,6 +31,7 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
             sx={{ minWidth: 0, ...sx }}
             variant="contained"
             data-testid={RefineButtonTestIds.SaveButton}
+            className={RefineButtonClassNames.SaveButton}
             {...restProps}
         >
             {hideText ? (

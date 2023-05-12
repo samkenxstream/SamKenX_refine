@@ -1,16 +1,8 @@
-import { HttpError } from "@pankod/refine-core";
+import { HttpError } from "@refinedev/core";
 import { useState } from "react";
-import {
-    Edit,
-    Select,
-    TextInput,
-    useForm,
-    useSelect,
-    Text,
-    SimpleGrid,
-    Image,
-} from "@pankod/refine-mantine";
-import { RichTextEditor } from "@mantine/rte";
+import { Edit, useForm, useSelect } from "@refinedev/mantine";
+import { Select, TextInput, Text, SimpleGrid, Image } from "@mantine/core";
+import MDEditor from "@uiw/react-md-editor";
 import { Dropzone, IMAGE_MIME_TYPE, FileWithPath } from "@mantine/dropzone";
 
 import { convertBase64 } from "../../utils";
@@ -118,7 +110,13 @@ export const PostEdit: React.FC = () => {
                 <Text mt={8} weight={500} size="sm" color="#212529">
                     Content
                 </Text>
-                <RichTextEditor {...getInputProps("content")} />
+                <Text mt={8} weight={500} size="sm">
+                    Content
+                </Text>
+                <MDEditor
+                    data-color-mode="light"
+                    {...getInputProps("content")}
+                />
                 {errors.content && (
                     <Text mt={2} weight={500} size="xs" color="red">
                         {errors.content}

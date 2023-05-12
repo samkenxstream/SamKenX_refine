@@ -1,27 +1,24 @@
-import { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 import { FormInstance, FormProps, ModalProps } from "antd";
-import {
-    useModalForm as useModalFormSF,
-    UseModalFormConfig as UseModalFormConfigSF,
-} from "sunflower-antd";
 
 import {
-    useMutationMode,
     useTranslate,
     useWarnAboutChange,
-    useResourceWithRoute,
-    useRouterContext,
     HttpError,
-    ResourceRouterParams,
     UseFormProps as UseFormPropsCore,
     BaseRecord,
     LiveModeProps,
     BaseKey,
     userFriendlyResourceName,
-} from "@pankod/refine-core";
+    useResource,
+    FormWithSyncWithLocationParams,
+    useParsed,
+    useGo,
+} from "@refinedev/core";
 import { useForm, UseFormProps, UseFormReturnType } from "../useForm";
+import { useModal } from "@hooks/modal";
 
-export type useModalFormFromSFReturnType<TData, TVariables> = {
+export type useModalFormFromSFReturnType<TResponse, TVariables> = {
     open: boolean;
     form: FormInstance<TVariables>;
     show: (id?: BaseKey) => void;
@@ -33,7 +30,7 @@ export type useModalFormFromSFReturnType<TData, TVariables> = {
     formValues: {};
     initialValues: {};
     formResult: undefined;
-    submit: (values?: TVariables) => Promise<TData>;
+    submit: (values?: TVariables) => Promise<TResponse>;
     /** @deprecated Please use `open` instead. */
     visible: boolean;
 };
@@ -43,24 +40,55 @@ type useModalFormConfig = {
 };
 
 export type UseModalFormReturnType<
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
 > = Omit<
-    UseFormReturnType<TData, TError, TVariables>,
+    UseFormReturnType<
+        TQueryFnData,
+        TError,
+        TVariables,
+        TData,
+        TResponse,
+        TResponseError
+    >,
     "saveButtonProps" | "deleteButtonProps"
 > &
-    useModalFormFromSFReturnType<TData, TVariables>;
+    useModalFormFromSFReturnType<TResponse, TVariables>;
 
 export type UseModalFormProps<
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
-> = UseFormPropsCore<TData, TError, TVariables> &
-    UseFormProps<TData, TError, TVariables> &
-    UseModalFormConfigSF &
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
+> = UseFormPropsCore<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
+> &
+    UseFormProps<
+        TQueryFnData,
+        TError,
+        TVariables,
+        TData,
+        TResponse,
+        TResponseError
+    > &
     useModalFormConfig &
-    LiveModeProps;
+    LiveModeProps &
+    FormWithSyncWithLocationParams & {
+        defaultVisible?: boolean;
+        autoSubmitClose?: boolean;
+        autoResetForm?: boolean;
+    };
 /**
  * `useModalForm` hook allows you to manage a form within a modal. It returns Ant Design {@link https://ant.design/components/form/ Form} and {@link https://ant.design/components/modal/ Modal} components props.
  *
@@ -73,86 +101,154 @@ export type UseModalFormProps<
  *
  */
 export const useModalForm = <
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
 >({
-    mutationMode: mutationModeProp,
+    syncWithLocation,
+    defaultVisible = false,
+    autoSubmitClose = true,
+    autoResetForm = true,
     ...rest
-}: UseModalFormProps<TData, TError, TVariables>): UseModalFormReturnType<
-    TData,
+}: UseModalFormProps<
+    TQueryFnData,
     TError,
-    TVariables
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
+>): UseModalFormReturnType<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
 > => {
-    const useFormProps = useForm<TData, TError, TVariables>({
+    const [initiallySynced, setInitiallySynced] = React.useState(false);
+
+    const useFormProps = useForm<
+        TQueryFnData,
+        TError,
+        TVariables,
+        TData,
+        TResponse,
+        TResponseError
+    >({
         ...rest,
-        mutationMode: mutationModeProp,
     });
 
-    const { form, formProps, setId, formLoading, mutationResult } =
-        useFormProps;
+    const { form, formProps, id, setId, formLoading, onFinish } = useFormProps;
+
+    const { resource, action: actionFromParams } = useResource(rest.resource);
+
+    const parsed = useParsed();
+    const go = useGo();
+
+    const action = rest.action ?? actionFromParams ?? "";
+
+    const syncingId = !(
+        typeof syncWithLocation === "object" &&
+        syncWithLocation?.syncId === false
+    );
+
+    const syncWithLocationKey =
+        typeof syncWithLocation === "object" && "key" in syncWithLocation
+            ? syncWithLocation.key
+            : resource && action && syncWithLocation
+            ? `modal-${resource?.identifier ?? resource?.name}-${action}`
+            : undefined;
 
     const translate = useTranslate();
 
     const { warnWhen, setWarnWhen } = useWarnAboutChange();
 
-    const sunflowerUseModal = useModalFormSF<TData, TVariables>({
-        ...rest,
-        form: form,
+    const { show, close, modalProps } = useModal({
+        modalProps: {
+            open: defaultVisible,
+        },
     });
 
-    const {
-        visible,
-        close,
-        form: modalForm,
-        formProps: modalFormProps,
+    const visible = modalProps.open || false;
+    const sunflowerUseModal: useModalFormFromSFReturnType<
+        TResponse,
+        TVariables
+    > = {
         modalProps,
-    } = sunflowerUseModal;
+        form,
+        formLoading,
+        formProps,
+        formResult: undefined,
+        formValues: form.getFieldsValue,
+        defaultFormValuesLoading: false,
+        initialValues: {},
+        submit: onFinish as any,
+        close,
+        open: modalProps.open || false,
+        show,
+        visible,
+    };
 
-    const { mutationMode: mutationModeContext } = useMutationMode();
-    const mutationMode = mutationModeProp ?? mutationModeContext;
+    React.useEffect(() => {
+        if (initiallySynced === false && syncWithLocationKey) {
+            const openStatus = parsed?.params?.[syncWithLocationKey]?.open;
+            if (typeof openStatus === "boolean") {
+                if (openStatus) {
+                    show();
+                }
+            } else if (typeof openStatus === "string") {
+                if (openStatus === "true") {
+                    show();
+                }
+            }
 
-    const {
-        isLoading: isLoadingMutation,
-        isSuccess: isSuccessMutation,
-        reset: resetMutation,
-    } = mutationResult ?? {};
+            if (syncingId) {
+                const idFromParams = parsed?.params?.[syncWithLocationKey]?.id;
+                if (idFromParams) {
+                    setId?.(idFromParams);
+                }
+            }
 
-    useEffect(() => {
-        if (visible && mutationMode === "pessimistic") {
-            if (isSuccessMutation && !isLoadingMutation) {
-                close();
-                resetMutation?.();
-                // Prevents resetting form values before closing modal in UI
-                setTimeout(() => {
-                    form.resetFields();
+            setInitiallySynced(true);
+        }
+    }, [syncWithLocationKey, parsed, syncingId, setId]);
+
+    React.useEffect(() => {
+        if (initiallySynced === true) {
+            if (visible && syncWithLocationKey) {
+                go({
+                    query: {
+                        [syncWithLocationKey]: {
+                            ...parsed?.params?.[syncWithLocationKey],
+                            open: true,
+                            ...(syncingId && id && { id }),
+                        },
+                    },
+                    options: { keepQuery: true },
+                    type: "replace",
+                });
+            } else if (syncWithLocationKey && !visible) {
+                go({
+                    query: {
+                        [syncWithLocationKey]: undefined,
+                    },
+                    options: { keepQuery: true },
+                    type: "replace",
                 });
             }
         }
-    }, [isSuccessMutation, isLoadingMutation]);
+    }, [id, visible, show, syncWithLocationKey, syncingId]);
 
     const saveButtonPropsSF = {
         disabled: formLoading,
-        onClick: () => {
-            modalForm.submit();
-
-            if (!(mutationMode === "pessimistic")) {
-                close();
-                // Prevents resetting form values before closing modal in UI
-                setTimeout(() => {
-                    form.resetFields();
-                });
-            }
-        },
         loading: formLoading,
+        onClick: () => {
+            form.submit();
+        },
     };
-
-    const { useParams } = useRouterContext();
-
-    const { resource: routeResourceName } = useParams<ResourceRouterParams>();
-
-    const resourceWithRoute = useResourceWithRoute();
-    const resource = resourceWithRoute(rest.resource ?? routeResourceName);
 
     const handleClose = useCallback(() => {
         if (warnWhen) {
@@ -174,11 +270,23 @@ export const useModalForm = <
         sunflowerUseModal.close();
     }, [warnWhen]);
 
-    const handleShow = useCallback((id?: BaseKey) => {
-        setId?.(id);
+    const handleShow = useCallback(
+        (showId?: BaseKey) => {
+            if (typeof showId !== "undefined") {
+                setId?.(showId);
+            }
+            const needsIdToOpen = action === "edit" || action === "clone";
+            const hasId =
+                typeof showId !== "undefined" || typeof id !== "undefined";
+            if (needsIdToOpen ? hasId : true) {
+                sunflowerUseModal.show();
+            }
+        },
+        [id],
+    );
 
-        sunflowerUseModal.show();
-    }, []);
+    const { visible: _visible, ...otherModalProps } = modalProps;
+    const newModalProps = { open: _visible, ...otherModalProps };
 
     return {
         ...useFormProps,
@@ -187,20 +295,35 @@ export const useModalForm = <
         close: handleClose,
         open: visible,
         formProps: {
-            ...modalFormProps,
+            ...formProps,
             ...useFormProps.formProps,
             onValuesChange: formProps?.onValuesChange,
             onKeyUp: formProps?.onKeyUp,
-            onFinish: formProps.onFinish,
+            onFinish: async (values) => {
+                await onFinish(values);
+
+                if (autoSubmitClose) {
+                    close();
+                }
+
+                if (autoResetForm) {
+                    form.resetFields();
+                }
+            },
         },
         modalProps: {
-            ...modalProps,
+            ...newModalProps,
             width: "1000px",
             okButtonProps: saveButtonPropsSF,
             title: translate(
-                `${resource.name}.titles.${rest.action}`,
+                `${resource?.name}.titles.${rest.action}`,
                 `${userFriendlyResourceName(
-                    `${rest.action} ${resource.name}`,
+                    `${rest.action} ${
+                        resource?.meta?.label ??
+                        resource?.options?.label ??
+                        resource?.label ??
+                        resource?.name
+                    }`,
                     "singular",
                 )}`,
             ),

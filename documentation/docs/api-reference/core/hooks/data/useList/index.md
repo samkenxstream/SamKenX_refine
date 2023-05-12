@@ -33,9 +33,9 @@ Dynamically changing the `pagination` properties will trigger a new request.
 
 ## Sorting
 
-The `useList` hook supports the sorting feature. You can pass the `sort` property to enable sorting. To handle sorting, the `useList` hook passes the `sort` property to the `getList` method from the `dataProvider`.
+The `useList` hook supports the sorting feature. You can pass the `sorters` property to enable sorting. To handle sorting, the `useList` hook passes the `sorters` property to the `getList` method from the `dataProvider`.
 
-Dynamically changing the `sort` property will trigger a new request.
+Dynamically changing the `sorters` property will trigger a new request.
 
 <SortingLivePreview />
 
@@ -77,7 +77,7 @@ useList({
 });
 ```
 
-### `config.filters`
+### `filters`
 
 `filters` will be passed to the `getList` method from the `dataProvider` as a parameter. It is used to send filter query parameters to the API.
 
@@ -85,38 +85,34 @@ useList({
 
 ```tsx
 useList({
-    config: {
-        filters: [
-            {
-                field: "title",
-                operator: "contains",
-                value: "Foo",
-            },
-        ],
-    },
+    filters: [
+        {
+            field: "title",
+            operator: "contains",
+            value: "Foo",
+        },
+    ],
 });
 ```
 
-### `config.sort`
+### `sorters`
 
-`sort` will be passed to the `getList` method from the `dataProvider` as a parameter. It is used to send sort query parameters to the API.
+`sorters` will be passed to the `getList` method from the `dataProvider` as a parameter. It is used to send sort query parameters to the API.
 
 [Refer to the `CrudSorting` interface for more information &#8594](docs/api-reference/core/interfaceReferences#crudsorting)
 
 ```tsx
 useList({
-    config: {
-        sort: [
-            {
-                field: "title",
-                order: "asc",
-            },
-        ],
-    },
+    sorters: [
+        {
+            field: "title",
+            order: "asc",
+        },
+    ],
 });
 ```
 
-### `config.pagination`
+### `pagination`
 
 `pagination` will be passed to the `getList` method from the `dataProvider` as a parameter. It is used to send pagination query parameters to the API.
 
@@ -126,10 +122,8 @@ You can pass the `current` page number to the `pagination` property.
 
 ```tsx
 useList({
-    config: {
-        pagination: {
-            current: 2,
-        },
+    pagination: {
+        current: 2,
     },
 });
 ```
@@ -140,22 +134,20 @@ You can pass the `pageSize` to the `pagination` property.
 
 ```tsx
 useList({
-    config: {
-        pagination: {
-            pageSize: 20,
-        },
+    pagination: {
+        pageSize: 20,
     },
 });
 ```
 
-### `config.hasPagination`
+#### `mode`
 
-`hasPagination` will be passed to the `getList` method from the `dataProvider` as a parameter. It is used to determine whether to use server-side pagination or not.
+It can be `"off"`, `"client"` or `"server"`. It is used to determine whether to use server-side pagination or not.
 
 ```tsx
 useList({
-    config: {
-        hasPagination: false,
+    pagination: {
+        mode: "off",
     },
 });
 ```
@@ -174,19 +166,21 @@ useList({
 });
 ```
 
-### `metaData`
+### `meta`
 
-[`metaData`](/docs/api-reference/general-concepts/#metadata) is used following two purposes:
+`meta` is a special property that can be used to pass additional information to data provider methods for the following purposes:
 
--   To pass additional information to data provider methods.
--   Generate GraphQL queries using plain JavaScript Objects (JSON). Please refer [GraphQL](/docs/advanced-tutorials/data-provider/graphql/#edit-page) for more information.
+-   Customizing the data provider methods for specific use cases.
+-   Generating GraphQL queries using plain JavaScript Objects (JSON).
 
-In the following example, we pass the `headers` property in the `metaData` object to the `create` method. With similar logic, you can pass any properties to specifically handle the data provider methods.
+[Refer to the `meta` section of the General Concepts documentation for more information &#8594](/docs/api-reference/general-concepts/#meta)
+
+In the following example, we pass the `headers` property in the `meta` object to the `create` method. With similar logic, you can pass any properties to specifically handle the data provider methods.
 
 ```tsx
 useList({
     // highlight-start
-    metaData: {
+    meta: {
         headers: { "x-meta-data": "true" },
     },
     // highlight-end
@@ -197,14 +191,13 @@ const myDataProvider = {
     getList: async ({
         resource,
         pagination,
-        hasPagination,
-        sort,
+        sorters,
         filters,
         // highlight-next-line
-        metaData,
+        meta,
     }) => {
         // highlight-next-line
-        const headers = metaData?.headers ?? {};
+        const headers = meta?.headers ?? {};
         const url = `${apiUrl}/${resource}`;
 
         //...
@@ -290,6 +283,26 @@ useList({
 
 Params to pass to liveProvider's [subscribe](/docs/api-reference/core/providers/live-provider/#subscribe) method.
 
+### ~~`config`~~
+
+:::caution Deprecated
+Use `pagination`, `sorters`, and `filters` instead.
+:::
+
+### ~~`hasPagination`~~
+
+:::caution Deprecated
+Use `pagination.mode` instead.
+:::
+
+`hasPagination` will be passed to the `getList` method from the `dataProvider` as a parameter. It is used to determine whether to use server-side pagination or not.
+
+```tsx
+useList({
+    hasPagination: false,
+});
+```
+
 ## Return Values
 
 Returns an object with TanStack Query's `useQuery` return values.
@@ -300,41 +313,24 @@ Returns an object with TanStack Query's `useQuery` return values.
 
 ### Properties
 
-<PropsTable module="@pankod/refine-core/useList" 
+<PropsTable module="@refinedev/core/useList" 
 successNotification-default='`false`'
 errorNotification-default='"Error (status code: `statusCode`)"'
 />
 
-### Config Parameters
-
-```ts
-interface UseListConfig {
-    hasPagination?: boolean;
-    pagination?: {
-        current?: number;
-        pageSize?: number;
-    };
-    sort?: Array<{
-        field: string;
-        order: "asc" | "desc";
-    }>;
-    filters?: Array<{
-        field: string;
-        operator: CrudOperators;
-        value: any;
-    }>;
-}
-```
-
 ### Type Parameters
 
-| Property | Desription                                                                                     | Type                                                         | Default                                                      |
-| -------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| TData    | Result data of the query. Extends [`BaseRecord`](/api-reference/core/interfaces.md#baserecord) | [`BaseRecord`](/api-reference/core/interfaces.md#baserecord) | [`BaseRecord`](/api-reference/core/interfaces.md#baserecord) |
-| TError   | Custom error object that extends [`HttpError`](/api-reference/core/interfaces.md#httperror)    | [`HttpError`](/api-reference/core/interfaces.md#httperror)   | [`HttpError`](/api-reference/core/interfaces.md#httperror)   |
+| Property     | Desription                                                                                                                                                          | Type                       | Default                    |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------- |
+| TQueryFnData | Result data returned by the query function. Extends [`BaseRecord`][baserecord]                                                                                      | [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
+| TError       | Custom error object that extends [`HttpError`][httperror]                                                                                                           | [`HttpError`][httperror]   | [`HttpError`][httperror]   |
+| TData        | Result data returned by the `select` function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TQueryFnData` will be used as the default value. | [`BaseRecord`][baserecord] | `TQueryFnData`             |
 
 ### Return Values
 
 | Description                               | Type                                                                                                                                                 |
 | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Result of the TanStack Query's `useQuery` | [`QueryObserverResult<{`<br/>` data: TData[];`<br/>` total: number; },`<br/>` TError>`](https://tanstack.com/query/v4/docs/react/reference/useQuery) |
+
+[baserecord]: /api-reference/core/interfaces.md#baserecord
+[httperror]: /api-reference/core/interfaces.md#httperror

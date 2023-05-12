@@ -7,31 +7,27 @@ tutorial:
     next: tutorial/adding-crud-pages/{preferredUI}/adding-sort-and-filters
 ---
 
-Let's start by adding the delete feature to the list page by adding a delete button to the table. To do this, we will use the `useDelete` hook.
+`useDelete` is a **refine** hook that is used to delete a record. It returns mutation functions that can be used to delete a record, and when the mutation function is called, the parameters of the function are passed to the `delete` method of the data provider.
 
-`useDelete` is a **refine** hook that is used to delete a record. It returns mutation functions that can be used to delete a record. When the mutation function is called, the parameters of the function are passed to the `delete` method of the data provider.
+We will now add a delete button to the list page by using the `useDelete` hook; for this, follow these steps:
 
-[Refer to the `useDelete` documentation for more information &#8594](/docs/api-reference/core/hooks/data/useDelete/)
+1. Open the `src/pages/blog-posts/list.tsx` file on your editor.
 
-To add a delete feature to the products table, you can follow the steps below:
-
-1. Open the `src/pages/products/list.tsx` file on your editor.
-
-2. Import the `useOne` hook from `@pankod/refine-core`:
+2. Import the `useOne` hook from `@refinedev/core`:
 
     ```tsx
-    import { useOne } from "@pankod/refine-core";
+    import { useOne } from "@refinedev/core";
     ```
 
-3. Call the `useDelete` hook in the `ProductList` component:
+3. Call the `useDelete` hook in the `BlogPostList` component:
 
     ```tsx
-    const ProductList: React.FC = () => {
-        const { mutate: deleteProduct } = useDelete();
+    const BlogPostList: React.FC = () => {
+        const { mutate: deleteBlogPost } = useDelete();
     };
     ```
 
-    `deleteProduct` mutation takes `id`, `resource` etc. You can check the parameters of the mutation function in the [documentation](/docs/api-reference/core/hooks/data/useDelete/#properties).
+    > You can check the parameters of the `deleteBlogPost` mutation function in the [`useDelete` documentation](/docs/api-reference/core/hooks/data/useDelete/#properties).
 
 4. Add the `<button/>` component to the `actions` column of the table as shown below:
 
@@ -52,14 +48,14 @@ To add a delete feature to the products table, you can follow the steps below:
                         >
                             <button
                                 onClick={() => {
-                                    show("products", getValue() as string);
+                                    show("blog_posts", getValue() as string);
                                 }}
                             >
                                 Show
                             </button>
                             <button
                                 onClick={() => {
-                                    edit("products", getValue() as string);
+                                    edit("blog_posts", getValue() as string);
                                 }}
                             >
                                 Edit
@@ -67,9 +63,9 @@ To add a delete feature to the products table, you can follow the steps below:
                             //highlight-start
                             <button
                                 onClick={() => {
-                                    deleteProduct({
-                                        resource: "products",
-                                        id: "1",
+                                    deleteBlogPost({
+                                        resource: "blog_posts",
+                                        id: getValue() as string,
                                     });
                                 }}
                             >
@@ -82,7 +78,7 @@ To add a delete feature to the products table, you can follow the steps below:
             },
     ```
 
-Now, you can try to delete a record from the list page. Just click on the delete button of the record you want to delete.
+You can now delete a record from the list page by clicking on the delete button of any blog post.
 
 <br/>
 
@@ -90,7 +86,7 @@ Now, you can try to delete a record from the list page. Just click on the delete
 
 You can also use `useDelete` hook provided by **refine** to delete a record.
 
-[Refer to the `useDelete` documentation for more information information &#8594](/docs/api-reference/core/hooks/data/useDelete/)
+For more information, refer to the [`useDelete` documentation&#8594](/docs/api-reference/core/hooks/data/useDelete/)
 
 :::
 
@@ -99,10 +95,10 @@ You can also use `useDelete` hook provided by **refine** to delete a record.
 <Checklist>
 
 <ChecklistItem id="add-delete-feature-headless">
-I added the delete feature to the list page.
+I have added the delete feature to the list page.
 </ChecklistItem>
 <ChecklistItem id="add-delete-feature-headless-2">
-I enabled the delete feature on the show page and edit page.
+I have enabled the delete feature on the show page and edit page.
 </ChecklistItem>
 
 </Checklist>

@@ -3,7 +3,7 @@ title: Unexpected token in JSON at position 0 error
 description: We will look into the various possible causes of this error message and suggest methods to rectify it.
 slug: unexpected-token-in-json-at-position-0-error
 authors: chukwuka_reuben
-tags: [javascript, errors]
+tags: [javascript]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-12-09-json-error/social.png
 hide_table_of_contents: false
 ---
@@ -170,10 +170,9 @@ Spelling errors do not apply only to API endpoints, they can also occur while at
 - Use the try-and-catch method in your function to prevent your app from crashing.
     
 
-
 ---
 
-<PromotionBanner title="Building a side project?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/generic_banner.png" />
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
 
 ---
 

@@ -10,7 +10,8 @@ setInitialRoutes(["/posts"]);
 
 // visible-block-start
 import React from "react";
-import { useTable, ColumnDef, flexRender } from "@pankod/refine-react-table";
+import { useTable } from "@refinedev/react-table";
+import { ColumnDef, flexRender } from "@tanstack/react-table";
 
 interface IPost {
     id: number;
@@ -26,6 +27,8 @@ const PostList: React.FC = () => {
                 id: "id",
                 header: "ID",
                 accessorKey: "id",
+                //highlight-next-line
+                enableColumnFilter: false,
             },
             {
                 id: "title",
@@ -51,6 +54,11 @@ const PostList: React.FC = () => {
                 id: "createdAt",
                 header: "CreatedAt",
                 accessorKey: "createdAt",
+                //highlight-start
+                meta: {
+                    filterOperator: "gte",
+                },
+                //highlight-end
             },
         ],
         [],
@@ -74,21 +82,23 @@ const PostList: React.FC = () => {
                                                 header.column.columnDef.header,
                                                 header.getContext(),
                                             )}
-                                            <div>
-                                                {/* highlight-start */}
-                                                <input
-                                                    value={
-                                                        (header.column.getFilterValue() as string) ??
-                                                        ""
-                                                    }
-                                                    onChange={(e) =>
-                                                        header.column.setFilterValue(
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                />
-                                                {/* highlight-end */}
-                                            </div>
+                                            {/* highlight-start */}
+                                            {header.column.getCanFilter() ? (
+                                                <div>
+                                                    <input
+                                                        value={
+                                                            (header.column.getFilterValue() as string) ??
+                                                            ""
+                                                        }
+                                                        onChange={(e) =>
+                                                            header.column.setFilterValue(
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
+                                            ) : null}
+                                            {/* highlight-end */}
                                         </>
                                     )}
                                 </th>

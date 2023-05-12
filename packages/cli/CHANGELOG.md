@@ -1,5 +1,120 @@
 # @pankod/refine-cli
 
+## 2.5.3
+
+### Patch Changes
+
+-   [#4195](https://github.com/refinedev/refine/pull/4195) [`18f955a064e`](https://github.com/refinedev/refine/commit/18f955a064ef7524eef3f4434fb030d30058b4f9) Thanks [@aliemir](https://github.com/aliemir)! - fix(cli): add file system check to find installed packages
+
+    Updated the package find logic and added file system check for double checking if the package is installed or not.
+
+## 2.5.2
+
+### Patch Changes
+
+-   [#4195](https://github.com/refinedev/refine/pull/4195) [`18f955a064e`](https://github.com/refinedev/refine/commit/18f955a064ef7524eef3f4434fb030d30058b4f9) Thanks [@aliemir](https://github.com/aliemir)! - fix(cli): add file system check to find installed packages
+
+    Updated the package find logic and added file system check for double checking if the package is installed or not.
+
+## 2.5.1
+
+### Patch Changes
+
+-   [#4195](https://github.com/refinedev/refine/pull/4195) [`18f955a064e`](https://github.com/refinedev/refine/commit/18f955a064ef7524eef3f4434fb030d30058b4f9) Thanks [@aliemir](https://github.com/aliemir)! - fix(cli): add file system check to find installed packages
+
+    Updated the package find logic and added file system check for double checking if the package is installed or not.
+
+## 2.5.0
+
+### Minor Changes
+
+-   [#4187](https://github.com/refinedev/refine/pull/4187) [`014ad4d5e79`](https://github.com/refinedev/refine/commit/014ad4d5e79069b0a5e393d0bfc5e30f66f99c49) Thanks [@aliemir](https://github.com/aliemir)! - refactor: use `require.resolve` to find script executables.
+
+    Updated the runner command to use `require.resolve` to find the script executable. This allows the script to be run from anywhere in the project and allow mono-repos with workspaces to work.
+
+-   [#4187](https://github.com/refinedev/refine/pull/4187) [`014ad4d5e79`](https://github.com/refinedev/refine/commit/014ad4d5e79069b0a5e393d0bfc5e30f66f99c49) Thanks [@aliemir](https://github.com/aliemir)! - refactor: use `require.resolve` to find refine package paths.
+
+    Updated the refine package search to use `require.resolve` to find the package path. This allows the package to be run from anywhere in the project and allow mono-repos with workspaces to work.
+
+## 2.4.0
+
+### Minor Changes
+
+-   [#4187](https://github.com/refinedev/refine/pull/4187) [`014ad4d5e79`](https://github.com/refinedev/refine/commit/014ad4d5e79069b0a5e393d0bfc5e30f66f99c49) Thanks [@aliemir](https://github.com/aliemir)! - refactor: use `require.resolve` to find script executables.
+
+    Updated the runner command to use `require.resolve` to find the script executable. This allows the script to be run from anywhere in the project and allow mono-repos with workspaces to work.
+
+-   [#4187](https://github.com/refinedev/refine/pull/4187) [`014ad4d5e79`](https://github.com/refinedev/refine/commit/014ad4d5e79069b0a5e393d0bfc5e30f66f99c49) Thanks [@aliemir](https://github.com/aliemir)! - refactor: use `require.resolve` to find refine package paths.
+
+    Updated the refine package search to use `require.resolve` to find the package path. This allows the package to be run from anywhere in the project and allow mono-repos with workspaces to work.
+
+## 2.3.0
+
+### Minor Changes
+
+-   [#4149](https://github.com/refinedev/refine/pull/4149) [`ca6a2b18576`](https://github.com/refinedev/refine/commit/ca6a2b185762e7dbae120da4090c47af5391fe45) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: added required packages to install after swizzling.
+    Now with this feature, users can automatically install the required packages after swizzling.
+
+### Patch Changes
+
+-   [#4138](https://github.com/refinedev/refine/pull/4138) [`a15634d6621`](https://github.com/refinedev/refine/commit/a15634d66219f12de7cc195b5e97c9461e4b7164) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - fix: When the project type is vite, the `refine dev` command was running `vite start`. It is now changed to `vite dev`, because there is no `start` command in vite.
+
+## 2.2.0
+
+### Minor Changes
+
+-   [#4149](https://github.com/refinedev/refine/pull/4149) [`ca6a2b18576`](https://github.com/refinedev/refine/commit/ca6a2b185762e7dbae120da4090c47af5391fe45) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: added required packages to install after swizzling.
+    Now with this feature, users can automatically install the required packages after swizzling.
+
+### Patch Changes
+
+-   [#4138](https://github.com/refinedev/refine/pull/4138) [`a15634d6621`](https://github.com/refinedev/refine/commit/a15634d66219f12de7cc195b5e97c9461e4b7164) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - fix: When the project type is vite, the `refine dev` command was running `vite start`. It is now changed to `vite dev`, because there is no `start` command in vite.
+
+## 2.1.2
+
+### Patch Changes
+
+-   [#3976](https://github.com/refinedev/refine/pull/3976) [`7e793ee9dc3`](https://github.com/refinedev/refine/commit/7e793ee9dc343751e6e9ee8aeaf00260afdf1c50) Thanks [@BatuhanW](https://github.com/BatuhanW)! - feat: added parcel support
+
+    fixed: refine --version doesn't return refine cli's version.
+    fixed: add error message if user tries to run script with unsupported package.
+    fixed: added "unknown" project type as fallback.
+
+## 2.1.1
+
+### Patch Changes
+
+-   [#3976](https://github.com/refinedev/refine/pull/3976) [`7e793ee9dc3`](https://github.com/refinedev/refine/commit/7e793ee9dc343751e6e9ee8aeaf00260afdf1c50) Thanks [@BatuhanW](https://github.com/BatuhanW)! - feat: added parcel support
+
+    fixed: refine --version doesn't return refine cli's version.
+    fixed: add error message if user tries to run script with unsupported package.
+    fixed: added "unknown" project type as fallback.
+
+## 2.1.0
+
+### Minor Changes
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    **Moving to the `@refinedev` scope 🎉🎉**
+
+    Moved to the `@refinedev` scope and updated our packages to use the new scope. From now on, all packages will be published under the `@refinedev` scope with their new names.
+
+    Now, we're also removing the `refine` prefix from all packages. So, the `@pankod/refine-core` package is now `@refinedev/core`, `@pankod/refine-antd` is now `@refinedev/antd`, and so on.
+
+### Patch Changes
+
+## 1.19.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
+## 1.18.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
 ## 1.17.2
 
 ### Patch Changes

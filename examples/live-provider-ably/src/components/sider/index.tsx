@@ -1,26 +1,26 @@
 import React, { useState } from "react";
 import {
-    useTitle,
     useSubscription,
     CanAccess,
     ITreeMenu,
-    useRouterContext,
-} from "@pankod/refine-core";
-import {
-    AntdLayout,
-    Menu,
     useMenu,
-    Grid,
-    Icons,
-    Badge,
-} from "@pankod/refine-antd";
+} from "@refinedev/core";
+import { Link } from "react-router-dom";
+import {
+    UnorderedListOutlined,
+    LeftOutlined,
+    RightOutlined,
+} from "@ant-design/icons";
+import { Layout as AntdLayout, Menu, Grid, Badge, theme, Button } from "antd";
 import { antLayoutSider, antLayoutSiderMobile } from "./styles";
+import { ThemedTitle } from "@refinedev/antd";
+
+const { useToken } = theme;
 
 export const CustomSider: React.FC = () => {
+    const { token } = useToken();
     const [subscriptionCount, setSubscriptionCount] = useState(0);
     const [collapsed, setCollapsed] = useState<boolean>(false);
-    const { Link } = useRouterContext();
-    const Title = useTitle();
     const { SubMenu } = Menu;
 
     const { menuItems, selectedKey } = useMenu();
@@ -37,13 +37,24 @@ export const CustomSider: React.FC = () => {
 
     const renderTreeView = (tree: ITreeMenu[], selectedKey: string) => {
         return tree.map((item: ITreeMenu) => {
-            const { icon, label, route, name, children, parentName } = item;
+            const { name, children, meta, key, list } = item;
+
+            const icon = meta?.icon;
+            const label = meta?.label ?? name;
+            const parent = meta?.parent;
+            const route = key;
+            const to =
+                typeof list === "string"
+                    ? list
+                    : typeof list !== "function"
+                    ? list?.path
+                    : key;
 
             if (children.length > 0) {
                 return (
                     <SubMenu
                         key={route}
-                        icon={icon ?? <Icons.UnorderedListOutlined />}
+                        icon={icon ?? <UnorderedListOutlined />}
                         title={label}
                     >
                         {renderTreeView(children, selectedKey)}
@@ -51,9 +62,7 @@ export const CustomSider: React.FC = () => {
                 );
             }
             const isSelected = route === selectedKey;
-            const isRoute = !(
-                parentName !== undefined && children.length === 0
-            );
+            const isRoute = !(parent !== undefined && children.length === 0);
             return (
                 <CanAccess
                     key={route}
@@ -63,14 +72,12 @@ export const CustomSider: React.FC = () => {
                 >
                     <Menu.Item
                         key={route}
+                        icon={icon ?? (isRoute && <UnorderedListOutlined />)}
                         style={{
-                            fontWeight: isSelected ? "bold" : "normal",
+                            textTransform: "capitalize",
                         }}
-                        icon={
-                            icon ?? (isRoute && <Icons.UnorderedListOutlined />)
-                        }
                     >
-                        <Link to={route}>{label}</Link>
+                        <Link to={to || "/"}>{label}</Link>
                         {label === "Posts" && (
                             <Badge
                                 size="small"
@@ -87,6 +94,8 @@ export const CustomSider: React.FC = () => {
         });
     };
 
+    const siderStyle = isMobile ? antLayoutSiderMobile : antLayoutSider;
+
     return (
         <AntdLayout.Sider
             collapsible
@@ -94,14 +103,61 @@ export const CustomSider: React.FC = () => {
             collapsed={collapsed}
             breakpoint="lg"
             onCollapse={(collapsed: boolean): void => setCollapsed(collapsed)}
-            style={isMobile ? antLayoutSiderMobile : antLayoutSider}
+            style={{
+                ...siderStyle,
+                backgroundColor: token.colorBgContainer,
+                borderRight: `1px solid ${token.colorBgElevated}`,
+            }}
+            trigger={
+                !isMobile && (
+                    <Button
+                        type="text"
+                        style={{
+                            borderRadius: 0,
+                            height: "100%",
+                            width: "100%",
+                            backgroundColor: token.colorBgElevated,
+                        }}
+                    >
+                        {collapsed ? (
+                            <RightOutlined
+                                style={{
+                                    color: token.colorPrimary,
+                                }}
+                            />
+                        ) : (
+                            <LeftOutlined
+                                style={{
+                                    color: token.colorPrimary,
+                                }}
+                            />
+                        )}
+                    </Button>
+                )
+            }
         >
-            {Title && <Title collapsed={collapsed} />}
+            <div
+                style={{
+                    width: collapsed ? "80px" : "200px",
+                    padding: collapsed ? "0" : "0 16px",
+                    display: "flex",
+                    justifyContent: collapsed ? "center" : "flex-start",
+                    alignItems: "center",
+                    height: "64px",
+                    backgroundColor: token.colorBgElevated,
+                    fontSize: "14px",
+                }}
+            >
+                <ThemedTitle collapsed={collapsed} />
+            </div>
 
             <Menu
                 selectedKeys={[selectedKey]}
                 mode="inline"
-                theme="dark"
+                style={{
+                    marginTop: "8px",
+                    border: "none",
+                }}
                 onClick={({ key }) => {
                     if (!breakpoint.lg) {
                         setCollapsed(true);

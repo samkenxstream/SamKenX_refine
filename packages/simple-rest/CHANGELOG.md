@@ -1,5 +1,164 @@
 # @pankod/refine-simple-rest
 
+## 4.5.0
+
+### Minor Changes
+
+-   [#4177](https://github.com/refinedev/refine/pull/4177) [`623691b10f0`](https://github.com/refinedev/refine/commit/623691b10f07f13af11ed56c24161cc0dc9dd3f1) Thanks [@salihozdemir](https://github.com/salihozdemir)! - feat: add the abilities to pass custom headers and custom http method to the request
+
+    Example of changing the http method:
+
+    ```tsx
+    import { useUpdate } from "@refinedev/core";
+
+    const { mutate } = useUpdate();
+
+    mutate({
+        resource: "posts",
+        id: 1,
+        variables: {
+            title: "New title",
+        },
+        //highlight-start
+        meta: {
+            method: "put",
+        },
+        //highlight-end
+    });
+    ```
+
+    Example of passing custom headers:
+
+    ```tsx
+    import { useOne } from "@refinedev/core";
+
+    useOne({
+        resource: "posts",
+        id: 1,
+        //highlight-start
+        meta: {
+            headers: {
+                "X-Custom-Header": "Custom header value",
+            },
+        },
+        //highlight-end
+    });
+    ```
+
+## 4.4.0
+
+### Minor Changes
+
+-   [#4177](https://github.com/refinedev/refine/pull/4177) [`623691b10f0`](https://github.com/refinedev/refine/commit/623691b10f07f13af11ed56c24161cc0dc9dd3f1) Thanks [@salihozdemir](https://github.com/salihozdemir)! - feat: add the abilities to pass custom headers and custom http method to the request
+
+    Example of changing the http method:
+
+    ```tsx
+    import { useUpdate } from "@refinedev/core";
+
+    const { mutate } = useUpdate();
+
+    mutate({
+        resource: "posts",
+        id: 1,
+        variables: {
+            title: "New title",
+        },
+        //highlight-start
+        meta: {
+            method: "put",
+        },
+        //highlight-end
+    });
+    ```
+
+    Example of passing custom headers:
+
+    ```tsx
+    import { useOne } from "@refinedev/core";
+
+    useOne({
+        resource: "posts",
+        id: 1,
+        //highlight-start
+        meta: {
+            headers: {
+                "X-Custom-Header": "Custom header value",
+            },
+        },
+        //highlight-end
+    });
+    ```
+
+## 4.3.0
+
+### Minor Changes
+
+-   [#4162](https://github.com/refinedev/refine/pull/4162) [`4ebd298fa8a`](https://github.com/refinedev/refine/commit/4ebd298fa8a9245a17fb724ae5817908cbb13926) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: `requiredPackages` added to refine.config.js for CLI to automatically install required packages for the project.
+
+## 4.2.0
+
+### Minor Changes
+
+-   [#4162](https://github.com/refinedev/refine/pull/4162) [`4ebd298fa8a`](https://github.com/refinedev/refine/commit/4ebd298fa8a9245a17fb724ae5817908cbb13926) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: `requiredPackages` added to refine.config.js for CLI to automatically install required packages for the project.
+
+## 4.1.0
+
+### Minor Changes
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+
+    -   `metaData` prop is now deprecated for all data provider methods. Use `meta` prop instead.
+
+        > For backward compatibility, we still support `metaData` prop with refine v4.
+
+        ```diff
+        create: async ({
+        -    metaData
+        +    meta
+        }) => {
+            ...
+        },
+        ```
+
+    -   `sort`, `hasPagination`, and `metaData` parameters of `getList` method are now deprecated. Use `sorters`, `pagination`, and `meta` parameters instead.
+
+        > For backward compatibility, we still support `sort`, `hasPagination` and `metaData` props with refine v4.
+
+        ```diff
+        getList: async ({
+        -    sort
+        +    sorters
+        -    hasPagination
+        +    pagination: { mode: "off" | "server | "client" }
+        -    metaData
+        +    meta
+        }) => {
+            ...
+        },
+        ```
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    **Moving to the `@refinedev` scope 🎉🎉**
+
+    Moved to the `@refinedev` scope and updated our packages to use the new scope. From now on, all packages will be published under the `@refinedev` scope with their new names.
+
+    Now, we're also removing the `refine` prefix from all packages. So, the `@pankod/refine-core` package is now `@refinedev/core`, `@pankod/refine-antd` is now `@refinedev/antd`, and so on.
+
+### Patch Changes
+
+## 3.39.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
+## 3.38.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
 ## 3.37.4
 
 ### Patch Changes

@@ -1,7 +1,6 @@
 import React from "react";
 import clsx from "clsx";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
-import Link from "@docusaurus/Link";
 
 import {
     PageMetadata,
@@ -12,6 +11,7 @@ import BlogLayout from "@theme/BlogLayout";
 import BlogListPaginator from "@theme/BlogListPaginator";
 import SearchMetadata from "@theme/SearchMetadata";
 import BlogPostItems from "@theme/BlogPostItems";
+import TagsList from "@theme/TagsList";
 
 import { FeaturedBlogPostItems } from "../../components/blog";
 
@@ -46,13 +46,14 @@ function BlogListPageContent(props) {
 
     return (
         <BlogLayout>
-            {/* {isFirstPage && <FeaturedBlogPostItems items={featuredPosts} />} */}
-            {isFirstPage && (
+            {isFirstPage && <FeaturedBlogPostItems items={featuredPosts} />}
+            {/*    {isFirstPage && (
                 <Link to="https://s.refine.dev/hackathon">
                     <img src="https://refine.ams3.cdn.digitaloceanspaces.com/blog/2023-01-06-hackaton-january/social.png"></img>
                 </Link>
-            )}
+            )} */}
             <br />
+            <TagsList tags={props.tags} />
             <br />
             <br />
 

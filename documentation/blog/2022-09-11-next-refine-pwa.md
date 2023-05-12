@@ -3,14 +3,21 @@ title: Build a Progressive Web App (PWA) with Next.js
 description: We will walk you through the entire process of building a PWA using Next.JS and refine framework, from start to finish!
 slug: next-js-pwa
 authors: david_omotayo
-tags: [nextjs, react, pwa, refine]
+tags: [nextjs, tutorial, refine]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-09-11-next-refine-pwa/social.png
 featured_image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-09-11-next-refine-pwa/featured.png
-is_featured: true
 hide_table_of_contents: false
 ---
 
+:::caution
 
+This post was created using version 3.x.x of **refine**. Although we plan to update it with the latest version of **refine** as soon as possible, you can still benefit from the post in the meantime.
+
+You should know that **refine** version 4.x.x is backward compatible with version 3.x.x, so there is no need to worry. If you want to see the differences between the two versions, check out the [migration guide](https://refine.dev/docs/migration-guide/).
+
+Just be aware that the source code example in this post have been updated to version 4.x.x.
+
+:::
 
 
 
@@ -34,7 +41,6 @@ In this article, we'll look at what refine is and demonstrate how to use it to b
 <!--truncate-->
 
 Steps we'll cover:
-  - [What is refine?](#what-is-refine)
 - [What is a PWA?](#what-is-a-pwa)
 - [Project Setup](#project-setup)
 - [Adding Tailwind CSS for styling](#adding-tailwind-css-for-styling)
@@ -44,7 +50,7 @@ Steps we'll cover:
 - [Adding Resources](#adding-resources)
 - [Using Next.js SSR](#using-nextjs-ssr)
 - [Creating product cards](#creating-product-cards)
-- [Creating product list](#creating-productlist)
+- [Creating ProductList](#creating-productlist)
   - [Using the useTable hook](#using-the-usetable-hook)
 - [Generating PWA manifest](#generating-pwa-manifest)
 - [Configuring PWA](#configuring-pwa)
@@ -85,7 +91,7 @@ Although it is possible to integrate refine into an existing Next.js project, it
 Open up your command line tool, cd to your folder of choice, and run the following command to bootstrap a Next.js refine template:
 
 ```
-npx superplate-cli -p refine-nextjs refine-storefront
+npm create refine-app@latest refine-storefront -- -p refine-nextjs -b v3
 ```
 
 After running the command, you’ll be prompted to choose your preferences for the project. Select the following options to proceed:
@@ -165,9 +171,9 @@ As a first step, navigate to the `_app.tsx` file inside the pages folder. When y
 ```tsx title="pages/_app.tsx"
 import React from "react";
 import { AppProps } from "next/app";
-import { Refine } from "@pankod/refine-core";
-import routerProvider from "@pankod/refine-nextjs-router";
-import dataProvider from "@pankod/refine-simple-rest";
+import { Refine } from "@refinedev/core";
+import routerProvider from "@refinedev/nextjs-router";
+import dataProvider from "@refinedev/simple-rest";
  
 const API_URL = "https://api.fake-rest.refine.dev";
  
@@ -250,7 +256,7 @@ To get started, create a components sub-folder inside the src folder, Next, crea
 
 ```tsx title="src/Layout.tsx"
 import * as React from 'react';
-import { LayoutProps } from '@pankod/refine-core';
+import { LayoutProps } from '@refinedev/core';
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
     return (
@@ -391,7 +397,7 @@ To go about this, navigate to the `index.tsx` file inside the pages folder and a
 
 ```tsx title="pages/index.tsx"
 import { GetServerSideProps } from "next";
-import dataProvider from "@pankod/refine-simple-rest";
+import dataProvider from "@refinedev/simple-rest";
  
 interface IProduct {
   id: number;
@@ -495,9 +501,9 @@ Also import the `ProductCards` and the `LayoutWrapper` components like highlight
 
 ```tsx title="pages/index.tsx"
 import { GetServerSideProps } from 'next';
-import dataProvider from '@pankod/refine-simple-rest';
+import dataProvider from '@refinedev/simple-rest';
  //highlight-start
-import { GetListResponse, LayoutWrapper, useTable } from '@pankod/refine-core';
+import { GetListResponse, LayoutWrapper, useTable } from '@refinedev/core';
 import ProductCards from '@components/ProductCard';
  //highlight-end
 
@@ -588,6 +594,13 @@ If you save your progress and go back to the browser, you should see a nicely re
 <br/>
 
 That’s it! We’ve successfully built a storefront using refine and Next.js SSR. Next, we’ll demonstrate how to generate a PWA manifest for our app, and how to turn it into a PWA.
+
+---
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
+---
 
 ## Generating PWA manifest
 
@@ -721,7 +734,7 @@ The purpose of this tutorial is to give you a headstart with refine and its ecos
 
 ## Project source code
 
-https://github.com/refinedev/refine/tree/next/examples/blog/next-refine-pwa
+https://github.com/refinedev/refine/tree/master/examples/blog/next-refine-pwa
 
 
 <br/>

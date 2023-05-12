@@ -1,4 +1,15 @@
-import * as RefineMui from "@pankod/refine-mui";
+import {
+    Show,
+    TagField,
+    TextFieldComponent,
+    EmailField,
+    UrlField,
+    BooleanField,
+    DateField,
+    MarkdownField,
+    NumberField,
+} from "@refinedev/mui";
+import { Typography, Stack } from "@mui/material";
 
 import { createInferencer } from "@/create-inferencer";
 import {
@@ -13,7 +24,7 @@ import {
 
 import { ErrorComponent } from "./error";
 import { LoadingComponent } from "./loading";
-import { CodeViewerComponent } from "./code-viewer";
+import { SharedCodeViewer } from "@/components/shared-code-viewer";
 
 import {
     InferencerResultComponent,
@@ -21,6 +32,7 @@ import {
     ImportElement,
     RendererContext,
 } from "@/types";
+import { getMetaProps } from "@/utilities/get-meta-props";
 
 /**
  * a renderer function for show page in Material UI
@@ -29,6 +41,7 @@ import {
 export const renderer = ({
     resource,
     fields,
+    meta,
     isCustomPage,
     id,
 }: RendererContext) => {
@@ -38,10 +51,10 @@ export const renderer = ({
     );
     const recordName = "record";
     const imports: Array<ImportElement> = [
-        ["useShow", "@pankod/refine-core"],
-        ["Show", "@pankod/refine-mui"],
-        ["Typography", "@pankod/refine-mui"],
-        ["Stack", "@pankod/refine-mui"],
+        ["useShow", "@refinedev/core"],
+        ["Show", "@refinedev/mui"],
+        ["Typography", "@mui/material"],
+        ["Stack", "@mui/material"],
     ];
 
     const relationFields: (InferField | null)[] = fields.filter(
@@ -53,7 +66,7 @@ export const renderer = ({
         .map((field) => {
             if (field?.relation && !field.fieldable && field.resource) {
                 if (field.multiple) {
-                    imports.push(["useMany", "@pankod/refine-core"]);
+                    imports.push(["useMany", "@refinedev/core"]);
 
                     let ids = accessor(recordName, field.key);
 
@@ -79,11 +92,16 @@ export const renderer = ({
                     queryOptions: {
                         enabled: !!${recordName},
                     },
+                    ${getMetaProps(
+                        field?.resource?.identifier ?? field?.resource?.name,
+                        meta,
+                        "getMany",
+                    )}
                 });
                 `;
                 }
 
-                imports.push(["useOne", "@pankod/refine-core"]);
+                imports.push(["useOne", "@refinedev/core"]);
 
                 return `
                 const { data: ${getVariableName(
@@ -101,6 +119,11 @@ export const renderer = ({
                     queryOptions: {
                         enabled: !!${recordName},
                     },
+                    ${getMetaProps(
+                        field?.resource?.identifier ?? field?.resource?.name,
+                        meta,
+                        "getOne",
+                    )}
                 });
             `;
             }
@@ -114,7 +137,7 @@ export const renderer = ({
             const variableIsLoading = getVariableName(field.key, "IsLoading");
 
             if (field.multiple) {
-                imports.push(["TagField", "@pankod/refine-mui"]);
+                imports.push(["TagField", "@refinedev/mui"]);
 
                 return jsx`
                 <Typography variant="body1" fontWeight="bold">
@@ -202,13 +225,10 @@ export const renderer = ({
 
     const textFields = (field: InferField) => {
         if (field.type === "text") {
-            imports.push([
-                "TextFieldComponent as TextField",
-                "@pankod/refine-mui",
-            ]);
+            imports.push(["TextFieldComponent as TextField", "@refinedev/mui"]);
 
             if (field.multiple) {
-                imports.push(["TagField", "@pankod/refine-mui"]);
+                imports.push(["TagField", "@refinedev/mui"]);
 
                 const val = accessor("item", undefined, field.accessor);
 
@@ -272,10 +292,10 @@ export const renderer = ({
 
     const emailFields = (field: InferField) => {
         if (field.type === "email") {
-            imports.push(["EmailField", "@pankod/refine-mui"]);
+            imports.push(["EmailField", "@refinedev/mui"]);
 
             if (field.multiple) {
-                imports.push(["TagField", "@pankod/refine-mui"]);
+                imports.push(["TagField", "@refinedev/mui"]);
 
                 const val = accessor("item", undefined, field.accessor);
 
@@ -307,10 +327,10 @@ export const renderer = ({
 
     const urlFields = (field: InferField) => {
         if (field.type === "url") {
-            imports.push(["UrlField", "@pankod/refine-mui"]);
+            imports.push(["UrlField", "@refinedev/mui"]);
 
             if (field.multiple) {
-                imports.push(["TagField", "@pankod/refine-mui"]);
+                imports.push(["TagField", "@refinedev/mui"]);
 
                 const val = accessor("item", undefined, field.accessor);
 
@@ -342,10 +362,10 @@ export const renderer = ({
 
     const booleanFields = (field: InferField) => {
         if (field.type === "boolean") {
-            imports.push(["BooleanField", "@pankod/refine-mui"]);
+            imports.push(["BooleanField", "@refinedev/mui"]);
 
             if (field.multiple) {
-                imports.push(["TagField", "@pankod/refine-mui"]);
+                imports.push(["TagField", "@refinedev/mui"]);
 
                 const val = accessor("item", undefined, field.accessor);
 
@@ -381,7 +401,7 @@ export const renderer = ({
 
     const dateFields = (field: InferField) => {
         if (field.type === "date") {
-            imports.push(["DateField", "@pankod/refine-mui"]);
+            imports.push(["DateField", "@refinedev/mui"]);
 
             if (field.multiple) {
                 const val = accessor("item", undefined, field.accessor);
@@ -415,7 +435,7 @@ export const renderer = ({
 
     const richtextFields = (field: InferField) => {
         if (field.type === "richtext") {
-            imports.push(["MarkdownField", "@pankod/refine-mui"]);
+            imports.push(["MarkdownField", "@refinedev/mui"]);
 
             return jsx`
                 <Typography variant="body1" fontWeight="bold">
@@ -435,10 +455,10 @@ export const renderer = ({
 
     const numberFields = (field: InferField) => {
         if (field.type === "number") {
-            imports.push(["NumberField", "@pankod/refine-mui"]);
+            imports.push(["NumberField", "@refinedev/mui"]);
 
             if (field.multiple) {
-                imports.push(["TagField", "@pankod/refine-mui"]);
+                imports.push(["TagField", "@refinedev/mui"]);
 
                 const val = accessor("item", undefined, field.accessor);
 
@@ -504,8 +524,23 @@ export const renderer = ({
             isCustomPage
                 ? `{ 
                     resource: "${resource.name}", 
-                    id: ${id}
+                    id: ${id},
+                    ${getMetaProps(
+                        resource?.identifier ?? resource?.name,
+                        meta,
+                        "getOne",
+                    )}
                 }`
+                : getMetaProps(
+                      resource?.identifier ?? resource?.name,
+                      meta,
+                      "getOne",
+                  )
+                ? `{ ${getMetaProps(
+                      resource?.identifier ?? resource?.name,
+                      meta,
+                      "getOne",
+                  )} }`
                 : ""
         });
         const { data, isLoading } = queryResult;
@@ -530,8 +565,25 @@ export const renderer = ({
  */
 export const ShowInferencer: InferencerResultComponent = createInferencer({
     type: "show",
-    additionalScope: [["@pankod/refine-mui", "RefineMui", RefineMui]],
-    codeViewerComponent: CodeViewerComponent,
+    additionalScope: [
+        [
+            "@refinedev/mui",
+            "RefineMui",
+            {
+                Show,
+                TagField,
+                TextFieldComponent,
+                EmailField,
+                UrlField,
+                BooleanField,
+                DateField,
+                MarkdownField,
+                NumberField,
+            },
+        ],
+        ["@mui/material", "MuiMaterial", { Typography, Stack }],
+    ],
+    codeViewerComponent: SharedCodeViewer,
     loadingComponent: LoadingComponent,
     errorComponent: ErrorComponent,
     renderer,

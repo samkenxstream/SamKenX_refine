@@ -1,6 +1,7 @@
 import React from "react";
 import { FormInstance, FormProps, Form } from "antd";
 import { useForm as useFormSF } from "sunflower-antd";
+import { ButtonProps } from "antd";
 
 import {
     HttpError,
@@ -11,15 +12,24 @@ import {
     UseFormProps as UseFormPropsCore,
     CreateResponse,
     UpdateResponse,
-} from "@pankod/refine-core";
-
-import { ButtonProps } from "../../components/antd";
+    pickNotDeprecated,
+} from "@refinedev/core";
 
 export type UseFormProps<
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
-> = UseFormPropsCore<TData, TError, TVariables> & {
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
+> = UseFormPropsCore<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
+> & {
     submitOnEnter?: boolean;
     /**
      * Shows notification when unsaved changes exist
@@ -28,10 +38,20 @@ export type UseFormProps<
 };
 
 export type UseFormReturnType<
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
-> = UseFormReturnTypeCore<TData, TError, TVariables> & {
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
+> = UseFormReturnTypeCore<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
+> & {
     form: FormInstance<TVariables>;
     formProps: FormProps<TVariables>;
     saveButtonProps: ButtonProps & {
@@ -39,7 +59,7 @@ export type UseFormReturnType<
     };
     onFinish: (
         values?: TVariables,
-    ) => Promise<CreateResponse<TData> | UpdateResponse<TData> | void>;
+    ) => Promise<CreateResponse<TResponse> | UpdateResponse<TResponse> | void>;
 };
 
 /**
@@ -50,13 +70,19 @@ export type UseFormReturnType<
  * @typeParam TData - Result data of the query extends {@link https://refine.dev/docs/api-references/interfaceReferences#baserecord `BaseRecord`}
  * @typeParam TError - Custom error object that extends {@link https://refine.dev/docs/api-references/interfaceReferences#httperror `HttpError`}
  * @typeParam TVariables - Values for params. default `{}`
+ * @typeParam TData - Result data returned by the `select` function. Extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#baserecord `BaseRecord`}. Defaults to `TQueryFnData`
+ * @typeParam TResponse - Result data returned by the mutation function. Extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#baserecord `BaseRecord`}. Defaults to `TData`
+ * @typeParam TResponseError - Custom error object that extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#httperror `HttpError`}. Defaults to `TError`
  *
  *
  */
 export const useForm = <
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables = {},
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
 >({
     action,
     resource,
@@ -67,6 +93,7 @@ export const useForm = <
     redirect,
     successNotification,
     errorNotification,
+    meta,
     metaData,
     liveMode,
     liveParams,
@@ -79,18 +106,35 @@ export const useForm = <
     createMutationOptions,
     updateMutationOptions,
     id: idFromProps,
-}: UseFormProps<TData, TError, TVariables> = {}): UseFormReturnType<
-    TData,
+}: UseFormProps<
+    TQueryFnData,
     TError,
-    TVariables
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
+> = {}): UseFormReturnType<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TData,
+    TResponse,
+    TResponseError
 > => {
     const [formAnt] = Form.useForm();
-    const formSF = useFormSF<TData, TVariables>({
+    const formSF = useFormSF<TResponse, TVariables>({
         form: formAnt,
     });
     const { form } = formSF;
 
-    const useFormCoreResult = useFormCore<TData, TError, TVariables>({
+    const useFormCoreResult = useFormCore<
+        TQueryFnData,
+        TError,
+        TVariables,
+        TData,
+        TResponse,
+        TResponseError
+    >({
         onMutationSuccess: onMutationSuccessProp
             ? onMutationSuccessProp
             : undefined,
@@ -100,7 +144,8 @@ export const useForm = <
         resource,
         successNotification,
         errorNotification,
-        metaData,
+        meta: pickNotDeprecated(meta, metaData),
+        metaData: pickNotDeprecated(meta, metaData),
         liveMode,
         liveParams,
         mutationMode,

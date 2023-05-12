@@ -1,61 +1,159 @@
-import { Refine } from "@pankod/refine-core";
+import {
+    Authenticated,
+    GitHubBanner,
+    Refine,
+    useParsed,
+} from "@refinedev/core";
 import {
     notificationProvider,
-    Layout,
+    ThemedLayoutV2,
     ErrorComponent,
-} from "@pankod/refine-antd";
-import { dataProvider, liveProvider } from "@pankod/refine-appwrite";
-import routerProvider from "@pankod/refine-react-router-v6";
+    AuthPage,
+    RefineThemes,
+} from "@refinedev/antd";
+import { dataProvider, liveProvider } from "@refinedev/appwrite";
+import routerProvider, {
+    CatchAllNavigate,
+    NavigateToResource,
+    UnsavedChangesNotifier,
+} from "@refinedev/react-router-v6";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 
-import "@pankod/refine-antd/dist/reset.css";
+import { ConfigProvider } from "antd";
+import "@refinedev/antd/dist/reset.css";
 
 import { appwriteClient } from "utility";
 import { authProvider } from "./authProvider";
 
-import { CustomSider } from "components/sider";
-import { Login } from "pages/login";
 import { ProductList } from "pages/products";
-import { CreateOrder, OrderList, OrderEdit } from "pages/orders";
+import { OrderCreate, OrderList, OrderEdit } from "pages/orders";
 import { ProductShow } from "components/product";
-import { StoreProvider } from "context/store";
+import { Header } from "components/header";
 
 function App() {
+    // inital tenant
+    const tenant = "refine";
+
     return (
-        <StoreProvider>
-            <Refine
-                routerProvider={routerProvider}
-                liveProvider={liveProvider(appwriteClient)}
-                dataProvider={dataProvider(appwriteClient)}
-                authProvider={authProvider}
-                LoginPage={Login}
-                options={{ liveMode: "auto" }}
-                Sider={CustomSider}
-                resources={[
-                    {
-                        name: "61cb01b17ef57",
-                        list: ProductList,
-                        show: ProductShow,
-                        options: {
-                            label: "Products",
-                            route: "products",
+        <BrowserRouter>
+            <GitHubBanner />
+            <ConfigProvider theme={RefineThemes.Blue}>
+                <Refine
+                    routerProvider={routerProvider}
+                    liveProvider={liveProvider(appwriteClient, {
+                        databaseId: "multi-tenancy",
+                    })}
+                    dataProvider={dataProvider(appwriteClient, {
+                        databaseId: "multi-tenancy",
+                    })}
+                    authProvider={authProvider}
+                    options={{
+                        liveMode: "auto",
+                        syncWithLocation: true,
+                        warnWhenUnsavedChanges: true,
+                    }}
+                    resources={[
+                        {
+                            name: "products",
+                            list: "/:tenant/products",
+                            show: "/:tenant/products/show/:id",
+                            meta: {
+                                tenant,
+                            },
                         },
-                    },
-                    {
-                        name: "61cb019fdbd11",
-                        list: OrderList,
-                        create: CreateOrder,
-                        edit: OrderEdit,
-                        options: {
-                            label: "Orders",
-                            route: "orders",
+                        {
+                            name: "orders",
+                            list: "/:tenant/orders",
+                            create: "/:tenant/orders/create",
+                            edit: "/:tenant/orders/edit/:id",
+                            meta: {
+                                tenant,
+                            },
                         },
-                    },
-                ]}
-                notificationProvider={notificationProvider}
-                Layout={Layout}
-                catchAll={<ErrorComponent />}
-            />
-        </StoreProvider>
+                    ]}
+                    notificationProvider={notificationProvider}
+                >
+                    <Routes>
+                        <Route
+                            element={
+                                <Authenticated
+                                    fallback={<CatchAllNavigate to="/login" />}
+                                >
+                                    <ThemedLayoutV2 Header={Header}>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route
+                                index
+                                element={
+                                    <NavigateToResource resource="products" />
+                                }
+                            />
+
+                            <Route path="/:tenant">
+                                <Route path="products">
+                                    <Route index element={<ProductList />} />
+                                    <Route
+                                        path="show/:id"
+                                        element={<ProductShow />}
+                                    />
+                                </Route>
+
+                                <Route path="orders">
+                                    <Route index element={<OrderList />} />
+                                    <Route
+                                        path="create"
+                                        element={<OrderCreate />}
+                                    />
+                                    <Route
+                                        path="edit/:id"
+                                        element={<OrderEdit />}
+                                    />
+                                </Route>
+                            </Route>
+                        </Route>
+
+                        <Route
+                            element={
+                                <Authenticated fallback={<Outlet />}>
+                                    <NavigateToResource resource="products" />
+                                </Authenticated>
+                            }
+                        >
+                            <Route
+                                path="/login"
+                                element={
+                                    <AuthPage
+                                        type="login"
+                                        formProps={{
+                                            initialValues: {
+                                                email: "demo@refine.dev",
+                                                password: "demodemo",
+                                            },
+                                        }}
+                                    />
+                                }
+                            />
+                        </Route>
+
+                        <Route
+                            element={
+                                <Authenticated>
+                                    <ThemedLayoutV2 Header={Header}>
+                                        <Outlet />
+                                    </ThemedLayoutV2>
+                                </Authenticated>
+                            }
+                        >
+                            <Route path="*" element={<ErrorComponent />} />
+                        </Route>
+                    </Routes>
+                    <UnsavedChangesNotifier />
+                </Refine>
+            </ConfigProvider>
+        </BrowserRouter>
     );
 }
 

@@ -1,6 +1,5 @@
 import React, { Children, createElement, Fragment } from "react";
 import { Grid, FormProps, Form, TablePaginationConfig, TableProps } from "antd";
-import { QueryObserverResult } from "@tanstack/react-query";
 import { useForm as useFormSF } from "sunflower-antd";
 
 import { SorterResult } from "antd/lib/table/interface";
@@ -9,15 +8,12 @@ import {
     useLiveMode,
     BaseRecord,
     CrudFilters,
-    CrudSorting,
-    GetListResponse,
-    SuccessErrorNotification,
     HttpError,
-    LiveModeProps,
     useTable as useTableCore,
     useTableProps as useTablePropsCore,
     useTableReturnType as useTableCoreReturnType,
-} from "@pankod/refine-core";
+    pickNotDeprecated,
+} from "@refinedev/core";
 
 import {
     mapAntdSorterToCrudSorting,
@@ -25,13 +21,8 @@ import {
 } from "@definitions/table";
 import { PaginationLink } from "./paginationLink";
 
-export type useTableProps<
-    TData,
-    TError,
-    TSearchVariables = unknown,
-> = useTablePropsCore<TData, TError> &
-    SuccessErrorNotification &
-    LiveModeProps & {
+export type useTableProps<TQueryFnData, TError, TSearchVariables, TData> =
+    useTablePropsCore<TQueryFnData, TError, TData> & {
         onSearch?: (
             data: TSearchVariables,
         ) => CrudFilters | Promise<CrudFilters>;
@@ -41,19 +32,9 @@ export type useTableReturnType<
     TData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TSearchVariables = unknown,
-> = {
+> = useTableCoreReturnType<TData, TError> & {
     searchFormProps: FormProps<TSearchVariables>;
     tableProps: TableProps<TData>;
-    tableQueryResult: QueryObserverResult<GetListResponse<TData>, TError>;
-    sorter?: CrudSorting;
-    filters?: CrudFilters;
-    current?: number;
-    setCurrent: useTableCoreReturnType<TData>["setCurrent"];
-    pageSize: number;
-    setPageSize: useTableCoreReturnType<TData>["setPageSize"];
-    pageCount: number;
-    setFilters: useTableCoreReturnType<TData>["setFilters"];
-    setSorter: useTableCoreReturnType<TData>["setSorter"];
 };
 
 /**
@@ -61,38 +42,50 @@ export type useTableReturnType<
  * Ant Design {@link https://ant.design/components/table/ `<Table>`} component.
  * All features such as sorting, filtering and pagination comes as out of box.
  *
- * @see {@link https://refine.dev/docs/api-references/hooks/table/useTable} for more details.
+ * @see {@link https://refine.dev/docs/api-reference/antd/hooks/table/useTable/} for more details.
+ *
+ * @typeParam TQueryFnData - Result data returned by the query function. Extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#baserecord `BaseRecord`}
+ * @typeParam TError - Custom error object that extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#httperror `HttpError`}
+ * @typeParam TSearchVariables - Values for search params
+ * @typeParam TData - Result data returned by the `select` function. Extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#baserecord `BaseRecord`}. Defaults to `TQueryFnData`
+ *
  */
 
-// const defaultPermanentFilter: CrudFilters = [];
-
 export const useTable = <
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TSearchVariables = unknown,
->(
-    {
-        onSearch,
-        initialCurrent,
-        initialPageSize,
-        hasPagination = true,
-        initialSorter,
-        permanentSorter,
-        initialFilter,
-        permanentFilter,
-        defaultSetFilterBehavior,
-        syncWithLocation: syncWithLocationProp,
-        resource: resourceFromProp,
-        successNotification,
-        errorNotification,
-        queryOptions,
-        liveMode: liveModeFromProp,
-        onLiveEvent,
-        liveParams,
-        metaData,
-        dataProviderName,
-    }: useTableProps<TData, TError, TSearchVariables> = { hasPagination: true },
-): useTableReturnType<TData, TError, TSearchVariables> => {
+    TData extends BaseRecord = TQueryFnData,
+>({
+    onSearch,
+    initialCurrent,
+    initialPageSize,
+    hasPagination = true,
+    pagination,
+    initialSorter,
+    permanentSorter,
+    initialFilter,
+    permanentFilter,
+    defaultSetFilterBehavior,
+    filters: filtersFromProp,
+    sorters: sortersFromProp,
+    syncWithLocation,
+    resource,
+    successNotification,
+    errorNotification,
+    queryOptions,
+    liveMode: liveModeFromProp,
+    onLiveEvent,
+    liveParams,
+    meta,
+    metaData,
+    dataProviderName,
+}: useTableProps<
+    TQueryFnData,
+    TError,
+    TSearchVariables,
+    TData
+> = {}): useTableReturnType<TData, TError, TSearchVariables> => {
     const {
         tableQueryResult,
         current,
@@ -101,21 +94,25 @@ export const useTable = <
         setPageSize,
         filters,
         setFilters,
+        sorters,
+        setSorters,
         sorter,
         setSorter,
         createLinkForSyncWithLocation,
         pageCount,
-    } = useTableCore<TData, TError>({
+    } = useTableCore<TQueryFnData, TError, TData>({
         permanentSorter,
         permanentFilter,
         initialCurrent,
         initialPageSize,
-        // @ts-expect-error currently boolean casting is not supported in overloaded types.
-        hasPagination: hasPagination,
+        pagination,
+        hasPagination,
+        filters: filtersFromProp,
+        sorters: sortersFromProp,
         initialSorter,
         initialFilter,
-        syncWithLocation: syncWithLocationProp,
-        resource: resourceFromProp,
+        syncWithLocation,
+        resource,
         defaultSetFilterBehavior,
         successNotification,
         errorNotification,
@@ -123,23 +120,30 @@ export const useTable = <
         liveMode: liveModeFromProp,
         onLiveEvent,
         liveParams,
-        metaData,
+        meta: pickNotDeprecated(meta, metaData),
+        metaData: pickNotDeprecated(meta, metaData),
         dataProviderName,
     });
-
     const breakpoint = Grid.useBreakpoint();
-
     const [form] = Form.useForm<TSearchVariables>();
     const formSF = useFormSF<any, TSearchVariables>({
         form: form,
     });
-
     const liveMode = useLiveMode(liveModeFromProp);
+
+    const hasPaginationString = hasPagination === false ? "off" : "server";
+    const isPaginationEnabled =
+        (pagination?.mode ?? hasPaginationString) !== "off";
+
+    const preferredInitialFilters = pickNotDeprecated(
+        filtersFromProp?.initial,
+        initialFilter,
+    );
 
     const { data, isFetched, isLoading } = tableQueryResult;
 
     const onChange = (
-        pagination: TablePaginationConfig,
+        paginationState: TablePaginationConfig,
         tableFilters: Record<
             string,
             (string | number | boolean) | (string | number | boolean)[] | null
@@ -151,7 +155,7 @@ export const useTable = <
             const crudFilters = mapAntdFilterToCrudFilter(
                 tableFilters,
                 filters,
-                initialFilter,
+                preferredInitialFilters,
             );
             setFilters(crudFilters);
         }
@@ -159,13 +163,12 @@ export const useTable = <
         if (sorter && Object.keys(sorter).length > 0) {
             // Map Antd:Sorter -> refine:CrudSorting
             const crudSorting = mapAntdSorterToCrudSorting(sorter);
-            setSorter(crudSorting);
+            setSorters(crudSorting);
         }
 
-        // tablePropsSunflower.onChange(pagination, filters, sorter);
-        if (hasPagination) {
-            setCurrent?.(pagination.current || 1);
-            setPageSize?.(pagination.pageSize || 10);
+        if (isPaginationEnabled) {
+            setCurrent?.(paginationState.current || 1);
+            setPageSize?.(paginationState.pageSize || 10);
         }
     };
 
@@ -173,14 +176,15 @@ export const useTable = <
         if (onSearch) {
             const searchFilters = await onSearch(value);
             setFilters(searchFilters);
-            if (hasPagination) {
+
+            if (isPaginationEnabled) {
                 setCurrent?.(1);
             }
         }
     };
 
     const antdPagination = (): false | TablePaginationConfig => {
-        if (hasPagination) {
+        if (isPaginationEnabled) {
             return {
                 itemRender: (page, type, element) => {
                     const link = createLinkForSyncWithLocation({
@@ -188,7 +192,7 @@ export const useTable = <
                             pageSize,
                             current: page,
                         },
-                        sorter,
+                        sorters,
                         filters,
                     });
 
@@ -248,8 +252,10 @@ export const useTable = <
             scroll: { x: true },
         },
         tableQueryResult,
+        sorters,
         sorter,
         filters,
+        setSorters,
         setSorter,
         setFilters,
         current,
@@ -257,5 +263,6 @@ export const useTable = <
         pageSize,
         setPageSize,
         pageCount,
+        createLinkForSyncWithLocation,
     };
 };

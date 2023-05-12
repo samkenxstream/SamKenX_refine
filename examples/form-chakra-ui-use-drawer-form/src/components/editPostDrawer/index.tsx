@@ -1,3 +1,5 @@
+import { Edit } from "@refinedev/chakra-ui";
+
 import {
     Drawer,
     DrawerBody,
@@ -10,18 +12,19 @@ import {
     FormLabel,
     FormErrorMessage,
     Select,
-    Edit,
-} from "@pankod/refine-chakra-ui";
-import { useSelect } from "@pankod/refine-core";
-import { UseModalFormReturnType } from "@pankod/refine-react-hook-form";
+} from "@chakra-ui/react";
 
-import { ICategory } from "../../interfaces";
+import { useSelect } from "@refinedev/core";
+import { UseModalFormReturnType } from "@refinedev/react-hook-form";
 
-export const EditPostDrawer: React.FC<UseModalFormReturnType> = ({
+import { IPost, ICategory } from "../../interfaces";
+
+export const EditPostDrawer: React.FC<UseModalFormReturnType<IPost>> = ({
     saveButtonProps,
     modal: { visible, close },
     register,
     formState: { errors },
+    refineCore: { id },
 }) => {
     const { options } = useSelect<ICategory>({
         resource: "categories",
@@ -39,7 +42,7 @@ export const EditPostDrawer: React.FC<UseModalFormReturnType> = ({
 
                 <DrawerBody>
                     <Edit
-                        headerButtons={false}
+                        recordItemId={id}
                         title={false}
                         goBack={null}
                         saveButtonProps={saveButtonProps}

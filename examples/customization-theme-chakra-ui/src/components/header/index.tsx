@@ -1,4 +1,5 @@
-import { Box, IconButton, Icon, useColorMode } from "@pankod/refine-chakra-ui";
+import { HamburgerMenu } from "@refinedev/chakra-ui";
+import { Box, IconButton, Icon, useColorMode } from "@chakra-ui/react";
 import { IconMoon, IconSun } from "@tabler/icons";
 
 export const Header = () => {
@@ -8,10 +9,16 @@ export const Header = () => {
             py="2"
             px="4"
             display="flex"
-            justifyContent="flex-end"
+            justifyContent="space-between"
+            alignItems="center"
             w="full"
             bg="chakra-body-bg"
+            height="64px"
+            position="sticky"
+            top="0"
+            zIndex="1"
         >
+            <HamburgerMenu />
             <IconButton
                 variant="ghost"
                 aria-label="Toggle theme"

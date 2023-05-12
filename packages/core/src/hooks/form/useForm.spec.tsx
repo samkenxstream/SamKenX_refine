@@ -4,41 +4,41 @@ import { MockJSONServer, TestWrapper, act } from "@test";
 import { useForm } from "./useForm";
 
 import React from "react";
-import { Route, Routes } from "react-router-dom";
 
 import { posts } from "@test/dataMocks";
+import { mockRouterBindings } from "@test";
 
 const SimpleWrapper = TestWrapper({});
 
 const EditWrapper = TestWrapper({
     dataProvider: MockJSONServer,
-    routerInitialEntries: ["/posts/edit/1"],
+    routerProvider: mockRouterBindings({
+        resource: {
+            name: "posts",
+        },
+        action: "edit",
+        id: "1",
+    }),
 });
 
 const CloneWrapper = TestWrapper({
     dataProvider: MockJSONServer,
-    routerInitialEntries: ["/posts/clone/1"],
+    routerProvider: mockRouterBindings({
+        resource: {
+            name: "posts",
+        },
+        action: "clone",
+        id: "1",
+    }),
 });
 
 const EditWrapperWithRoute: React.FC<{
     children?: React.ReactNode;
-}> = ({ children }) => (
-    <EditWrapper>
-        <Routes>
-            <Route path="/:resource/:action/:id" element={children} />
-        </Routes>
-    </EditWrapper>
-);
+}> = ({ children }) => <EditWrapper>{children}</EditWrapper>;
 
 const CloneWrapperWithRoute: React.FC<{
     children?: React.ReactNode;
-}> = ({ children }) => (
-    <CloneWrapper>
-        <Routes>
-            <Route path="/:resource/:action/:id" element={children} />
-        </Routes>
-    </CloneWrapper>
-);
+}> = ({ children }) => <CloneWrapper>{children}</CloneWrapper>;
 
 describe("useForm Hook", () => {
     it("renders with form", async () => {
@@ -210,6 +210,100 @@ describe("useForm Hook", () => {
 
         expect(result.current.queryResult?.data?.data.title).toEqual(
             posts[0].title,
+        );
+    });
+
+    it("should pass meta from resource defination, hook parameter and query parameters to dataProvider", async () => {
+        const getOneMock = jest.fn();
+
+        renderHook(() => useForm({ resource: "posts", meta: { foo: "bar" } }), {
+            wrapper: TestWrapper({
+                dataProvider: {
+                    default: {
+                        ...MockJSONServer.default,
+                        getOne: getOneMock,
+                    },
+                },
+                routerProvider: mockRouterBindings({
+                    action: "edit",
+                    resource: { name: "posts" },
+                    id: "1",
+                    pathname: "/posts/edit/1",
+                    params: { baz: "qux" },
+                }),
+                resources: [{ name: "posts", meta: { dip: "dop" } }],
+            }),
+        });
+
+        await waitFor(() => {
+            expect(getOneMock).toBeCalled();
+        });
+
+        expect(getOneMock).toBeCalledWith(
+            expect.objectContaining({
+                meta: expect.objectContaining({
+                    foo: "bar",
+                    baz: "qux",
+                    dip: "dop",
+                }),
+            }),
+        );
+    });
+
+    it("two resources with same name, should pass resource meta according to identifier", async () => {
+        const getOneMock = jest.fn();
+
+        renderHook(() => useForm({ resource: "recentPosts", id: "1" }), {
+            wrapper: TestWrapper({
+                dataProvider: {
+                    default: {
+                        ...MockJSONServer.default,
+                        getOne: getOneMock,
+                    },
+                },
+                routerProvider: mockRouterBindings({
+                    action: "edit",
+                    resource: { name: "posts" },
+                    id: "1",
+                    pathname: "/posts/edit/1",
+                }),
+                resources: [
+                    {
+                        name: "posts",
+                        identifier: "recentPosts",
+                        meta: {
+                            startDate: "2021-01-01",
+                        },
+                    },
+                    {
+                        name: "posts",
+                        identifier: "popularPosts",
+                        meta: {
+                            likes: 100,
+                        },
+                    },
+                ],
+            }),
+        });
+
+        await waitFor(() => {
+            expect(getOneMock).toBeCalled();
+        });
+
+        expect(getOneMock).toBeCalledWith(
+            expect.objectContaining({
+                meta: expect.objectContaining({
+                    startDate: "2021-01-01",
+                }),
+            }),
+        );
+
+        expect(getOneMock).not.toBeCalledWith(
+            expect.objectContaining({
+                meta: expect.objectContaining({
+                    likes: 100,
+                }),
+            }),
         );
     });
 });

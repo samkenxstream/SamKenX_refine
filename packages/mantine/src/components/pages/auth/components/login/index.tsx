@@ -1,6 +1,12 @@
 import React from "react";
-import { LoginPageProps, LoginFormTypes } from "@pankod/refine-core";
-import { useLogin, useTranslate, useRouterContext } from "@pankod/refine-core";
+import {
+    LoginPageProps,
+    LoginFormTypes,
+    useRouterType,
+    useLink,
+    useActiveAuthProvider,
+} from "@refinedev/core";
+import { useLogin, useTranslate, useRouterContext } from "@refinedev/core";
 import {
     Box,
     Card,
@@ -16,10 +22,17 @@ import {
     Stack,
     BoxProps,
     CardProps,
+    useMantineTheme,
 } from "@mantine/core";
 
+import { ThemedTitle } from "@components";
 import { FormContext } from "@contexts/form-context";
-import { layoutStyles, cardStyles, titleStyles } from "../styles";
+import {
+    layoutStyles,
+    cardStyles,
+    titleStyles,
+    pageTitleStyles,
+} from "../styles";
 import { FormPropsType } from "../..";
 
 type LoginProps = LoginPageProps<BoxProps, CardProps, FormPropsType>;
@@ -37,11 +50,17 @@ export const LoginPage: React.FC<LoginProps> = ({
     wrapperProps,
     renderContent,
     formProps,
+    title,
 }) => {
+    const theme = useMantineTheme();
     const { useForm, FormProvider } = FormContext;
     const { onSubmit: onSubmitProp, ...useFormProps } = formProps || {};
     const translate = useTranslate();
-    const { Link } = useRouterContext();
+    const routerType = useRouterType();
+    const Link = useLink();
+    const { Link: LegacyLink } = useRouterContext();
+
+    const ActiveLink = routerType === "legacy" ? LegacyLink : Link;
 
     const form = useForm({
         initialValues: {
@@ -63,7 +82,17 @@ export const LoginPage: React.FC<LoginProps> = ({
     });
     const { onSubmit, getInputProps } = form;
 
-    const { mutate: login, isLoading } = useLogin<LoginFormTypes>();
+    const authProvider = useActiveAuthProvider();
+    const { mutate: login, isLoading } = useLogin<LoginFormTypes>({
+        v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+    });
+
+    const PageTitle =
+        title === false ? null : (
+            <div style={pageTitleStyles}>
+                {title ?? <ThemedTitle collapsed={false} />}
+            </div>
+        );
 
     const renderProviders = () => {
         if (providers && providers.length > 0) {
@@ -74,6 +103,7 @@ export const LoginPage: React.FC<LoginProps> = ({
                             return (
                                 <Button
                                     key={provider.name}
+                                    variant="default"
                                     fullWidth
                                     leftIcon={provider.icon}
                                     onClick={() =>
@@ -100,9 +130,13 @@ export const LoginPage: React.FC<LoginProps> = ({
 
     const CardContent = (
         <Card style={cardStyles} {...(contentProps ?? {})}>
-            <Title style={titleStyles}>
+            <Title
+                style={titleStyles}
+                color={theme.colorScheme === "dark" ? "brand.5" : "brand.8"}
+            >
                 {translate("pages.login.title", "Sign in to your account")}
             </Title>
+            <Space h="sm" />
             <Space h="lg" />
             {renderProviders()}
             <FormProvider form={form}>
@@ -155,7 +189,7 @@ export const LoginPage: React.FC<LoginProps> = ({
                         )}
                         {forgotPasswordLink ?? (
                             <Anchor
-                                component={Link}
+                                component={ActiveLink as any}
                                 to="/forgot-password"
                                 size="xs"
                             >
@@ -167,7 +201,7 @@ export const LoginPage: React.FC<LoginProps> = ({
                         )}
                     </Box>
                     <Button
-                        mt="lg"
+                        mt="md"
                         fullWidth
                         size="md"
                         type="submit"
@@ -179,12 +213,16 @@ export const LoginPage: React.FC<LoginProps> = ({
             </FormProvider>
 
             {registerLink ?? (
-                <Text mt="xs" size="xs">
+                <Text mt="md" size="xs" align="center">
                     {translate(
                         "pages.login.buttons.noAccount",
                         "Don’t have an account?",
                     )}{" "}
-                    <Anchor component={Link} to="/register" weight={700}>
+                    <Anchor
+                        component={ActiveLink as any}
+                        to="/register"
+                        weight={700}
+                    >
                         {translate("pages.login.signup", "Sign up")}
                     </Anchor>
                 </Text>
@@ -194,7 +232,14 @@ export const LoginPage: React.FC<LoginProps> = ({
 
     return (
         <Box style={layoutStyles} {...(wrapperProps ?? {})}>
-            {renderContent ? renderContent(CardContent) : CardContent}
+            {renderContent ? (
+                renderContent(CardContent, PageTitle)
+            ) : (
+                <>
+                    {PageTitle}
+                    {CardContent}
+                </>
+            )}
         </Box>
     );
 };

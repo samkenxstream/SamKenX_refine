@@ -1,17 +1,15 @@
+import { Create, useStepsForm, SaveButton } from "@refinedev/mantine";
 import {
     Button,
     Code,
-    Create,
     Group,
     Select,
     Stepper,
     TextInput,
-    useStepsForm,
-    SaveButton,
     Text,
     Space,
-} from "@pankod/refine-mantine";
-import { RichTextEditor } from "@mantine/rte";
+} from "@mantine/core";
+import MDEditor from "@uiw/react-md-editor";
 import { DatePicker } from "@mantine/dates";
 
 export const PostCreate: React.FC = () => {
@@ -128,8 +126,9 @@ export const PostCreate: React.FC = () => {
                     <Text mt={8} weight={500} size="sm" color="#212529">
                         Content
                     </Text>
-                    <RichTextEditor
-                        sx={{ minHeight: 300 }}
+                    <MDEditor
+                        style={{ minHeight: "300px" }}
+                        data-color-mode="light"
                         {...getInputProps("content")}
                     />
                 </Stepper.Step>

@@ -1,12 +1,6 @@
-import {
-    Create,
-    Select,
-    TextInput,
-    useForm,
-    useSelect,
-    Text,
-} from "@pankod/refine-mantine";
-import { RichTextEditor } from "@mantine/rte";
+import { Create, useForm, useSelect } from "@refinedev/mantine";
+import { Select, TextInput, Text } from "@mantine/core";
+import MDEditor from "@uiw/react-md-editor";
 
 export const PostCreate: React.FC = () => {
     const { saveButtonProps, getInputProps, errors } = useForm({
@@ -65,7 +59,10 @@ export const PostCreate: React.FC = () => {
                 <Text mt={8} weight={500} size="sm" color="#212529">
                     Content
                 </Text>
-                <RichTextEditor {...getInputProps("content")} />
+                <MDEditor
+                    data-color-mode="light"
+                    {...getInputProps("content")}
+                />
                 {errors.content && (
                     <Text mt={2} weight={500} size="xs" color="red">
                         {errors.content}

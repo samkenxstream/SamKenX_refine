@@ -2,7 +2,8 @@ import React from "react";
 import {
     UpdatePasswordPageProps,
     UpdatePasswordFormTypes,
-} from "@pankod/refine-core";
+    useActiveAuthProvider,
+} from "@refinedev/core";
 import {
     Row,
     Col,
@@ -15,12 +16,21 @@ import {
     LayoutProps,
     CardProps,
     FormProps,
+    theme,
 } from "antd";
-import { useTranslate, useUpdatePassword } from "@pankod/refine-core";
+import { useTranslate, useUpdatePassword } from "@refinedev/core";
 
-import { layoutStyles, containerStyles, titleStyles } from "../styles";
+import {
+    layoutStyles,
+    containerStyles,
+    titleStyles,
+    headStyles,
+    bodyStyles,
+} from "../styles";
+import { ThemedTitle } from "@components";
 
 const { Title } = Typography;
+const { useToken } = theme;
 
 type UpdatePasswordProps = UpdatePasswordPageProps<
     LayoutProps,
@@ -38,14 +48,39 @@ export const UpdatePasswordPage: React.FC<UpdatePasswordProps> = ({
     contentProps,
     renderContent,
     formProps,
+    title,
 }) => {
+    const { token } = useToken();
     const [form] = Form.useForm<UpdatePasswordFormTypes>();
     const translate = useTranslate();
+    const authProvider = useActiveAuthProvider();
     const { mutate: updatePassword, isLoading } =
-        useUpdatePassword<UpdatePasswordFormTypes>();
+        useUpdatePassword<UpdatePasswordFormTypes>({
+            v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+        });
+
+    const PageTitle =
+        title === false ? null : (
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    marginBottom: "32px",
+                    fontSize: "20px",
+                }}
+            >
+                {title ?? <ThemedTitle collapsed={false} />}
+            </div>
+        );
 
     const CardTitle = (
-        <Title level={3} style={titleStyles}>
+        <Title
+            level={3}
+            style={{
+                color: token.colorPrimaryTextHover,
+                ...titleStyles,
+            }}
+        >
             {translate("pages.updatePassword.title", "Set New Password")}
         </Title>
     );
@@ -53,8 +88,12 @@ export const UpdatePasswordPage: React.FC<UpdatePasswordProps> = ({
     const CardContent = (
         <Card
             title={CardTitle}
-            headStyle={{ borderBottom: 0 }}
-            style={containerStyles}
+            headStyle={headStyles}
+            bodyStyle={bodyStyles}
+            style={{
+                ...containerStyles,
+                backgroundColor: token.colorBgElevated,
+            }}
             {...(contentProps ?? {})}
         >
             <Form<UpdatePasswordFormTypes>
@@ -110,7 +149,6 @@ export const UpdatePasswordPage: React.FC<UpdatePasswordProps> = ({
                             },
                         }),
                     ]}
-                    style={{ marginBottom: "12px" }}
                 >
                     <Input
                         type="password"
@@ -118,7 +156,11 @@ export const UpdatePasswordPage: React.FC<UpdatePasswordProps> = ({
                         size="large"
                     />
                 </Form.Item>
-                <Form.Item>
+                <Form.Item
+                    style={{
+                        marginBottom: 0,
+                    }}
+                >
                     <Button
                         type="primary"
                         size="large"
@@ -146,7 +188,14 @@ export const UpdatePasswordPage: React.FC<UpdatePasswordProps> = ({
                 }}
             >
                 <Col xs={22}>
-                    {renderContent ? renderContent(CardContent) : CardContent}
+                    {renderContent ? (
+                        renderContent(CardContent, PageTitle)
+                    ) : (
+                        <>
+                            {PageTitle}
+                            {CardContent}
+                        </>
+                    )}
                 </Col>
             </Row>
         </Layout>

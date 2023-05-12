@@ -1,7 +1,9 @@
-import { useShow, IResourceComponentsProps, useOne } from "@pankod/refine-core";
-import { Show, Typography, MarkdownField } from "@pankod/refine-antd";
+import { useShow, IResourceComponentsProps, useOne } from "@refinedev/core";
+import { Show, MarkdownField } from "@refinedev/antd";
 
-import { IPost, ICategory } from "interfaces";
+import { Typography } from "antd";
+
+import { IPost, ICategory } from "../../interfaces";
 
 const { Title, Text } = Typography;
 

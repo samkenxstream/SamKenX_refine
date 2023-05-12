@@ -1,4 +1,4 @@
-import { TestWrapper, MockJSONServer } from "@test";
+import { TestWrapper, MockJSONServer, mockRouterBindings } from "@test";
 import { renderHook } from "@testing-library/react";
 import * as papaparse from "papaparse";
 
@@ -72,6 +72,10 @@ describe("useImport hook", () => {
                 wrapper: TestWrapper({
                     dataProvider: MockJSONServer,
                     resources: [{ name: "posts" }],
+                    routerProvider: mockRouterBindings({
+                        pathname: "/posts",
+                        resource: { name: "posts" },
+                    }),
                 }),
             },
         );
@@ -126,31 +130,39 @@ describe("useImport hook", () => {
                     onFinish: async () => {
                         expect(
                             mockDataProvider.default?.createMany,
-                        ).toHaveBeenCalledWith({
-                            resource: "posts",
-                            variables: [parsedData[0], parsedData[1]].map(
-                                (parsedData) => ({
-                                    ...parsedData,
-                                }),
-                            ),
-                        });
+                        ).toHaveBeenCalledWith(
+                            expect.objectContaining({
+                                resource: "posts",
+                                variables: [parsedData[0], parsedData[1]].map(
+                                    (parsedData) => ({
+                                        ...parsedData,
+                                    }),
+                                ),
+                            }),
+                        );
 
                         expect(
                             mockDataProvider.default?.createMany,
-                        ).toHaveBeenCalledWith({
-                            resource: "posts",
-                            variables: [parsedData[0], parsedData[1]].map(
-                                (parsedData) => ({
-                                    ...parsedData,
-                                }),
-                            ),
-                        });
+                        ).toHaveBeenCalledWith(
+                            expect.objectContaining({
+                                resource: "posts",
+                                variables: [parsedData[0], parsedData[1]].map(
+                                    (parsedData) => ({
+                                        ...parsedData,
+                                    }),
+                                ),
+                            }),
+                        );
                     },
                 }),
             {
                 wrapper: TestWrapper({
                     dataProvider: mockDataProvider,
                     resources: [{ name: "posts" }],
+                    routerProvider: mockRouterBindings({
+                        pathname: "/posts",
+                        resource: { name: "posts" },
+                    }),
                 }),
             },
         );
@@ -180,19 +192,25 @@ describe("useImport hook", () => {
                     onFinish: () => {
                         expect(
                             mockDataProvider.default?.createMany,
-                        ).toHaveBeenCalledWith({
-                            resource: "posts",
-                            variables: parsedData.map((parsedData) => ({
-                                id: parsedData.id,
-                                newTitle: parsedData.title,
-                            })),
-                        });
+                        ).toHaveBeenCalledWith(
+                            expect.objectContaining({
+                                resource: "posts",
+                                variables: parsedData.map((parsedData) => ({
+                                    id: parsedData.id,
+                                    newTitle: parsedData.title,
+                                })),
+                            }),
+                        );
                     },
                 }),
             {
                 wrapper: TestWrapper({
                     dataProvider: mockDataProvider,
                     resources: [{ name: "posts" }],
+                    routerProvider: mockRouterBindings({
+                        pathname: "/posts",
+                        resource: { name: "posts" },
+                    }),
                 }),
             },
         );
@@ -215,16 +233,18 @@ describe("useImport hook", () => {
         const { result } = renderHook(
             () =>
                 useImport({
-                    resourceName: "tests",
+                    resource: "tests",
                     onFinish: () => {
                         expect(
                             mockDataProvider.default?.createMany,
-                        ).toHaveBeenCalledWith({
-                            resource: "tests",
-                            variables: parsedData.map((parsedData) => ({
-                                ...parsedData,
-                            })),
-                        });
+                        ).toHaveBeenCalledWith(
+                            expect.objectContaining({
+                                resource: "tests",
+                                variables: parsedData.map((parsedData) => ({
+                                    ...parsedData,
+                                })),
+                            }),
+                        );
                     },
                 }),
             {
@@ -293,7 +313,7 @@ describe("useImport hook", () => {
             const { result } = renderHook(
                 () =>
                     useImport({
-                        resourceName: "posts",
+                        resource: "posts",
                         onFinish: ({ succeeded }) => {
                             expect(succeeded[0].request).toEqual(parsedData);
                         },
@@ -331,7 +351,7 @@ describe("useImport hook", () => {
             const { result } = renderHook(
                 () =>
                     useImport({
-                        resourceName: "posts",
+                        resource: "posts",
                         onFinish: ({ errored }) => {
                             expect(errored[0].response[0]).toEqual({
                                 message: "something happened",
@@ -371,28 +391,38 @@ describe("useImport hook", () => {
                         onFinish: () => {
                             expect(
                                 mockDataProvider.default?.create,
-                            ).toHaveBeenCalledWith({
-                                resource: "posts",
-                                variables: parsedData[0],
-                            });
+                            ).toHaveBeenCalledWith(
+                                expect.objectContaining({
+                                    resource: "posts",
+                                    variables: parsedData[0],
+                                }),
+                            );
                             expect(
                                 mockDataProvider.default?.create,
-                            ).toHaveBeenCalledWith({
-                                resource: "posts",
-                                variables: parsedData[1],
-                            });
+                            ).toHaveBeenCalledWith(
+                                expect.objectContaining({
+                                    resource: "posts",
+                                    variables: parsedData[1],
+                                }),
+                            );
                             expect(
                                 mockDataProvider.default?.create,
-                            ).toHaveBeenCalledWith({
-                                resource: "posts",
-                                variables: parsedData[2],
-                            });
+                            ).toHaveBeenCalledWith(
+                                expect.objectContaining({
+                                    resource: "posts",
+                                    variables: parsedData[2],
+                                }),
+                            );
                         },
                     }),
                 {
                     wrapper: TestWrapper({
                         dataProvider: mockDataProvider,
                         resources: [{ name: "posts" }],
+                        routerProvider: mockRouterBindings({
+                            pathname: "/posts",
+                            resource: { name: "posts" },
+                        }),
                     }),
                 },
             );
@@ -438,7 +468,7 @@ describe("useImport hook", () => {
                 () =>
                     useImport({
                         batchSize: 1,
-                        resourceName: "posts",
+                        resource: "posts",
                         onFinish: ({ succeeded }) => {
                             expect(succeeded[0].response[0]).toEqual(
                                 parsedData[0],
@@ -455,6 +485,10 @@ describe("useImport hook", () => {
                     wrapper: TestWrapper({
                         dataProvider: mockDataProvider,
                         resources: [{ name: "posts" }],
+                        routerProvider: mockRouterBindings({
+                            pathname: "/posts",
+                            resource: { name: "posts" },
+                        }),
                     }),
                 },
             );

@@ -1,12 +1,13 @@
 ---
 id: useModalForm
 title: useModalForm
+sidebar_label: useModalForm
 ---
 
 `useModalForm` hook also allows you to manage a form inside a modal component. It provides some useful methods to handle the form modal.
 
 :::info
-`useModalForm` hook is extended from [`useForm`][use-form-refine-mantine] hook from the [`@pankod/refine-mantine`](https://github.com/refinedev/refine/tree/next/packages/mantine) package. This means that you can use all the features of [`useForm`][use-form-refine-mantine] hook.
+`useModalForm` hook is extended from [`useForm`][use-form-refine-mantine] hook from the [`@refinedev/mantine`](https://github.com/refinedev/refine/tree/next/packages/mantine) package. This means that you can use all the features of [`useForm`][use-form-refine-mantine] hook.
 :::
 
 ## Basic Usage
@@ -30,24 +31,22 @@ setInitialRoutes(["/posts"]);
 
 // visible-block-start
 import React from "react";
-import { IResourceComponentsProps } from "@pankod/refine-core";
-import { useTable, ColumnDef, flexRender } from "@pankod/refine-react-table";
-import { GetManyResponse, useMany } from "@pankod/refine-core";
+import { useTable } from "@refinedev/react-table";
+import { ColumnDef, flexRender } from "@tanstack/react-table";
+import { GetManyResponse, useMany } from "@refinedev/core";
+import { List, useModalForm, SaveButton } from "@refinedev/mantine";
 import {
     Box,
     Group,
-    List,
     ScrollArea,
     Table,
     Pagination,
-    useModalForm,
     Modal,
     Select,
     TextInput,
-    SaveButton,
-} from "@pankod/refine-mantine";
+} from "@mantine/core";
 
-const PostList: React.FC<IResourceComponentsProps> = () => {
+const PostList: React.FC = () => {
     // highlight-start
     const {
         getInputProps,
@@ -242,25 +241,22 @@ setInitialRoutes(["/posts"]);
 
 // visible-block-start
 import React from "react";
-import { IResourceComponentsProps } from "@pankod/refine-core";
-import { useTable, ColumnDef, flexRender } from "@pankod/refine-react-table";
-import { GetManyResponse, useMany } from "@pankod/refine-core";
+import { useTable } from "@refinedev/react-table";
+import { ColumnDef, flexRender } from "@tanstack/react-table";
+import { GetManyResponse, useMany } from "@refinedev/core";
+import { List, useModalForm, EditButton, SaveButton } from "@refinedev/mantine";
 import {
     Box,
     Group,
-    List,
     ScrollArea,
     Table,
     Pagination,
-    useModalForm,
     Modal,
     Select,
     TextInput,
-    EditButton,
-    SaveButton,
-} from "@pankod/refine-mantine";
+} from "@mantine/core";
 
-const PostList: React.FC<IResourceComponentsProps> = () => {
+const PostList: React.FC = () => {
     // highlight-start
     const {
         getInputProps,
@@ -514,25 +510,27 @@ setInitialRoutes(["/posts"]);
 
 // visible-block-start
 import React from "react";
-import { IResourceComponentsProps } from "@pankod/refine-core";
-import { useTable, ColumnDef, flexRender } from "@pankod/refine-react-table";
-import { GetManyResponse, useMany } from "@pankod/refine-core";
+import { useTable } from "@refinedev/react-table";
+import { ColumnDef, flexRender } from "@tanstack/react-table";
+import { GetManyResponse, useMany } from "@refinedev/core";
+import {
+    List,
+    useModalForm,
+    CloneButton,
+    SaveButton,
+} from "@refinedev/mantine";
 import {
     Box,
     Group,
-    List,
     ScrollArea,
     Table,
     Pagination,
-    useModalForm,
     Modal,
     Select,
     TextInput,
-    CloneButton,
-    SaveButton,
-} from "@pankod/refine-mantine";
+} from "@mantine/core";
 
-const PostList: React.FC<IResourceComponentsProps> = () => {
+const PostList: React.FC = () => {
     // highlight-start
     const {
         getInputProps,
@@ -850,6 +848,20 @@ const modalForm = useModalForm({
 });
 ```
 
+### `syncWithLocation`
+
+> Default: `false`
+
+When `true`, the modals visibility state and the `id` of the record will be synced with the URL.
+
+This property can also be set as an object `{ key: string; syncId?: boolean }` to customize the key of the URL query parameter. `id` will be synced with the URL only if `syncId` is `true`.
+
+```tsx
+const modalForm = useModalForm({
+    syncWithLocation: { key: "my-modal", syncId: true },
+});
+```
+
 ## Return Values
 
 :::tip
@@ -1000,6 +1012,64 @@ return (
 );
 ```
 
+## FAQ
+### How can I change the form data before submitting it to the API?
+
+You may need to modify the form data before it is sent to the API.
+
+For example, Let's send the values we received from the user in two separate inputs, `name` and `surname`, to the API as `fullName`.
+
+```tsx title="pages/user/create.tsx"
+import React from "react";
+import { useModalForm } from "@refinedev/mantine";
+import { TextInput, Modal } from "@mantine/core";
+
+const UserCreate: React.FC = () => {
+    const {
+        getInputProps,
+        saveButtonProps,
+        modal: { show, close, title, visible },
+    } = useModalForm({
+        refineCoreProps: { action: "create" },
+        initialValues: {
+            name: "",
+            surname: "",
+        },
+        // highlight-start
+        transformValues: (values) => ({
+            fullName: `${values.name} ${values.surname}`,
+        }),
+        // highlight-end
+    });
+    
+    return (
+        <Modal opened={visible} onClose={close} title={title}>
+            <TextInput
+                mt={8}
+                label="Name"
+                placeholder="Name"
+                {...getInputProps("name")}
+            />
+            <TextInput
+                mt={8}
+                label="Surname"
+                placeholder="Surname"
+                {...getInputProps("surname")}
+            />
+            <Box mt={8} sx={{ display: "flex", justifyContent: "flex-end" }}>
+                <Button
+                    {...saveButtonProps}
+                    onClick={(e) => {
+                        // -- your custom logic
+                        saveButtonProps.onClick(e);
+                    }}
+                />
+            </Box>
+        </Drawer>
+    );
+};
+```
+
 ## API Reference
 
 ### Properties
@@ -1019,6 +1089,18 @@ return (
 > | defaultVisible  | Initial visibility state of the modal                         | `boolean` | `false` |
 > | autoSubmitClose | Whether the form should be submitted when the modal is closed | `boolean` | `true`  |
 > | autoResetForm   | Whether the form should be reset when the form is submitted   | `boolean` | `true`  |
+
+### Type Parameters
+
+| Property       | Desription                                                                                                                                                          | Type                       | Default                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------- |
+| TQueryFnData   | Result data returned by the query function. Extends [`BaseRecord`][baserecord]                                                                                      | [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
+| TError         | Custom error object that extends [`HttpError`][httperror]                                                                                                           | [`HttpError`][httperror]   | [`HttpError`][httperror]   |
+| TVariables     | Form values for mutation function                                                                                                                                   | `{}`                       | `Record<string, unknown>`  |
+| TTransformed   | Form values after transformation for mutation function                                                                                                              | `{}`                       | `TVariables`               |
+| TData          | Result data returned by the `select` function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TQueryFnData` will be used as the default value. | [`BaseRecord`][baserecord] | `TQueryFnData`             |
+| TResponse      | Result data returned by the mutation function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TData` will be used as the default value.        | [`BaseRecord`][baserecord] | `TData`                    |
+| TResponseError | Custom error object that extends [`HttpError`][httperror]. If not specified, the value of `TError` will be used as the default value.                               | [`HttpError`][httperror]   | `TError`                   |
 
 ### Return values
 
@@ -1047,3 +1129,5 @@ return (
 
 [use-form-refine-mantine]: /api-reference/mantine/hooks/form/useForm.md
 [use-form-core]: /api-reference/core/hooks/useForm.md
+[baserecord]: /api-reference/core/interfaces.md#baserecord
+[httperror]: /api-reference/core/interfaces.md#httperror

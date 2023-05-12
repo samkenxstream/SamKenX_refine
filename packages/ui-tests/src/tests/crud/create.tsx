@@ -3,7 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import {
     RefineCrudCreateProps,
     RefineButtonTestIds,
-} from "@pankod/refine-ui-types";
+} from "@refinedev/ui-types";
 
 import { ITestWrapperProps, render, TestWrapper } from "@test";
 
@@ -32,7 +32,7 @@ export const crudCreateTests = function (
         RefineCrudCreateProps<any, any, any, any, any, any, {}>
     >,
 ): void {
-    describe("[@pankod/refine-ui-tests] Common Tests / CRUD Create", () => {
+    describe("[@refinedev/ui-tests] Common Tests / CRUD Create", () => {
         beforeAll(() => {
             jest.spyOn(console, "warn").mockImplementation(jest.fn());
         });
@@ -66,12 +66,19 @@ export const crudCreateTests = function (
             getByText("Create Post");
         });
 
+        it("should not render title when is false", async () => {
+            const { queryByText } = renderCreate(<Create title={false} />);
+
+            const text = queryByText("Create Post");
+            expect(text).not.toBeInTheDocument();
+        });
+
         it("should render with label instead of resource name successfully", async () => {
             const { getByText } = renderCreate(<Create />, {
                 resources: [
                     {
                         name: "posts",
-                        options: { route: "posts", label: "test label" },
+                        meta: { route: "posts", label: "test label" },
                     },
                 ],
                 routerInitialEntries: ["/posts/create"],

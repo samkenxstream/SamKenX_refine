@@ -9,44 +9,64 @@ import {
     HttpError,
     BaseRecord,
     BaseKey,
-    MetaDataQuery,
     LiveModeProps,
     SuccessErrorNotification,
+    MetaQuery,
+    Prettify,
 } from "../../interfaces";
 import {
     useResource,
-    useCheckError,
     useTranslate,
     useResourceSubscription,
     useHandleNotification,
     useDataProvider,
+    useOnError,
+    useMeta,
 } from "@hooks";
-import { queryKeys, pickDataProvider } from "@definitions";
+import {
+    queryKeys,
+    pickDataProvider,
+    pickNotDeprecated,
+    useActiveAuthProvider,
+} from "@definitions";
 
-export type UseOneProps<TData, TError> = {
+export type UseOneProps<TQueryFnData, TError, TData> = {
     /**
      * Resource name for API data interactions
      */
-    resource: string;
+    resource?: string;
     /**
      * id of the item in the resource
      * @type [`BaseKey`](/docs/api-reference/core/interfaceReferences/#basekey)
      */
-    id: BaseKey;
+    id?: BaseKey;
     /**
      * react-query's [useQuery](https://tanstack.com/query/v4/docs/reference/useQuery) options
      */
-    queryOptions?: UseQueryOptions<GetOneResponse<TData>, TError>;
+    queryOptions?: UseQueryOptions<
+        GetOneResponse<TQueryFnData>,
+        TError,
+        GetOneResponse<TData>
+    >;
     /**
      * Metadata query for `dataProvider`,
      */
-    metaData?: MetaDataQuery;
+    meta?: MetaQuery;
+    /**
+     * Meta data query for `dataProvider`,
+     * @deprecated `metaData` is deprecated with refine@4, refine will pass `meta` instead, however, we still support `metaData` for backward compatibility.
+     */
+    metaData?: MetaQuery;
     /**
      * If there is more than one `dataProvider`, you should use the `dataProviderName` that you will use.
      * @default `"default"``
      */
     dataProviderName?: string;
-} & SuccessErrorNotification &
+} & SuccessErrorNotification<
+    GetOneResponse<TData>,
+    TError,
+    Prettify<{ id?: BaseKey } & MetaQuery>
+> &
     LiveModeProps;
 
 /**
@@ -56,39 +76,55 @@ export type UseOneProps<TData, TError> = {
  *
  * @see {@link https://refine.dev/docs/core/hooks/data/useOne} for more details.
  *
- * @typeParam TData - Result data of the query extends {@link https://refine.dev/docs/api-references/interfaceReferences#baserecord `BaseRecord`}
- * @typeParam TError - Custom error object that extends {@link https://refine.dev/docs/api-references/interfaceReferences#httperror `HttpError`}
+ * @typeParam TQueryFnData - Result data returned by the query function. Extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#baserecord `BaseRecord`}
+ * @typeParam TError - Custom error object that extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#httperror `HttpError`}
+ * @typeParam TData - Result data returned by the `select` function. Extends {@link https://refine.dev/docs/api-reference/core/interfaceReferences#baserecord `BaseRecord`}. Defaults to `TQueryFnData`
  *
  */
+
 export const useOne = <
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
+    TData extends BaseRecord = TQueryFnData,
 >({
     resource,
     id,
     queryOptions,
     successNotification,
     errorNotification,
+    meta,
     metaData,
     liveMode,
     onLiveEvent,
     liveParams,
     dataProviderName,
-}: UseOneProps<TData, TError>): QueryObserverResult<GetOneResponse<TData>> => {
+}: UseOneProps<TQueryFnData, TError, TData>): QueryObserverResult<
+    GetOneResponse<TData>
+> => {
     const { resources } = useResource();
     const dataProvider = useDataProvider();
+    const translate = useTranslate();
+    const authProvider = useActiveAuthProvider();
+    const { mutate: checkError } = useOnError({
+        v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+    });
+    const handleNotification = useHandleNotification();
+    const getMeta = useMeta();
+
+    const preferredMeta = pickNotDeprecated(meta, metaData);
+
     const queryKey = queryKeys(
         resource,
         pickDataProvider(resource, dataProviderName, resources),
-        metaData,
+        preferredMeta,
+        preferredMeta,
     );
 
     const { getOne } = dataProvider(
         pickDataProvider(resource, dataProviderName, resources),
     );
-    const translate = useTranslate();
-    const { mutate: checkError } = useCheckError();
-    const handleNotification = useHandleNotification();
+
+    const combinedMeta = getMeta({ meta: preferredMeta });
 
     useResourceSubscription({
         resource,
@@ -97,23 +133,39 @@ export const useOne = <
         params: {
             ids: id ? [id] : [],
             id: id,
-            metaData,
+            meta: combinedMeta,
+            metaData: combinedMeta,
             subscriptionType: "useOne",
             ...liveParams,
         },
-        enabled: queryOptions?.enabled,
+        enabled:
+            typeof queryOptions?.enabled !== "undefined"
+                ? queryOptions?.enabled
+                : typeof resource !== "undefined" && typeof id !== "undefined",
         liveMode,
         onLiveEvent,
     });
 
-    const queryResponse = useQuery<GetOneResponse<TData>, TError>(
+    const queryResponse = useQuery<
+        GetOneResponse<TQueryFnData>,
+        TError,
+        GetOneResponse<TData>
+    >(
         queryKey.detail(id),
         ({ queryKey, pageParam, signal }) =>
-            getOne<TData>({
-                resource,
-                id,
+            getOne<TQueryFnData>({
+                resource: resource!,
+                id: id!,
+                meta: {
+                    ...combinedMeta,
+                    queryContext: {
+                        queryKey,
+                        pageParam,
+                        signal,
+                    },
+                },
                 metaData: {
-                    ...metaData,
+                    ...combinedMeta,
                     queryContext: {
                         queryKey,
                         pageParam,
@@ -123,12 +175,23 @@ export const useOne = <
             }),
         {
             ...queryOptions,
+            enabled:
+                typeof queryOptions?.enabled !== "undefined"
+                    ? queryOptions?.enabled
+                    : typeof id !== "undefined",
             onSuccess: (data) => {
                 queryOptions?.onSuccess?.(data);
 
                 const notificationConfig =
                     typeof successNotification === "function"
-                        ? successNotification(data, { id, metaData }, resource)
+                        ? successNotification(
+                              data,
+                              {
+                                  id,
+                                  ...combinedMeta,
+                              },
+                              resource,
+                          )
                         : successNotification;
 
                 handleNotification(notificationConfig);
@@ -139,7 +202,14 @@ export const useOne = <
 
                 const notificationConfig =
                     typeof errorNotification === "function"
-                        ? errorNotification(err, { id, metaData }, resource)
+                        ? errorNotification(
+                              err,
+                              {
+                                  id,
+                                  ...combinedMeta,
+                              },
+                              resource,
+                          )
                         : errorNotification;
 
                 handleNotification(notificationConfig, {

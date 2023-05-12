@@ -21,12 +21,12 @@ export const ColumnSorter: React.FC<ColumnButtonProps> = ({ column }) => {
             }}
             variant={sorted ? "light" : "transparent"}
             color={sorted ? "primary" : "gray"}
-        >
-            {sorted ? (
-                <IconChevronDown size={18} />
-            ) : (
-                <IconSelector size={18} />
-            )}
-        </IconButton>
+            icon={
+                <>
+                    {!sorted && <IconSelector size={18} />}
+                    {sorted && <IconChevronDown size={18} />}
+                </>
+            }
+        ></IconButton>
     );
 };

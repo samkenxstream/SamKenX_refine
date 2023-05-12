@@ -1,20 +1,24 @@
-import { Refine } from "@pankod/refine-core";
+import { useState } from "react";
+import { GitHubBanner, Refine } from "@refinedev/core";
 import {
     notificationProvider,
-    Layout,
+    ThemedLayoutV2,
     ErrorComponent,
-    ConfigProvider,
-    theme,
-} from "@pankod/refine-antd";
-import dataProvider from "@pankod/refine-simple-rest";
-import routerProvider from "@pankod/refine-react-router-v6";
+    RefineThemes,
+} from "@refinedev/antd";
+import { ConfigProvider, theme } from "antd";
+import dataProvider from "@refinedev/simple-rest";
+import routerProvider, {
+    NavigateToResource,
+    UnsavedChangesNotifier,
+} from "@refinedev/react-router-v6";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 
 import { PostList, PostCreate, PostEdit, PostShow } from "pages/posts";
 
-import "@pankod/refine-antd/dist/reset.css";
+import "@refinedev/antd/dist/reset.css";
 
 import Header from "components/Header";
-import { useState } from "react";
 
 const API_URL = "https://api.fake-rest.refine.dev";
 
@@ -22,45 +26,82 @@ const App: React.FC = () => {
     const [currentTheme, setCurrentTheme] = useState<"light" | "dark">("dark");
 
     return (
-        <ConfigProvider
-            theme={{
-                algorithm:
-                    currentTheme === "light"
-                        ? theme.defaultAlgorithm
-                        : theme.darkAlgorithm,
-                components: {
-                    Button: {
-                        borderRadius: 0,
+        <BrowserRouter>
+            <GitHubBanner />
+            <ConfigProvider
+                theme={{
+                    ...RefineThemes.Blue,
+                    algorithm:
+                        currentTheme === "light"
+                            ? theme.defaultAlgorithm
+                            : theme.darkAlgorithm,
+                    components: {
+                        Button: {
+                            borderRadius: 0,
+                        },
+                        Typography: {
+                            colorTextHeading: "#1890ff",
+                        },
                     },
-                    Typography: {
-                        colorTextHeading: "#1890ff",
+                    token: {
+                        colorPrimary: "#f0f",
                     },
-                },
-                token: {
-                    colorPrimary: "#f0f",
-                },
-            }}
-        >
-            <Refine
-                dataProvider={dataProvider(API_URL)}
-                routerProvider={routerProvider}
-                Header={() => (
-                    <Header theme={currentTheme} setTheme={setCurrentTheme} />
-                )}
-                resources={[
-                    {
-                        name: "posts",
-                        list: PostList,
-                        create: PostCreate,
-                        edit: PostEdit,
-                        show: PostShow,
-                    },
-                ]}
-                notificationProvider={notificationProvider}
-                Layout={Layout}
-                catchAll={<ErrorComponent />}
-            />
-        </ConfigProvider>
+                }}
+            >
+                <Refine
+                    dataProvider={dataProvider(API_URL)}
+                    routerProvider={routerProvider}
+                    resources={[
+                        {
+                            name: "posts",
+                            list: "/posts",
+                            show: "/posts/show/:id",
+                            create: "/posts/create",
+                            edit: "/posts/edit/:id",
+                        },
+                    ]}
+                    notificationProvider={notificationProvider}
+                    options={{
+                        syncWithLocation: true,
+                        warnWhenUnsavedChanges: true,
+                    }}
+                >
+                    <Routes>
+                        <Route
+                            element={
+                                <ThemedLayoutV2
+                                    Header={() => (
+                                        <Header
+                                            theme={currentTheme}
+                                            setTheme={setCurrentTheme}
+                                        />
+                                    )}
+                                >
+                                    <Outlet />
+                                </ThemedLayoutV2>
+                            }
+                        >
+                            <Route
+                                index
+                                element={
+                                    <NavigateToResource resource="posts" />
+                                }
+                            />
+
+                            <Route path="/posts">
+                                <Route index element={<PostList />} />
+                                <Route path="create" element={<PostCreate />} />
+                                <Route path="edit/:id" element={<PostEdit />} />
+                                <Route path="show/:id" element={<PostShow />} />
+                            </Route>
+
+                            <Route path="*" element={<ErrorComponent />} />
+                        </Route>
+                    </Routes>
+                    <UnsavedChangesNotifier />
+                </Refine>
+            </ConfigProvider>
+        </BrowserRouter>
     );
 };
 

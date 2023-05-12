@@ -1,4 +1,15 @@
-import * as RefineMantine from "@pankod/refine-mantine";
+import {
+    Show,
+    TagField,
+    TextField,
+    EmailField,
+    UrlField,
+    BooleanField,
+    DateField,
+    MarkdownField,
+    NumberField,
+} from "@refinedev/mantine";
+import { Title, Group, Image } from "@mantine/core";
 
 import { createInferencer } from "@/create-inferencer";
 import {
@@ -14,13 +25,14 @@ import {
 
 import { ErrorComponent } from "./error";
 import { LoadingComponent } from "./loading";
-import { CodeViewerComponent } from "./code-viewer";
+import { SharedCodeViewer } from "@/components/shared-code-viewer";
 
 import {
     InferencerResultComponent,
     InferField,
     RendererContext,
 } from "@/types";
+import { getMetaProps } from "@/utilities/get-meta-props";
 
 /**
  * a renderer function for show page in Mantine
@@ -29,6 +41,7 @@ import {
 export const renderer = ({
     resource,
     fields,
+    meta,
     isCustomPage,
     id,
 }: RendererContext) => {
@@ -38,9 +51,9 @@ export const renderer = ({
     );
     const recordName = "record";
     const imports: Array<[element: string, module: string]> = [
-        ["useShow", "@pankod/refine-core"],
-        ["Show", "@pankod/refine-mantine"],
-        ["Title", "@pankod/refine-mantine"],
+        ["useShow", "@refinedev/core"],
+        ["Show", "@refinedev/mantine"],
+        ["Title", "@mantine/core"],
     ];
 
     const relationFields: (InferField | null)[] = fields.filter(
@@ -52,7 +65,7 @@ export const renderer = ({
         .map((field) => {
             if (field?.relation && !field.fieldable && field.resource) {
                 if (field.multiple) {
-                    imports.push(["useMany", "@pankod/refine-core"]);
+                    imports.push(["useMany", "@refinedev/core"]);
 
                     let ids = accessor(recordName, field.key);
 
@@ -78,10 +91,15 @@ export const renderer = ({
                     queryOptions: {
                         enabled: !!${recordName},
                     },
+                    ${getMetaProps(
+                        field?.resource?.identifier ?? field?.resource?.name,
+                        meta,
+                        "getMany",
+                    )}
                 });
                 `;
                 }
-                imports.push(["useOne", "@pankod/refine-core"]);
+                imports.push(["useOne", "@refinedev/core"]);
 
                 return `
                 const { data: ${getVariableName(
@@ -99,6 +117,11 @@ export const renderer = ({
                     queryOptions: {
                         enabled: !!${recordName},
                     },
+                    ${getMetaProps(
+                        field?.resource?.identifier ?? field?.resource?.name,
+                        meta,
+                        "getOne",
+                    )}
                 });
             `;
             }
@@ -113,8 +136,8 @@ export const renderer = ({
 
             if (field.multiple) {
                 imports.push(
-                    ["TagField", "@pankod/refine-mantine"],
-                    ["Group", "@pankod/refine-mantine"],
+                    ["TagField", "@refinedev/mantine"],
+                    ["Group", "@mantine/core"],
                 );
 
                 return jsx`
@@ -190,12 +213,12 @@ export const renderer = ({
 
     const textFields = (field: InferField) => {
         if (field.type === "text") {
-            imports.push(["TextField", "@pankod/refine-mantine"]);
+            imports.push(["TextField", "@refinedev/mantine"]);
 
             if (field.multiple) {
                 imports.push(
-                    ["TagField", "@pankod/refine-mantine"],
-                    ["Group", "@pankod/refine-mantine"],
+                    ["TagField", "@refinedev/mantine"],
+                    ["Group", "@mantine/core"],
                 );
 
                 const val = accessor("item", undefined, field.accessor);
@@ -223,10 +246,10 @@ export const renderer = ({
 
     const imageFields = (field: InferField) => {
         if (field.type === "image") {
-            imports.push(["Image", "@pankod/refine-mantine"]);
+            imports.push(["Image", "@mantine/core"]);
 
             if (field.multiple) {
-                imports.push(["Group", "@pankod/refine-mantine"]);
+                imports.push(["Group", "@mantine/core"]);
 
                 const val = accessor("item", undefined, field.accessor);
 
@@ -254,12 +277,12 @@ export const renderer = ({
 
     const emailFields = (field: InferField) => {
         if (field.type === "email") {
-            imports.push(["EmailField", "@pankod/refine-mantine"]);
+            imports.push(["EmailField", "@refinedev/mantine"]);
 
             if (field.multiple) {
                 imports.push(
-                    ["TagField", "@pankod/refine-mantine"],
-                    ["Group", "@pankod/refine-mantine"],
+                    ["TagField", "@refinedev/mantine"],
+                    ["Group", "@mantine/core"],
                 );
 
                 const val = accessor("item", undefined, field.accessor);
@@ -288,12 +311,12 @@ export const renderer = ({
 
     const urlFields = (field: InferField) => {
         if (field.type === "url") {
-            imports.push(["UrlField", "@pankod/refine-mantine"]);
+            imports.push(["UrlField", "@refinedev/mantine"]);
 
             if (field.multiple) {
                 imports.push(
-                    ["TagField", "@pankod/refine-mantine"],
-                    ["Group", "@pankod/refine-mantine"],
+                    ["TagField", "@refinedev/mantine"],
+                    ["Group", "@mantine/core"],
                 );
 
                 const val = accessor("item", undefined, field.accessor);
@@ -322,12 +345,12 @@ export const renderer = ({
 
     const booleanFields = (field: InferField) => {
         if (field.type === "boolean") {
-            imports.push(["BooleanField", "@pankod/refine-mantine"]);
+            imports.push(["BooleanField", "@refinedev/mantine"]);
 
             if (field.multiple) {
                 imports.push(
-                    ["TagField", "@pankod/refine-mantine"],
-                    ["Group", "@pankod/refine-mantine"],
+                    ["TagField", "@refinedev/mantine"],
+                    ["Group", "@mantine/core"],
                 );
 
                 const val = accessor("item", undefined, field.accessor);
@@ -359,10 +382,10 @@ export const renderer = ({
 
     const dateFields = (field: InferField) => {
         if (field.type === "date") {
-            imports.push(["DateField", "@pankod/refine-mantine"]);
+            imports.push(["DateField", "@refinedev/mantine"]);
 
             if (field.multiple) {
-                imports.push(["Group", "@pankod/refine-mantine"]);
+                imports.push(["Group", "@mantine/core"]);
 
                 const val = accessor("item", undefined, field.accessor);
 
@@ -390,7 +413,7 @@ export const renderer = ({
 
     const richtextFields = (field: InferField) => {
         if (field.type === "richtext") {
-            imports.push(["MarkdownField", "@pankod/refine-mantine"]);
+            imports.push(["MarkdownField", "@refinedev/mantine"]);
 
             return jsx`
                 <Title mt="xs" order={5}>${prettyString(field.key)}</Title>
@@ -408,12 +431,12 @@ export const renderer = ({
 
     const numberFields = (field: InferField) => {
         if (field.type === "number") {
-            imports.push(["NumberField", "@pankod/refine-mantine"]);
+            imports.push(["NumberField", "@refinedev/mantine"]);
 
             if (field.multiple) {
                 imports.push(
-                    ["TagField", "@pankod/refine-mantine"],
-                    ["Group", "@pankod/refine-mantine"],
+                    ["TagField", "@refinedev/mantine"],
+                    ["Group", "@mantine/core"],
                 );
 
                 const val = accessor("item", undefined, field.accessor);
@@ -484,8 +507,23 @@ export const renderer = ({
             isCustomPage
                 ? `{ 
                     resource: "${resource.name}", 
-                    id: ${id}
+                    id: ${id},
+                    ${getMetaProps(
+                        resource?.identifier ?? resource?.name,
+                        meta,
+                        "getOne",
+                    )}
                 }`
+                : getMetaProps(
+                      resource?.identifier ?? resource?.name,
+                      meta,
+                      "getOne",
+                  )
+                ? `{ ${getMetaProps(
+                      resource?.identifier ?? resource?.name,
+                      meta,
+                      "getOne",
+                  )} }`
                 : ""
         });
         const { data, isLoading } = queryResult;
@@ -509,9 +547,24 @@ export const renderer = ({
 export const ShowInferencer: InferencerResultComponent = createInferencer({
     type: "show",
     additionalScope: [
-        ["@pankod/refine-mantine", "RefineMantine", RefineMantine],
+        [
+            "@refinedev/mantine",
+            "RefineMantine",
+            {
+                Show,
+                TagField,
+                TextField,
+                EmailField,
+                UrlField,
+                BooleanField,
+                DateField,
+                MarkdownField,
+                NumberField,
+            },
+        ],
+        ["@mantine/core", "MantineCore", { Title, Group, Image }],
     ],
-    codeViewerComponent: CodeViewerComponent,
+    codeViewerComponent: SharedCodeViewer,
     loadingComponent: LoadingComponent,
     errorComponent: ErrorComponent,
     renderer,

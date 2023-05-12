@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from "@testing-library/react";
 
-import { MockJSONServer, TestWrapper, act } from "@test";
+import { MockJSONServer, TestWrapper, act, mockRouterBindings } from "@test";
 
 import { useSelect } from "./";
 import {
@@ -30,7 +30,8 @@ describe("useSelect Hook", () => {
 
         const { options } = result.current;
 
-        expect(options).toHaveLength(2);
+        await waitFor(() => expect(options).toHaveLength(2));
+
         expect(options).toEqual([
             {
                 label: "Necessitatibus necessitatibus id et cupiditate provident est qui amet.",
@@ -491,6 +492,7 @@ describe("useSelect Hook", () => {
                 useSelect({
                     resource: "posts",
                     defaultValue: ["1", "2"],
+                    hasPagination: true,
                     fetchSize: 20,
                 }),
             {
@@ -504,27 +506,52 @@ describe("useSelect Hook", () => {
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         await act(() => {});
 
-        expect(mockDataProvider.default?.getList).toHaveBeenCalledWith({
-            filters: [],
-            pagination: { pageSize: 20 },
-            resource: "posts",
-            metaData: {
-                queryContext: {
-                    queryKey: [
-                        "default",
-                        "posts",
-                        "list",
-                        {
-                            filters: [],
-                            pagination: {
-                                pageSize: 20,
+        expect(mockDataProvider.default?.getList).toHaveBeenCalledWith(
+            expect.objectContaining({
+                filters: [],
+                hasPagination: true,
+                pagination: { pageSize: 20, current: 1, mode: "server" },
+                resource: "posts",
+                meta: {
+                    queryContext: {
+                        queryKey: [
+                            "default",
+                            "posts",
+                            "list",
+                            {
+                                filters: [],
+                                hasPagination: true,
+                                pagination: {
+                                    current: 1,
+                                    mode: "server",
+                                    pageSize: 20,
+                                },
                             },
-                        },
-                    ],
-                    signal: new AbortController().signal,
+                        ],
+                        signal: new AbortController().signal,
+                    },
                 },
-            },
-        });
+                metaData: {
+                    queryContext: {
+                        queryKey: [
+                            "default",
+                            "posts",
+                            "list",
+                            {
+                                filters: [],
+                                hasPagination: true,
+                                pagination: {
+                                    current: 1,
+                                    mode: "server",
+                                    pageSize: 20,
+                                },
+                            },
+                        ],
+                        signal: new AbortController().signal,
+                    },
+                },
+            }),
+        );
     });
 
     it("should use onSearch option to get filters", async () => {
@@ -577,26 +604,41 @@ describe("useSelect Hook", () => {
 
         expect(mockDataProvider.default?.getList).toHaveBeenCalledWith({
             filters: [],
-            hasPagination: undefined,
+            hasPagination: false,
             resource: "posts",
-            metaData: {
+            meta: {
                 queryContext: {
-                    pageParam: undefined,
                     queryKey: [
                         "default",
                         "posts",
                         "list",
                         {
+                            hasPagination: false,
                             filters: [],
-                            pagination: {},
-                            sort: undefined,
                         },
                     ],
                     signal: new AbortController().signal,
                 },
             },
-            pagination: {},
-            sort: undefined,
+            metaData: {
+                queryContext: {
+                    queryKey: [
+                        "default",
+                        "posts",
+                        "list",
+                        {
+                            hasPagination: false,
+                            filters: [],
+                        },
+                    ],
+                    signal: new AbortController().signal,
+                },
+            },
+            pagination: {
+                current: 1,
+                mode: "off",
+                pageSize: 10,
+            },
         });
 
         await act(async () => {
@@ -606,26 +648,41 @@ describe("useSelect Hook", () => {
         await waitFor(() => {
             expect(mockDataProvider.default?.getList).toHaveBeenCalledWith({
                 filters,
-                hasPagination: undefined,
+                hasPagination: false,
                 resource: "posts",
-                metaData: {
+                meta: {
                     queryContext: {
-                        pageParam: undefined,
                         queryKey: [
                             "default",
                             "posts",
                             "list",
                             {
+                                hasPagination: false,
                                 filters,
-                                pagination: {},
-                                sort: undefined,
                             },
                         ],
                         signal: new AbortController().signal,
                     },
                 },
-                pagination: {},
-                sort: undefined,
+                metaData: {
+                    queryContext: {
+                        queryKey: [
+                            "default",
+                            "posts",
+                            "list",
+                            {
+                                hasPagination: false,
+                                filters,
+                            },
+                        ],
+                        signal: new AbortController().signal,
+                    },
+                },
+                pagination: {
+                    current: 1,
+                    mode: "off",
+                    pageSize: 10,
+                },
             });
         });
     });
@@ -661,6 +718,7 @@ describe("useSelect Hook", () => {
                 useSelect({
                     resource: "posts",
                     defaultValue: ["1", "2", "3"],
+                    hasPagination: true,
                     pagination: {
                         current: 2,
                         pageSize: 1,
@@ -679,8 +737,28 @@ describe("useSelect Hook", () => {
 
         expect(mockDataProvider.default?.getList).toHaveBeenCalledWith({
             filters: [],
-            pagination: { current: 2, pageSize: 1 },
+            pagination: { current: 2, mode: "server", pageSize: 1 },
+            hasPagination: true,
             resource: "posts",
+            meta: {
+                queryContext: {
+                    queryKey: [
+                        "default",
+                        "posts",
+                        "list",
+                        {
+                            filters: [],
+                            hasPagination: true,
+                            pagination: {
+                                current: 2,
+                                mode: "server",
+                                pageSize: 1,
+                            },
+                        },
+                    ],
+                    signal: new AbortController().signal,
+                },
+            },
             metaData: {
                 queryContext: {
                     queryKey: [
@@ -689,8 +767,10 @@ describe("useSelect Hook", () => {
                         "list",
                         {
                             filters: [],
+                            hasPagination: true,
                             pagination: {
                                 current: 2,
+                                mode: "server",
                                 pageSize: 1,
                             },
                         },
@@ -699,5 +779,96 @@ describe("useSelect Hook", () => {
                 },
             },
         });
+    });
+
+    it("should pass meta from resource defination, hook parameter and query parameters to dataProvider", async () => {
+        const getListMock = jest.fn();
+
+        renderHook(
+            () => useSelect({ resource: "posts", meta: { foo: "bar" } }),
+            {
+                wrapper: TestWrapper({
+                    dataProvider: {
+                        default: {
+                            ...MockJSONServer.default,
+                            getList: getListMock,
+                        },
+                    },
+                    routerProvider: mockRouterBindings({
+                        resource: { name: "posts" },
+                        params: { baz: "qux" },
+                    }),
+                    resources: [{ name: "posts", meta: { dip: "dop" } }],
+                }),
+            },
+        );
+
+        await waitFor(() => {
+            expect(getListMock).toBeCalled();
+        });
+
+        expect(getListMock).toBeCalledWith(
+            expect.objectContaining({
+                meta: expect.objectContaining({
+                    foo: "bar",
+                    baz: "qux",
+                    dip: "dop",
+                }),
+            }),
+        );
+    });
+
+    it("two resources with same name, should pass resource meta according to identifier", async () => {
+        const getListMock = jest.fn();
+
+        renderHook(() => useSelect({ resource: "recentPosts" }), {
+            wrapper: TestWrapper({
+                dataProvider: {
+                    default: {
+                        ...MockJSONServer.default,
+                        getList: getListMock,
+                    },
+                },
+                routerProvider: mockRouterBindings({
+                    resource: { name: "posts" },
+                }),
+                resources: [
+                    {
+                        name: "posts",
+                        identifier: "recentPosts",
+                        meta: {
+                            startDate: "2021-01-01",
+                        },
+                    },
+                    {
+                        name: "posts",
+                        identifier: "popularPosts",
+                        meta: {
+                            likes: 100,
+                        },
+                    },
+                ],
+            }),
+        });
+
+        await waitFor(() => {
+            expect(getListMock).toBeCalled();
+        });
+
+        expect(getListMock).toBeCalledWith(
+            expect.objectContaining({
+                meta: expect.objectContaining({
+                    startDate: "2021-01-01",
+                }),
+            }),
+        );
+
+        expect(getListMock).not.toBeCalledWith(
+            expect.objectContaining({
+                meta: expect.objectContaining({
+                    likes: 100,
+                }),
+            }),
+        );
     });
 });

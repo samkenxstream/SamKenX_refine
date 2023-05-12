@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM node:18-alpine
 
 WORKDIR /opt/app
 
@@ -13,8 +13,8 @@ RUN npm ci
 
 COPY . /opt/app
 
-RUN npm run bootstrap
-RUN npm run build
+RUN npm run bootstrap:all
+RUN npm run build:all
 
 WORKDIR /opt/app/documentation
 
@@ -24,7 +24,7 @@ ENV LIVE_PREVIEW_URL=https://next.live-previews.refine.dev/preview
 
 RUN npm run build
 
-FROM node:16-alpine
+FROM node:18-alpine
 
 COPY --from=0 /opt/app/documentation/build /opt/app
 WORKDIR /opt/app/

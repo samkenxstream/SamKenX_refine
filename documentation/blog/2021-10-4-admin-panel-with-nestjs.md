@@ -3,12 +3,18 @@ title: Build Fast and Customizable Admin Panel with NestJS
 description: We will prepare a simple `job-posting` application. We will also use the refine framework for the admin panel. The project will consist of two parts, api and admin.
 slug: customizable-admin-panel-with-nestjs
 authors: yildiray
-tags: [refine, nestjs, crud, react]
+tags: [refine, nestjs, react, tutorial]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/placeholder.png
 hide_table_of_contents: false
 ---
 
+:::caution
 
+This post was created using version 3.x.x of **refine**. Although we plan to update it with the latest version of **refine** as soon as possible, you can still benefit from the post in the meantime.
+
+You should know that **refine** version 4.x.x is backward compatible with version 3.x.x, so there is no need to worry. If you want to see the differences between the two versions, check out the [migration guide](https://refine.dev/docs/migration-guide/).
+
+:::
 
 
 
@@ -86,7 +92,7 @@ It created these end-points automatically with nestjsx/crud.
 **Now let's refine the admin panel.** With [Superplate](https://pankod.github.io/superplate/docs), we can quickly create a `refine` project.
 
 ```bash
-npx superplate-cli admin
+npm create refine-app@latest admin -- -b v3
 ```
 
 Answer as below:
@@ -148,12 +154,14 @@ import { ICompany } from "interfaces";
 
 export const CompanyList: React.FC<IResourceComponentsProps> = () => {
   const { tableProps, sorter } = useTable<ICompany>({
-    initialSorter: [
-      {
-        field: "id",
-        order: "desc",
-      },
-    ],
+    sorters: {
+      initial: [
+        {
+          field: "id",
+          order: "desc",
+        },
+      ],
+    }
   });
 
   return (
@@ -215,7 +223,7 @@ Next, let's define the resources in `<Refine>` (App.tsx):
 ```tsx
 import { Refine } from "@pankod/refine";
 import routerProvider from "@pankod/refine-react-router";
-import nestjsxCrudDataProvider from "@pankod/refine-nestjsx-crud";
+import nestjsxCrudDataProvider from "@refinedev/nestjsx-crud";
 
 import "styles/antd.less";
 

@@ -10,7 +10,7 @@ import {
     CreateManyResponse,
     HttpError,
     SuccessErrorNotification,
-    MetaDataQuery,
+    MetaQuery,
     IQueryKeys,
 } from "../../interfaces";
 import {
@@ -20,16 +20,23 @@ import {
     useHandleNotification,
     useDataProvider,
     useInvalidate,
+    useLog,
+    useMeta,
 } from "@hooks";
-import { handleMultiple, pickDataProvider } from "@definitions";
+import {
+    handleMultiple,
+    pickDataProvider,
+    pickNotDeprecated,
+} from "@definitions";
 
-type useCreateManyParams<TVariables> = {
+type useCreateManyParams<TData, TError, TVariables> = {
     resource: string;
     values: TVariables[];
-    metaData?: MetaDataQuery;
+    meta?: MetaQuery;
+    metaData?: MetaQuery;
     dataProviderName?: string;
     invalidates?: Array<keyof IQueryKeys>;
-} & SuccessErrorNotification;
+} & SuccessErrorNotification<CreateManyResponse<TData>, TError, TVariables[]>;
 
 export type UseCreateManyReturnType<
     TData extends BaseRecord = BaseRecord,
@@ -38,7 +45,7 @@ export type UseCreateManyReturnType<
 > = UseMutationResult<
     CreateManyResponse<TData>,
     TError,
-    useCreateManyParams<TVariables>,
+    useCreateManyParams<TData, TError, TVariables>,
     unknown
 >;
 
@@ -51,7 +58,7 @@ export type UseCreateManyProps<
         UseMutationOptions<
             CreateManyResponse<TData>,
             TError,
-            useCreateManyParams<TVariables>
+            useCreateManyParams<TData, TError, TVariables>
         >,
         "mutationFn" | "onError" | "onSuccess"
     >;
@@ -81,24 +88,30 @@ export const useCreateMany = <
     TVariables
 > => {
     const dataProvider = useDataProvider();
-
     const { resources } = useResource();
     const translate = useTranslate();
     const publish = usePublish();
     const handleNotification = useHandleNotification();
     const invalidateStore = useInvalidate();
+    const { log } = useLog();
+    const getMeta = useMeta();
 
     const mutation = useMutation<
         CreateManyResponse<TData>,
         TError,
-        useCreateManyParams<TVariables>
+        useCreateManyParams<TData, TError, TVariables>
     >(
         ({
             resource,
             values,
+            meta,
             metaData,
             dataProviderName,
-        }: useCreateManyParams<TVariables>) => {
+        }: useCreateManyParams<TData, TError, TVariables>) => {
+            const combinedMeta = getMeta({
+                meta: pickNotDeprecated(meta, metaData),
+            });
+
             const selectedDataProvider = dataProvider(
                 pickDataProvider(resource, dataProviderName, resources),
             );
@@ -107,7 +120,8 @@ export const useCreateMany = <
                 return selectedDataProvider.createMany<TData, TVariables>({
                     resource,
                     variables: values,
-                    metaData,
+                    meta: combinedMeta,
+                    metaData: combinedMeta,
                 });
             } else {
                 return handleMultiple(
@@ -115,7 +129,8 @@ export const useCreateMany = <
                         selectedDataProvider.create<TData, TVariables>({
                             resource,
                             variables: val,
-                            metaData,
+                            meta: combinedMeta,
+                            metaData: combinedMeta,
                         }),
                     ),
                 );
@@ -130,6 +145,8 @@ export const useCreateMany = <
                     dataProviderName,
                     invalidates = ["list", "many"],
                     values,
+                    meta,
+                    metaData,
                 },
             ) => {
                 const resourcePlural = pluralize.plural(resource);
@@ -176,6 +193,24 @@ export const useCreateMany = <
                         ids,
                     },
                     date: new Date(),
+                });
+
+                const { fields, operation, variables, ...rest } =
+                    pickNotDeprecated(meta, metaData) || {};
+
+                log?.mutate({
+                    action: "createMany",
+                    resource,
+                    data: values,
+                    meta: {
+                        dataProviderName: pickDataProvider(
+                            resource,
+                            dataProviderName,
+                            resources,
+                        ),
+                        ids,
+                        ...rest,
+                    },
                 });
             },
             onError: (err: TError, { resource, errorNotification, values }) => {

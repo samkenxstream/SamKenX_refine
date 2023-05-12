@@ -1,5 +1,118 @@
 # @pankod/refine-graphql
 
+## 6.4.2
+
+### Patch Changes
+
+-   [#4285](https://github.com/refinedev/refine/pull/4285) [`b5cd3328504`](https://github.com/refinedev/refine/commit/b5cd332850428383e8b43f997cbb0340ac7f0dc6) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - fixed: A bug that prevented data providers from being swizzled.
+
+## 6.4.1
+
+### Patch Changes
+
+-   [#4285](https://github.com/refinedev/refine/pull/4285) [`b5cd3328504`](https://github.com/refinedev/refine/commit/b5cd332850428383e8b43f997cbb0340ac7f0dc6) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - fixed: A bug that prevented data providers from being swizzled.
+
+## 6.4.0
+
+### Minor Changes
+
+-   [#4211](https://github.com/refinedev/refine/pull/4211) [`dca1d8b7ca8`](https://github.com/refinedev/refine/commit/dca1d8b7ca8b84184d00180af7e265c6bd12d708) Thanks [@mattbho](https://github.com/mattbho)! - Custom GraphQL data provider now allow users to provide a custom InputType via the meta field.
+
+## 6.3.0
+
+### Minor Changes
+
+-   [#4211](https://github.com/refinedev/refine/pull/4211) [`dca1d8b7ca8`](https://github.com/refinedev/refine/commit/dca1d8b7ca8b84184d00180af7e265c6bd12d708) Thanks [@mattbho](https://github.com/mattbho)! - Custom GraphQL data provider now allow users to provide a custom InputType via the meta field.
+
+## 6.2.0
+
+### Minor Changes
+
+-   [#4168](https://github.com/refinedev/refine/pull/4168) [`51ab614f75b`](https://github.com/refinedev/refine/commit/51ab614f75bb96d55ff08061e7cb63bdda5f1c8f) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: added refine.config.js to support swizzling. Now with swizzle support, you can easily customize graphql data provider for your needs.
+
+    feat: tests added for utility functions.
+
+    chore: utility functions have been moved to their own files.
+
+## 6.1.0
+
+### Minor Changes
+
+-   [#4168](https://github.com/refinedev/refine/pull/4168) [`51ab614f75b`](https://github.com/refinedev/refine/commit/51ab614f75bb96d55ff08061e7cb63bdda5f1c8f) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: added refine.config.js to support swizzling. Now with swizzle support, you can easily customize graphql data provider for your needs.
+
+    feat: tests added for utility functions.
+
+    chore: utility functions have been moved to their own files.
+
+## 6.0.1
+
+### Patch Changes
+
+-   [#4030](https://github.com/refinedev/refine/pull/4030) [`1b019280252`](https://github.com/refinedev/refine/commit/1b019280252140c251bf464426b0b072acd310fe) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - Upgraded `graphql-request` dependency `4.x` to [`5.x`](https://github.com/jasonkuhrt/graphql-request/releases/tag/5.0.0).
+
+## 6.0.0
+
+### Major Changes
+
+-   [#4030](https://github.com/refinedev/refine/pull/4030) [`1b019280252`](https://github.com/refinedev/refine/commit/1b019280252140c251bf464426b0b072acd310fe) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - Upgraded `graphql-request` dependency `4.x` to [`5.x`](https://github.com/jasonkuhrt/graphql-request/releases/tag/5.0.0).
+
+## 5.1.0
+
+### Minor Changes
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+
+    -   `metaData` prop is now deprecated for all data provider methods. Use `meta` prop instead.
+
+        > For backward compatibility, we still support `metaData` prop with refine v4.
+
+        ```diff
+        create: async ({
+        -    metaData
+        +    meta
+        }) => {
+            ...
+        },
+        ```
+
+    -   `sort`, `hasPagination`, and `metaData` parameters of `getList` method are now deprecated. Use `sorters`, `pagination`, and `meta` parameters instead.
+
+        > For backward compatibility, we still support `sort`, `hasPagination` and `metaData` props with refine v4.
+
+        ```diff
+        getList: async ({
+        -    sort
+        +    sorters
+        -    hasPagination
+        +    pagination: { mode: "off" | "server | "client" }
+        -    metaData
+        +    meta
+        }) => {
+            ...
+        },
+        ```
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    **Moving to the `@refinedev` scope 🎉🎉**
+
+    Moved to the `@refinedev` scope and updated our packages to use the new scope. From now on, all packages will be published under the `@refinedev` scope with their new names.
+
+    Now, we're also removing the `refine` prefix from all packages. So, the `@pankod/refine-core` package is now `@refinedev/core`, `@pankod/refine-antd` is now `@refinedev/antd`, and so on.
+
+### Patch Changes
+
+## 4.15.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
+## 4.14.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
 ## 4.13.0
 
 ### Minor Changes

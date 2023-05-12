@@ -1,193 +1,36 @@
-import axios, { AxiosInstance } from "axios";
+import { AxiosInstance } from "axios";
+import { DataProvider as IDataProvider } from "@refinedev/core";
+import { stringify } from "qs";
 import {
-    DataProvider as IDataProvider,
-    HttpError,
-    CrudFilters,
-    CrudSorting,
-    CrudOperators,
-    LogicalFilter,
-} from "@pankod/refine-core";
-import { stringify, parse } from "qs";
-
-const axiosInstance = axios.create();
-
-axiosInstance.interceptors.response.use(
-    (response) => {
-        return response;
-    },
-    (error) => {
-        const customError: HttpError = {
-            ...error,
-            message: error.response?.data?.message,
-            statusCode: error.response?.status,
-        };
-
-        return Promise.reject(customError);
-    },
-);
-
-const mapOperator = (operator: CrudOperators) => {
-    switch (operator) {
-        case "startswith":
-            return "startsWith";
-        case "endswith":
-            return "endsWith";
-        case "nin":
-            return "notIn";
-        case "ncontains":
-            return "notContainsi";
-        case "ncontainss":
-            return "notContains";
-        case "containss":
-            return "contains";
-        case "contains":
-            return "containsi";
-        case "nnull":
-            return "notNull";
-    }
-
-    return operator;
-};
-
-const generateSort = (sort?: CrudSorting) => {
-    const _sort: string[] = [];
-
-    if (sort) {
-        sort.map((item) => {
-            if (item.order) {
-                _sort.push(`${item.field}:${item.order}`);
-            }
-        });
-    }
-
-    return _sort;
-};
-
-const generateNestedFilterField = (field: string) => {
-    const fields = field.split(".");
-
-    if (fields.length > 1) {
-        let fieldQuery = "";
-        fields.map((v) => (fieldQuery += `[${v}]`));
-        return fieldQuery;
-    } else {
-        return `[${fields[0]}]`;
-    }
-};
-
-const generateFilter = (filters?: CrudFilters) => {
-    let rawQuery = "";
-
-    if (filters) {
-        filters.map((filter) => {
-            if (
-                filter.operator !== "or" &&
-                filter.operator !== "and" &&
-                "field" in filter
-            ) {
-                const { field, operator, value } = filter;
-
-                const mapedOperator = mapOperator(operator);
-
-                if (Array.isArray(value)) {
-                    value.map((val, index) => {
-                        rawQuery += `&filters${generateNestedFilterField(
-                            field,
-                        )}[$${mapedOperator}][${index}]=${val}`;
-                    });
-                } else {
-                    rawQuery += `&filters${generateNestedFilterField(
-                        field,
-                    )}[$${mapedOperator}]=${value}`;
-                }
-            } else {
-                const { value } = filter;
-
-                value.map((item, index) => {
-                    const { field, operator, value } = item as LogicalFilter;
-
-                    const mapedOperator = mapOperator(operator);
-
-                    rawQuery += `&filters[$${
-                        filter.operator
-                    }][${index}]${generateNestedFilterField(
-                        field,
-                    )}[$${mapedOperator}]=${value}`;
-                });
-            }
-        });
-    }
-
-    const parsedQuery = parse(rawQuery);
-    const queryFilters = stringify(parsedQuery, { encodeValuesOnly: true });
-
-    return queryFilters;
-};
-
-const normalizeData = (data: any): any => {
-    const isObject = (data: any) =>
-        Object.prototype.toString.call(data) === "[object Object]";
-
-    const flatten = (data: any) => {
-        if (!data.attributes) return data;
-
-        return {
-            id: data.id,
-            ...data.attributes,
-        };
-    };
-
-    if (Array.isArray(data)) {
-        return data.map((item) => normalizeData(item));
-    }
-
-    if (isObject(data)) {
-        if (Array.isArray(data.data)) {
-            data = [...data.data];
-        } else if (isObject(data.data)) {
-            data = flatten({ ...data.data });
-        } else if (data.data === null) {
-            data = null;
-        } else {
-            data = flatten(data);
-        }
-
-        for (const key in data) {
-            data[key] = normalizeData(data[key]);
-        }
-
-        return data;
-    }
-
-    return data;
-};
+    axiosInstance,
+    generateFilter,
+    generateSort,
+    normalizeData,
+} from "./utils";
 
 export const DataProvider = (
     apiUrl: string,
     httpClient: AxiosInstance = axiosInstance,
 ): Required<IDataProvider> => ({
-    getList: async ({
-        resource,
-        hasPagination = true,
-        pagination = { current: 1, pageSize: 10 },
-        filters,
-        sort,
-        metaData,
-    }) => {
+    getList: async ({ resource, pagination, filters, sorters, meta }) => {
         const url = `${apiUrl}/${resource}`;
 
-        const { current = 1, pageSize = 10 } = pagination ?? {};
+        const {
+            current = 1,
+            pageSize = 10,
+            mode = "server",
+        } = pagination ?? {};
 
-        const locale = metaData?.locale;
-        const fields = metaData?.fields;
-        const populate = metaData?.populate;
-        const publicationState = metaData?.publicationState;
+        const locale = meta?.locale;
+        const fields = meta?.fields;
+        const populate = meta?.populate;
+        const publicationState = meta?.publicationState;
 
-        const quertSorters = generateSort(sort);
+        const quertSorters = generateSort(sorters);
         const queryFilters = generateFilter(filters);
 
         const query = {
-            ...(hasPagination
+            ...(mode === "server"
                 ? {
                       "pagination[page]": current,
                       "pagination[pageSize]": pageSize,
@@ -213,13 +56,13 @@ export const DataProvider = (
         };
     },
 
-    getMany: async ({ resource, ids, metaData }) => {
+    getMany: async ({ resource, ids, meta }) => {
         const url = `${apiUrl}/${resource}`;
 
-        const locale = metaData?.locale;
-        const fields = metaData?.fields;
-        const populate = metaData?.populate;
-        const publicationState = metaData?.publicationState;
+        const locale = meta?.locale;
+        const fields = meta?.fields;
+        const populate = meta?.populate;
+        const publicationState = meta?.publicationState;
 
         const queryFilters = generateFilter([
             {
@@ -312,10 +155,10 @@ export const DataProvider = (
         return { data: response };
     },
 
-    getOne: async ({ resource, id, metaData }) => {
-        const locale = metaData?.locale;
-        const fields = metaData?.fields;
-        const populate = metaData?.populate;
+    getOne: async ({ resource, id, meta }) => {
+        const locale = meta?.locale;
+        const fields = meta?.fields;
+        const populate = meta?.populate;
 
         const query = {
             locale,
@@ -360,11 +203,19 @@ export const DataProvider = (
         return apiUrl;
     },
 
-    custom: async ({ url, method, filters, sort, payload, query, headers }) => {
+    custom: async ({
+        url,
+        method,
+        filters,
+        sorters,
+        payload,
+        query,
+        headers,
+    }) => {
         let requestUrl = `${url}?`;
 
-        if (sort) {
-            const sortQuery = generateSort(sort);
+        if (sorters) {
+            const sortQuery = generateSort(sorters);
             if (sortQuery.length > 0) {
                 requestUrl = `${requestUrl}&${stringify({
                     sort: sortQuery.join(","),

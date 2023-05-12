@@ -1,5 +1,13 @@
-import * as RefineMui from "@pankod/refine-mui";
-import * as RefineReactHookForm from "@pankod/refine-react-hook-form";
+import { Create, useAutocomplete } from "@refinedev/mui";
+import { useForm } from "@refinedev/react-hook-form";
+import {
+    Box,
+    Autocomplete,
+    TextField,
+    Checkbox,
+    FormControlLabel,
+} from "@mui/material";
+import { Controller } from "react-hook-form";
 
 import { createInferencer } from "@/create-inferencer";
 import {
@@ -16,7 +24,7 @@ import {
 
 import { ErrorComponent } from "./error";
 import { LoadingComponent } from "./loading";
-import { CodeViewerComponent } from "./code-viewer";
+import { SharedCodeViewer } from "@/components/shared-code-viewer";
 
 import {
     InferencerResultComponent,
@@ -24,6 +32,7 @@ import {
     ImportElement,
     RendererContext,
 } from "@/types";
+import { getMetaProps } from "@/utilities/get-meta-props";
 
 /**
  * a renderer function for create page in Material UI
@@ -32,6 +41,7 @@ import {
 export const renderer = ({
     resource,
     fields,
+    meta,
     isCustomPage,
 }: RendererContext) => {
     const COMPONENT_NAME = componentName(
@@ -39,9 +49,9 @@ export const renderer = ({
         "create",
     );
     const imports: Array<ImportElement> = [
-        ["Create", "@pankod/refine-mui"],
-        ["Box", "@pankod/refine-mui"],
-        ["useForm", "@pankod/refine-react-hook-form"],
+        ["Create", "@refinedev/mui"],
+        ["Box", "@mui/material"],
+        ["useForm", "@refinedev/react-hook-form"],
     ];
 
     const relationFields: (InferField | null)[] = fields.filter(
@@ -52,7 +62,7 @@ export const renderer = ({
         .filter(Boolean)
         .map((field) => {
             if (field?.relation && !field.fieldable && field.resource) {
-                imports.push(["useAutocomplete", "@pankod/refine-mui"]);
+                imports.push(["useAutocomplete", "@refinedev/mui"]);
 
                 return `
                 const { autocompleteProps: ${getVariableName(
@@ -61,6 +71,11 @@ export const renderer = ({
                 )} } =
                 useAutocomplete({
                     resource: "${field.resource.name}",
+                    ${getMetaProps(
+                        field?.resource?.identifier ?? field?.resource?.name,
+                        meta,
+                        "getList",
+                    )}
                 });
             `;
             }
@@ -71,8 +86,8 @@ export const renderer = ({
     const renderRelationFields = (field: InferField) => {
         if (field.relation && field.resource) {
             imports.push(
-                ["Autocomplete", "@pankod/refine-mui"],
-                ["Controller", "@pankod/refine-react-hook-form"],
+                ["Autocomplete", "@mui/material"],
+                ["Controller", "react-hook-form"],
             );
             const variableName = getVariableName(
                 field.key,
@@ -118,7 +133,7 @@ export const renderer = ({
                         field.multiple
                             ? "defaultValue={[] as any}"
                             : "defaultValue={null as any}"
-                    } 
+                    }
                     render={({ field }) => (
                         <Autocomplete
                             {...${variableName}}
@@ -142,7 +157,7 @@ export const renderer = ({
                             }}
                             isOptionEqualToValue={(option, value) =>
                                 value === undefined ||
-                                option.id.toString() === ${optionEqualValue}?.toString()
+                                option?.id?.toString() === ${optionEqualValue}?.toString()
                             }
                             renderInput={(params) => (
                                 <TextField
@@ -186,7 +201,7 @@ export const renderer = ({
                 return undefined;
             }
 
-            imports.push(["TextField", "@pankod/refine-mui"]);
+            imports.push(["TextField", "@mui/material"]);
 
             if (field.multiple) {
                 return undefined;
@@ -234,9 +249,9 @@ export const renderer = ({
     const booleanFields = (field: InferField) => {
         if (field.type === "boolean") {
             imports.push(
-                ["Checkbox", "@pankod/refine-mui"],
-                ["FormControlLabel", "@pankod/refine-mui"],
-                ["Controller", "@pankod/refine-react-hook-form"],
+                ["Checkbox", "@mui/material"],
+                ["FormControlLabel", "@mui/material"],
+                ["Controller", "react-hook-form"],
             );
 
             if (field.multiple) {
@@ -273,10 +288,10 @@ export const renderer = ({
             const basicRender = basicInputFields(field);
 
             return `
-                {/* 
-                    DatePicker component is not included in "@pankod/refine-mui" package.
+                {/*
+                    DatePicker component is not included in "@refinedev/mui" package.
                     To use a <DatePicker> component, you can follow the official documentation for Material UI.
-                    
+
                     Docs: https://mui.com/x/react-date-pickers/date-picker/#basic-usage
                 */}
                 ${basicRender ?? ""}
@@ -308,7 +323,7 @@ export const renderer = ({
 
     return jsx`
     ${printImports(imports)}
-    
+
     export const ${COMPONENT_NAME} = () => {
         const {
             saveButtonProps,
@@ -319,16 +334,33 @@ export const renderer = ({
         } = useForm(
             ${
                 isCustomPage
-                    ? `{ 
+                    ? `{
                 refineCoreProps: {
                     resource: "${resource.name}",
                     action: "create",
+                    ${getMetaProps(
+                        resource.identifier ?? resource.name,
+                        meta,
+                        "getOne",
+                    )}
                 }
             }`
+                    : getMetaProps(
+                          resource.identifier ?? resource.name,
+                          meta,
+                          "getOne",
+                      )
+                    ? `{
+                        refineCoreProps: { ${getMetaProps(
+                            resource.identifier ?? resource.name,
+                            meta,
+                            "getOne",
+                        )} }
+                        }`
                     : ""
             }
         );
-    
+
         ${relationHooksCode}
 
         return (
@@ -352,14 +384,16 @@ export const renderer = ({
 export const CreateInferencer: InferencerResultComponent = createInferencer({
     type: "create",
     additionalScope: [
-        ["@pankod/refine-mui", "RefineMui", RefineMui],
+        ["@refinedev/mui", "RefineMui", { Create, useAutocomplete }],
+        ["@refinedev/react-hook-form", "RefineReactHookForm", { useForm }],
         [
-            "@pankod/refine-react-hook-form",
-            "RefineReactHookForm",
-            RefineReactHookForm,
+            "@mui/material",
+            "MuiMaterial",
+            { Box, Autocomplete, TextField, Checkbox, FormControlLabel },
         ],
+        ["react-hook-form", "ReactHookForm", { Controller }],
     ],
-    codeViewerComponent: CodeViewerComponent,
+    codeViewerComponent: SharedCodeViewer,
     loadingComponent: LoadingComponent,
     errorComponent: ErrorComponent,
     renderer,

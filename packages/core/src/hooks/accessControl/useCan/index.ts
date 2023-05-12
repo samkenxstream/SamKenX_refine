@@ -1,11 +1,12 @@
-import { useContext } from "react";
 import {
     useQuery,
-    UseQueryResult,
     UseQueryOptions,
+    UseQueryResult,
 } from "@tanstack/react-query";
+import { useContext } from "react";
 
 import { AccessControlContext } from "@contexts/accessControl";
+import { sanitizeResource } from "@definitions/helpers/sanitize-resource";
 import { CanParams, CanReturnType } from "../../../interfaces";
 
 export type UseCanProps = CanParams & {
@@ -38,30 +39,22 @@ export const useCan = ({
     const { resource: _resource, ...paramsRest } = params ?? {};
 
     /* eslint-disable @typescript-eslint/no-unused-vars */
-    const {
-        icon: _icon,
-        list: _list,
-        edit: _edit,
-        create: _create,
-        show: _show,
-        children: _children,
-        ...restResource
-    } = _resource ?? {};
-    /* eslint-enable @typescript-eslint/no-unused-vars */
+    const sanitizedResource = sanitizeResource(_resource ?? {});
 
+    /* eslint-enable @typescript-eslint/no-unused-vars */
     const queryResponse = useQuery<CanReturnType>(
         [
             "useCan",
             {
                 action,
                 resource,
-                params: { ...paramsRest, resource: restResource },
+                params: { ...paramsRest, resource: sanitizedResource },
                 enabled: queryOptions?.enabled,
             },
         ],
         // Enabled check for `can` is enough to be sure that it's defined in the query function but TS is not smart enough to know that.
         () =>
-            can?.({ action, resource, params }) ??
+            can?.({ action, resource, params: paramsRest }) ??
             Promise.resolve({ can: true }),
         {
             enabled: typeof can !== "undefined",

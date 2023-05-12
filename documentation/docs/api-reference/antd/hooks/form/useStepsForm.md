@@ -4,26 +4,28 @@ title: useStepsForm
 ---
 
 ```tsx live shared
-import { useMany } from "@pankod/refine-core";
+import { useMany } from "@refinedev/core";
 
 import {
     List,
-    Table,
     TextField,
     useTable,
-    Space,
     EditButton,
-    Select as AntdSelect,
     useStepsForm as useStepsFormAntd,
     useSelect as useSelectAntd,
-    Input as AntdInput,
-    Form as AntdForm,
-    Steps as AntdSteps,
     SaveButton as AntdSaveButton,
     Edit as AntdEdit,
     Create as AntdCreate,
+} from "@refinedev/antd";
+import {
+    Table,
+    Space,
+    Select as AntdSelect,
+    Input as AntdInput,
+    Form as AntdForm,
+    Steps as AntdSteps,
     Button as AntdButton,
-} from "@pankod/refine-antd";
+} from "antd";
 
 const PostList = () => {
     const { tableProps } = useTable<IPost>();
@@ -342,23 +344,14 @@ setInitialRoutes(["/posts/create"]);
 
 // visible-block-start
 import React from "react";
-import { IResourceComponentsProps, HttpError } from "@pankod/refine-core";
+import { HttpError } from "@refinedev/core";
 
-import {
-    Create,
-    Form,
-    Input,
-    Select,
-    Button,
-    SaveButton,
-    useSelect,
-    useStepsForm,
-    Steps,
-} from "@pankod/refine-antd";
+import { Create, SaveButton, useSelect, useStepsForm } from "@refinedev/antd";
+import { Form, Input, Select, Button, Steps } from "antd";
 
 const { Step } = Steps;
 
-const PostCreatePage: React.FC<IResourceComponentsProps> = () => {
+const PostCreatePage: React.FC = () => {
     const { current, gotoStep, stepsProps, formProps, saveButtonProps } =
         useStepsForm<IPost, HttpError, IPost>();
 
@@ -514,23 +507,14 @@ setInitialRoutes(["/posts/edit/123"]);
 
 // visible-block-start
 import React from "react";
-import { IResourceComponentsProps, HttpError } from "@pankod/refine-core";
+import { HttpError } from "@refinedev/core";
 
-import {
-    Edit,
-    Form,
-    Input,
-    Select,
-    Button,
-    SaveButton,
-    useSelect,
-    useStepsForm,
-    Steps,
-} from "@pankod/refine-antd";
+import { Edit, SaveButton, useSelect, useStepsForm } from "@refinedev/antd";
+import { Form, Input, Select, Button, Steps } from "antd";
 
 const { Step } = Steps;
 
-const PostEditPage: React.FC<IResourceComponentsProps> = () => {
+const PostEditPage: React.FC = () => {
     const {
         current,
         gotoStep,
@@ -693,8 +677,8 @@ To split your form items under a `<Steps>` component, first import and use `useS
 
 ```tsx title="pages/posts/create.tsx"
 import React from "react";
-import { HttpError } from "@pankod/refine-core";
-import { useStepsForm } from "@pankod/refine-antd";
+import { HttpError } from "@refinedev/core";
+import { useStepsForm } from "@refinedev/antd";
 
 export const PostCreate: React.FC = () => {
     const {
@@ -731,14 +715,9 @@ Here, each item of `formList` corresponds to one step in form:
 
 ```tsx title="pages/posts/create.tsx"
 import React from "react";
-import { HttpError } from "@pankod/refine-core";
-import {
-    useStepsForm,
-    useSelect,
-    Form,
-    Input,
-    Select,
-} from "@pankod/refine-antd";
+import { HttpError } from "@refinedev/core";
+import { useStepsForm, useSelect } from "@refinedev/antd";
+import { Form, Input, Select } from "antd";
 
 export const PostCreate: React.FC = () => {
     const { current, gotoStep, stepsProps, formProps, saveButtonProps } =
@@ -812,18 +791,21 @@ You should use `stepsProps` on `<Steps>` component, `formProps` on the `<Form>` 
 
 ```tsx title="pages/posts/create.tsx"
 import React from "react";
-import { HttpError } from "@pankod/refine-core";
+import { HttpError } from "@refinedev/core";
 import {
     useStepsForm,
     useSelect,
+    // highlight-start
+    Create,
+    // highlight-end
+} from "@refinedev/antd";
+import {
     Form,
     Input,
     Select,
-    // highlight-start
-    Create,
+    // highlight-next-line
     Steps,
-    // highlight-end
-} from "@pankod/refine-antd";
+} from "antd";
 
 export const PostCreate: React.FC = () => {
     const {
@@ -910,20 +892,15 @@ To help users navigate between steps in the form, you can use action buttons. Yo
 
 ```tsx title="pages/posts/create.tsx"
 import React from "react";
-import { HttpError } from "@pankod/refine-core";
+import { HttpError } from "@refinedev/core";
 import {
     useStepsForm,
     useSelect,
-    Form,
-    Input,
-    Select,
     Create,
-    Steps,
-    // highlight-start
-    Button,
+    // highlight-next-line
     SaveButton,
-    // highlight-end
-} from "@pankod/refine-antd";
+} from "@refinedev/antd";
+import { Button, Form, Input, Select, Steps } from "antd";
 
 export const PostCreate: React.FC = () => {
     const {
@@ -1121,9 +1098,17 @@ You may need to modify the form data before it is sent to the API.
 For example, Let's send the values we received from the user in two separate inputs, `name` and `surname`, to the API as `fullName`. We can do this by overriding the `submit` function.
 
 ```tsx title="pages/user/create.tsx"
-// --
-useStepsForm({
-    submit: (formValues) => {
+import { useStepsForm } from "@refinedev/antd";
+// ...
+const {
+    current,
+    gotoStep,
+    stepsProps,
+    formProps,
+    saveButtonProps,
+    onFinish,
+} = useStepsForm<IPost>({
+    submit: (values) => {
         // highlight-start
         const data = {
             fullName: `${formValues.name} ${formValues.surname}`,
@@ -1131,10 +1116,10 @@ useStepsForm({
             city: formValues.city,
         };
         onFinish(data as any);
-        // highlight-end
+    // highlight-end
     },
 });
-// --
+// ...
 ```
 
 <br/>
@@ -1143,11 +1128,22 @@ useStepsForm({
 
 ### Properties
 
-<PropsTable module="@pankod/refine-antd/useStepsForm"/>
+<PropsTable module="@refinedev/antd/useStepsForm"/>
 
 > `*`: These props have default values in `RefineContext` and can also be set on **<[Refine](/api-reference/core/components/refine-config.md)>** component. `useModalForm` will use what is passed to `<Refine>` as default but a local value will override it.
 
 > `**`: If not explicitly configured, default value of `redirect` depends on which `action` used. If `action` is `create`, `redirect`s default value is `edit` (created resources edit page). if `action` is `edit` instead, `redirect`s default value is `list`.
+
+### Type Parameters
+
+| Property       | Desription                                                                                                                                                          | Type                       | Default                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------- |
+| TQueryFnData   | Result data returned by the query function. Extends [`BaseRecord`][baserecord]                                                                                      | [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
+| TError         | Custom error object that extends [`HttpError`][httperror]                                                                                                           | [`HttpError`][httperror]   | [`HttpError`][httperror]   |
+| TVariables     | Values for params.                                                                                                                                                  | `{}`                       |                            |
+| TData          | Result data returned by the `select` function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TQueryFnData` will be used as the default value. | [`BaseRecord`][baserecord] | `TQueryFnData`             |
+| TResponse      | Result data returned by the mutation function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TData` will be used as the default value.        | [`BaseRecord`][baserecord] | `TData`                    |
+| TResponseError | Custom error object that extends [`HttpError`][httperror]. If not specified, the value of `TError` will be used as the default value.                               | [`HttpError`][httperror]   | `TError`                   |
 
 ### Return Values
 
@@ -1160,14 +1156,6 @@ useStepsForm({
 | form                     | Ant Design form instance                                     | [`FormInstance<TVariables>`](https://ant.design/components/form/#FormInstance) |
 | defaultFormValuesLoading | DefaultFormValues loading status of form                     | `boolean`                                                                      |
 | submit                   | Submit method, the parameter is the value of the form fields | `() => void`                                                                   |
-
-### Type Parameters
-
-| Property   | Desription                                                       | Default                    |
-| ---------- | ---------------------------------------------------------------- | -------------------------- |
-| TData      | Result data of the query that extends [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
-| TError     | Custom error object that extends [`HttpError`][httperror]        | [`HttpError`][httperror]   |
-| TVariables | Values for params.                                               | `{}`                       |
 
 ## Example
 

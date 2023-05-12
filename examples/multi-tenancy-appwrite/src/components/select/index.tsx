@@ -1,27 +1,38 @@
-import { useContext } from "react";
-import { Select, useSelect } from "@pankod/refine-antd";
+import { useSelect } from "@refinedev/antd";
+import { useGetToPath, useGo, useParsed } from "@refinedev/core";
+import { Select } from "antd";
 
-import { StoreContext } from "context/store";
 import { IStore } from "interfaces";
 
 export const StoreSelect: React.FC = () => {
-    const [store, setStore] = useContext(StoreContext);
+    const getToPath = useGetToPath();
+    const go = useGo();
+    const { resource, action, params } = useParsed<{ tenant: string }>();
 
     const { selectProps: storeSelectProps } = useSelect<IStore>({
-        resource: "61cd62db95f92",
+        resource: "stores",
         optionLabel: "title",
         optionValue: "id",
+        meta: {
+            tenant: undefined,
+        },
     });
-
-    const handleChange = (selectedValue: string) => {
-        setStore(selectedValue);
-    };
 
     return (
         <Select
-            defaultValue={store}
-            style={{ width: 130 }}
-            onChange={handleChange}
+            defaultValue={params?.tenant}
+            style={{ width: 120 }}
+            onChange={(tenant) =>
+                go({
+                    to: getToPath({
+                        resource,
+                        action: action || "list",
+                        meta: {
+                            tenant,
+                        },
+                    }),
+                })
+            }
             onSelect={() => false}
         >
             {storeSelectProps.options?.map(({ value, label }) => (

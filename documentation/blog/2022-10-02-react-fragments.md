@@ -3,7 +3,7 @@ title: How to use React Fragments?
 description: We'll cover what React Fragments are, differences between React Fragments and Div elements.
 slug: how-react-fragments-is-works
 authors: clara_ekekenta
-tags: [react, react-fragments]
+tags: [react]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-10-02-react-fragments/social.png
 hide_table_of_contents: false
 ---
@@ -111,6 +111,12 @@ function TableData () {
 }
 ```
 
+---
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
+---
 
 ## Using shortcut version
 Aside from using React Fragment, React also provides a shorthand notation `<></>` to wrap multiple elements together that works similarly to React Fragment but with a lower memory load. In a react application, the shorthand notation `<></>` is implemented as follows.

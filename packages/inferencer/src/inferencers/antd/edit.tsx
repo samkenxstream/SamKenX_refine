@@ -1,4 +1,5 @@
-import * as RefineAntd from "@pankod/refine-antd";
+import { Edit, useForm, useSelect, getValueFromEvent } from "@refinedev/antd";
+import { Form, Input, Select, Upload, Checkbox, DatePicker } from "antd";
 import dayjs from "dayjs";
 
 import { createInferencer } from "@/create-inferencer";
@@ -15,7 +16,7 @@ import {
 
 import { ErrorComponent } from "./error";
 import { LoadingComponent } from "./loading";
-import { CodeViewerComponent } from "./code-viewer";
+import { SharedCodeViewer } from "@/components/shared-code-viewer";
 
 import {
     InferencerResultComponent,
@@ -24,6 +25,7 @@ import {
     RendererContext,
 } from "@/types";
 import { shouldDotAccess } from "@/utilities/accessor";
+import { getMetaProps } from "@/utilities/get-meta-props";
 
 /**
  * a renderer function for edit page in Ant Design
@@ -32,6 +34,7 @@ import { shouldDotAccess } from "@/utilities/accessor";
 export const renderer = ({
     resource,
     fields,
+    meta,
     isCustomPage,
     id,
 }: RendererContext) => {
@@ -42,11 +45,11 @@ export const renderer = ({
     const recordName = getVariableName(resource.label ?? resource.name, "Data");
     const imports: Array<ImportElement> = [
         ["React", "react", true],
-        ["IResourceComponentsProps", "@pankod/refine-core"],
-        ["Edit", "@pankod/refine-antd"],
-        ["Form", "@pankod/refine-antd"],
-        ["useForm", "@pankod/refine-antd"],
-        ["Input", "@pankod/refine-antd"],
+        ["IResourceComponentsProps", "@refinedev/core"],
+        ["Edit", "@refinedev/antd"],
+        ["Form", "antd"],
+        ["useForm", "@refinedev/antd"],
+        ["Input", "antd"],
     ];
 
     const relationFields: (InferField | null)[] = fields.filter(
@@ -57,7 +60,7 @@ export const renderer = ({
         .filter(Boolean)
         .map((field) => {
             if (field?.relation && !field.fieldable && field.resource) {
-                imports.push(["useSelect", "@pankod/refine-antd"]);
+                imports.push(["useSelect", "@refinedev/antd"]);
 
                 let val = accessor(
                     recordName,
@@ -97,6 +100,11 @@ export const renderer = ({
                                 : ""
                             : ""
                     }
+                    ${getMetaProps(
+                        field?.resource?.identifier ?? field?.resource?.name,
+                        meta,
+                        "getList",
+                    )}
                 });
             `;
             }
@@ -106,7 +114,7 @@ export const renderer = ({
 
     const renderRelationFields = (field: InferField) => {
         if (field.relation && field.resource) {
-            imports.push(["Select", "@pankod/refine-antd"]);
+            imports.push(["Select", "antd"]);
             const variableName = getVariableName(field.key, "SelectProps");
 
             const name = field.accessor
@@ -218,8 +226,8 @@ export const renderer = ({
     const imageFields = (field: InferField) => {
         if (field.type === "image") {
             imports.push(
-                ["Upload", "@pankod/refine-antd"],
-                ["getValueFromEvent", "@pankod/refine-antd"],
+                ["Upload", "antd"],
+                ["getValueFromEvent", "@refinedev/antd"],
             );
             let valueProps = 'valuePropName="fileList"';
 
@@ -269,7 +277,7 @@ export const renderer = ({
 
     const booleanFields = (field: InferField) => {
         if (field.type === "boolean") {
-            imports.push(["Checkbox", "@pankod/refine-antd"]);
+            imports.push(["Checkbox", "antd"]);
 
             if (field.multiple) {
                 const val = accessor(field.key, "index", field.accessor)
@@ -320,10 +328,7 @@ export const renderer = ({
 
     const dateFields = (field: InferField) => {
         if (field.type === "date") {
-            imports.push(
-                ["DatePicker", "@pankod/refine-antd"],
-                ["dayjs", "dayjs", true],
-            );
+            imports.push(["DatePicker", "antd"], ["dayjs", "dayjs", true]);
 
             if (field.multiple) {
                 const val = accessor(field.key, "index", field.accessor)
@@ -426,7 +431,24 @@ export const renderer = ({
                       resource: "${resource.name}",
                       id: ${id},
                       action: "edit",
+                      ${getMetaProps(
+                          resource?.identifier ?? resource?.name,
+                          meta,
+                          "getOne",
+                      )}
                   }`
+                : getMetaProps(
+                      resource?.identifier ?? resource?.name,
+                      meta,
+                      "getOne",
+                  )
+                ? `{
+                    ${getMetaProps(
+                        resource?.identifier ?? resource?.name,
+                        meta,
+                        "getOne",
+                    )}
+                }`
                 : ""
         });
     
@@ -451,10 +473,19 @@ export const renderer = ({
 export const EditInferencer: InferencerResultComponent = createInferencer({
     type: "edit",
     additionalScope: [
-        ["@pankod/refine-antd", "RefineAntd", RefineAntd],
+        [
+            "@refinedev/antd",
+            "RefineAntd",
+            { Edit, useForm, useSelect, getValueFromEvent },
+        ],
         ["dayjs", "dayjs", dayjs, true],
+        [
+            "antd",
+            "AntdPackage",
+            { Form, Input, Select, Upload, Checkbox, DatePicker },
+        ],
     ],
-    codeViewerComponent: CodeViewerComponent,
+    codeViewerComponent: SharedCodeViewer,
     loadingComponent: LoadingComponent,
     errorComponent: ErrorComponent,
     renderer,

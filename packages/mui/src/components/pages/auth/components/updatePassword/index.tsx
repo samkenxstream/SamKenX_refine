@@ -2,8 +2,9 @@ import * as React from "react";
 import {
     UpdatePasswordFormTypes,
     UpdatePasswordPageProps,
-} from "@pankod/refine-core";
-import { useForm } from "@pankod/refine-react-hook-form";
+    useActiveAuthProvider,
+} from "@refinedev/core";
+import { useForm } from "@refinedev/react-hook-form";
 import {
     Button,
     TextField,
@@ -21,10 +22,11 @@ import {
     HttpError,
     useTranslate,
     useUpdatePassword,
-} from "@pankod/refine-core";
+} from "@refinedev/core";
 
 import { layoutStyles, titleStyles } from "../styles";
 import { FormPropsType } from "../../index";
+import { ThemedTitle } from "@components";
 
 type UpdatePasswordProps = UpdatePasswordPageProps<
     BoxProps,
@@ -41,6 +43,7 @@ export const UpdatePasswordPage: React.FC<UpdatePasswordProps> = ({
     contentProps,
     renderContent,
     formProps,
+    title = undefined,
 }) => {
     const { onSubmit, ...useFormProps } = formProps || {};
     const {
@@ -52,19 +55,45 @@ export const UpdatePasswordPage: React.FC<UpdatePasswordProps> = ({
         ...useFormProps,
     });
 
+    const authProvider = useActiveAuthProvider();
     const { mutate: update, isLoading } =
-        useUpdatePassword<UpdatePasswordFormTypes>();
+        useUpdatePassword<UpdatePasswordFormTypes>({
+            v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+        });
+
     const translate = useTranslate();
+
+    const PageTitle =
+        title === false ? null : (
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    marginBottom: "32px",
+                    fontSize: "20px",
+                }}
+            >
+                {title ?? (
+                    <ThemedTitle
+                        collapsed={false}
+                        wrapperStyles={{
+                            gap: "8px",
+                        }}
+                    />
+                )}
+            </div>
+        );
 
     const Content = (
         <Card {...(contentProps ?? {})}>
-            <CardContent sx={{ paddingX: "32px" }}>
+            <CardContent sx={{ p: "32px", "&:last-child": { pb: "32px" } }}>
                 <Typography
                     component="h1"
                     variant="h5"
                     align="center"
                     style={titleStyles}
                     color="primary"
+                    fontWeight={700}
                 >
                     {translate(
                         "pages.updatePassword.title",
@@ -80,7 +109,6 @@ export const UpdatePasswordPage: React.FC<UpdatePasswordProps> = ({
 
                         return update(data);
                     })}
-                    gap="16px"
                 >
                     <TextField
                         {...register("password", {
@@ -99,6 +127,9 @@ export const UpdatePasswordPage: React.FC<UpdatePasswordProps> = ({
                         type="password"
                         placeholder="●●●●●●●●"
                         autoComplete="current-password"
+                        sx={{
+                            m: 0,
+                        }}
                     />
 
                     <TextField
@@ -127,6 +158,9 @@ export const UpdatePasswordPage: React.FC<UpdatePasswordProps> = ({
                         type="password"
                         placeholder="●●●●●●●●"
                         autoComplete="current-confirm-password"
+                        sx={{
+                            mb: 0,
+                        }}
                     />
 
                     <Button
@@ -134,7 +168,7 @@ export const UpdatePasswordPage: React.FC<UpdatePasswordProps> = ({
                         fullWidth
                         variant="contained"
                         sx={{
-                            mt: "8px",
+                            mt: "24px",
                         }}
                         disabled={isLoading}
                     >
@@ -161,7 +195,14 @@ export const UpdatePasswordPage: React.FC<UpdatePasswordProps> = ({
                         height: "100vh",
                     }}
                 >
-                    {renderContent ? renderContent(Content) : Content}
+                    {renderContent ? (
+                        renderContent(Content, PageTitle)
+                    ) : (
+                        <>
+                            {PageTitle}
+                            {Content}
+                        </>
+                    )}
                 </Container>
             </Box>
         </>

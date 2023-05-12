@@ -1,18 +1,8 @@
 import { renderHook } from "@testing-library/react";
-import ReactRouterDom from "react-router-dom";
 
 import { MockJSONServer, TestWrapper } from "@test";
 
 import { useDataProvider } from ".";
-
-const mHistory = {
-    push: jest.fn(),
-};
-
-jest.mock("react-router-dom", () => ({
-    ...(jest.requireActual("react-router-dom") as typeof ReactRouterDom),
-    useHistory: jest.fn(() => mHistory),
-}));
 
 describe("useDataProvider Hook", () => {
     const { result } = renderHook(() => useDataProvider(), {
@@ -54,7 +44,7 @@ describe("useDataProvider Hook without default data provider property", () => {
         }),
     });
 
-    it("get list without from default data provider", async () => {
+    it("should get the correct data provider methods", async () => {
         try {
             result.current("someDataProvider");
         } catch (error) {
@@ -64,5 +54,11 @@ describe("useDataProvider Hook without default data provider property", () => {
                 ),
             );
         }
+    });
+
+    it("should throw error if don't pass dataProviderName if there is no default data provider", async () => {
+        expect(() => result.current()).toThrowError(
+            `There is no "default" data provider. Please pass dataProviderName.`,
+        );
     });
 });

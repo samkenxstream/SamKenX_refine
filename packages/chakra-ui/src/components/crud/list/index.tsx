@@ -1,63 +1,85 @@
 import React from "react";
 import {
-    ResourceRouterParams,
-    useResourceWithRoute,
-    userFriendlyResourceName,
-    useRouterContext,
     useTranslate,
-} from "@pankod/refine-core";
+    userFriendlyResourceName,
+    useRefineContext,
+    useRouterType,
+    useResource,
+} from "@refinedev/core";
+
 import { Box, Heading } from "@chakra-ui/react";
 
-import { CreateButton, Breadcrumb } from "@components";
+import { CreateButton, Breadcrumb, CreateButtonProps } from "@components";
 import { ListProps } from "../types";
+import { RefinePageHeaderClassNames } from "@refinedev/ui-types";
 
 export const List: React.FC<ListProps> = (props) => {
     const {
         canCreate,
         children,
-        createButtonProps,
+        createButtonProps: createButtonPropsFromProps,
         resource: resourceFromProps,
         wrapperProps,
         contentProps,
         headerProps,
         headerButtonProps,
         headerButtons: headerButtonsFromProps,
-        breadcrumb = <Breadcrumb />,
+        breadcrumb: breadcrumbFromProps,
         title,
     } = props;
     const translate = useTranslate();
+    const { options: { breadcrumb: globalBreadcrumb } = {} } =
+        useRefineContext();
 
-    const { useParams } = useRouterContext();
+    const routerType = useRouterType();
 
-    const { resource: routeResourceName } = useParams<ResourceRouterParams>();
-
-    const resourceWithRoute = useResourceWithRoute();
-
-    const resource = resourceWithRoute(resourceFromProps ?? routeResourceName);
+    const { resource } = useResource(resourceFromProps);
 
     const isCreateButtonVisible =
-        canCreate ?? (resource.canCreate || createButtonProps);
+        canCreate ??
+        ((resource?.canCreate ?? !!resource?.create) ||
+            createButtonPropsFromProps);
+
+    const breadcrumb =
+        typeof breadcrumbFromProps === "undefined"
+            ? globalBreadcrumb
+            : breadcrumbFromProps;
+
+    const createButtonProps: CreateButtonProps | undefined =
+        isCreateButtonVisible
+            ? {
+                  resource:
+                      routerType === "legacy"
+                          ? resource?.route
+                          : resource?.identifier ?? resource?.name,
+                  ...createButtonPropsFromProps,
+              }
+            : undefined;
 
     const defaultHeaderButtons = isCreateButtonVisible ? (
-        <CreateButton
-            resourceNameOrRouteName={resource.route}
-            {...createButtonProps}
-        />
+        <CreateButton {...createButtonProps} />
     ) : null;
 
     const headerButtons = headerButtonsFromProps
         ? typeof headerButtonsFromProps === "function"
             ? headerButtonsFromProps({
                   defaultButtons: defaultHeaderButtons,
+                  createButtonProps,
               })
             : headerButtonsFromProps
         : defaultHeaderButtons;
 
     const renderTitle = () => {
+        if (title === false) return null;
+
         if (title) {
             if (typeof title === "string" || typeof title === "number") {
                 return (
-                    <Heading as="h3" size="lg">
+                    <Heading
+                        as="h3"
+                        size="lg"
+                        className={RefinePageHeaderClassNames.Title}
+                    >
                         {title}
                     </Heading>
                 );
@@ -67,11 +89,18 @@ export const List: React.FC<ListProps> = (props) => {
         }
 
         return (
-            <Heading as="h3" size="lg">
+            <Heading
+                as="h3"
+                size="lg"
+                className={RefinePageHeaderClassNames.Title}
+            >
                 {translate(
-                    `${resource.name}.titles.list`,
+                    `${resource?.name}.titles.list`,
                     userFriendlyResourceName(
-                        resource.label ?? resource.name,
+                        resource?.meta?.label ??
+                            resource?.options?.label ??
+                            resource?.label ??
+                            resource?.name,
                         "plural",
                     ),
                 )}
@@ -97,7 +126,11 @@ export const List: React.FC<ListProps> = (props) => {
                 {...headerProps}
             >
                 <Box minW={200}>
-                    {breadcrumb}
+                    {typeof breadcrumb !== "undefined" ? (
+                        <>{breadcrumb}</> ?? undefined
+                    ) : (
+                        <Breadcrumb />
+                    )}
                     {renderTitle()}
                 </Box>
                 <Box

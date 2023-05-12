@@ -1,19 +1,15 @@
-import { useGetLocale } from "@pankod/refine-core";
+import { useGetLocale } from "@refinedev/core";
+import { DownOutlined } from "@ant-design/icons";
 import {
-    AntdLayout,
+    Layout as AntdLayout,
     Space,
-    Menu,
     Button,
-    Icons,
     Dropdown,
     Avatar,
-} from "@pankod/refine-antd";
-import NextRouter from "@pankod/refine-nextjs-router";
+    MenuProps,
+} from "antd";
 import { useRouter } from "next/router";
-
-const { Link } = NextRouter;
-
-const { DownOutlined } = Icons;
+import Link from "next/link";
 
 export const Header: React.FC = () => {
     const locale = useGetLocale();
@@ -21,27 +17,21 @@ export const Header: React.FC = () => {
 
     const currentLocale = locale();
 
-    const menu = (
-        <Menu selectedKeys={currentLocale ? [currentLocale] : []}>
-            {[...(locales || [])].sort().map((lang: string) => (
-                <Menu.Item
-                    key={lang}
-                    icon={
-                        <span style={{ marginRight: 8 }}>
-                            <Avatar
-                                size={16}
-                                src={`/images/flags/${lang}.svg`}
-                            />
-                        </span>
-                    }
-                >
-                    <Link href="/" locale={lang}>
-                        {lang === "en" ? "English" : "German"}
-                    </Link>
-                </Menu.Item>
-            ))}
-        </Menu>
-    );
+    const menuItems: MenuProps["items"] = [...(locales || [])]
+        .sort()
+        .map((lang: string) => ({
+            key: lang,
+            icon: (
+                <span style={{ marginRight: 8 }}>
+                    <Avatar size={16} src={`/images/flags/${lang}.svg`} />
+                </span>
+            ),
+            label: (
+                <Link href="/" locale={lang}>
+                    {lang === "en" ? "English" : "German"}
+                </Link>
+            ),
+        }));
 
     return (
         <AntdLayout.Header
@@ -52,10 +42,18 @@ export const Header: React.FC = () => {
                 padding: "0px 24px",
                 height: "48px",
                 backgroundColor: "#FFF",
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
             }}
         >
-            <Dropdown overlay={menu}>
-                <Button type="link">
+            <Dropdown
+                menu={{
+                    items: menuItems,
+                    selectedKeys: currentLocale ? [currentLocale] : [],
+                }}
+            >
+                <Button type="text">
                     <Space>
                         <Avatar
                             size={16}

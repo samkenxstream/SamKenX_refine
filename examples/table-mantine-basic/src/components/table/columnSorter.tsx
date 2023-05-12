@@ -1,4 +1,4 @@
-import { ActionIcon } from "@pankod/refine-mantine";
+import { ActionIcon } from "@mantine/core";
 import { IconChevronDown, IconSelector } from "@tabler/icons";
 
 import { ColumnButtonProps } from "../../interfaces";
@@ -21,11 +21,8 @@ export const ColumnSorter: React.FC<ColumnButtonProps> = ({ column }) => {
             variant={sorted ? "light" : "transparent"}
             color={sorted ? "primary" : "gray"}
         >
-            {sorted ? (
-                <IconChevronDown size={18} />
-            ) : (
-                <IconSelector size={18} />
-            )}
+            {!sorted && <IconSelector size={18} />}
+            {sorted && <IconChevronDown size={18} />}
         </ActionIcon>
     );
 };

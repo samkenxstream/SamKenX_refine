@@ -31,11 +31,11 @@ When the `useShow` hook is mounted, it will call the `subscribe` method from the
 ### `resource`
 
 <PropResource
-    hook={{
+hook={{
         name:"useOne",
         URL:"/docs/api-reference/core/hooks/data/useOne/"
     }}
-    method={{
+method={{
         name:"getOne",
         URL:"/docs/api-reference/core/providers/data-provider/#getone"
     }}
@@ -46,6 +46,35 @@ useShow({
     resource: "categories",
 });
 ```
+
+:::caution
+
+If the `resource` is passed, the `id` from the current URL will be ignored because it may belong to a different resource. To retrieve the `id` value from the current URL, use the `useParsed` hook and pass the `id` value to the `useShow` hook.
+
+```tsx
+import { useShow, useParsed } from "@refinedev/core";
+
+const { id } = useParsed();
+
+useShow({
+    resource: "custom-resource",
+    id,
+});
+```
+
+Or you can use the `setId` function to set the `id` value.
+
+```tsx
+import { useShow } from "@refinedev/core";
+
+const { setShowId } = useShow({
+    resource: "custom-resource",
+});
+
+setShowId("123");
+```
+
+:::
 
 ### `id`
 
@@ -59,19 +88,21 @@ useShow({
 });
 ```
 
-### `metaData`
+### `meta`
 
-[`metaData`](/docs/api-reference/general-concepts/#metadata) is used following two purposes:
+`meta` is a special property that can be used to pass additional information to data provider methods for the following purposes:
 
--   To pass additional information to data provider methods.
--   Generate GraphQL queries using plain JavaScript Objects (JSON). Please refer [GraphQL](/docs/advanced-tutorials/data-provider/graphql/#edit-page) for more information.
+-   Customizing the data provider methods for specific use cases.
+-   Generating GraphQL queries using plain JavaScript Objects (JSON).
 
-In the following example, we pass the `headers` property in the `metaData` object to the `create` method. With similar logic, you can pass any properties to specifically handle the data provider methods.
+[Refer to the `meta` section of the General Concepts documentation for more information &#8594](/docs/api-reference/general-concepts/#meta)
+
+In the following example, we pass the `headers` property in the `meta` object to the `create` method. With similar logic, you can pass any properties to specifically handle the data provider methods.
 
 ```tsx
 useShow({
     // highlight-start
-    metaData: {
+    meta: {
         headers: { "x-meta-data": "true" },
     },
     // highlight-end
@@ -83,10 +114,10 @@ const myDataProvider = {
         resource,
         id,
         // highlight-next-line
-        metaData,
+        meta,
     }) => {
         // highlight-next-line
-        const headers = metaData?.headers ?? {};
+        const headers = meta?.headers ?? {};
         const url = `${apiUrl}/${resource}/${id}`;
 
         //...
@@ -219,7 +250,15 @@ It will trigger new request to fetch the data when the `showId` value is changed
 
 ### Props
 
-<PropsTable module="@pankod/refine-core/useShow" liveMode-default='`"off"`' />
+<PropsTable module="@refinedev/core/useShow" liveMode-default='`"off"`' />
+
+### Type Parameters
+
+| Property     | Desription                                                                                                                                                          | Type                       | Default                    |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------------- |
+| TQueryFnData | Result data returned by the query function. Extends [`BaseRecord`][baserecord]                                                                                      | [`BaseRecord`][baserecord] | [`BaseRecord`][baserecord] |
+| TError       | Custom error object that extends [`HttpError`][httperror]                                                                                                           | [`HttpError`][httperror]   | [`HttpError`][httperror]   |
+| TData        | Result data returned by the `select` function. Extends [`BaseRecord`][baserecord]. If not specified, the value of `TQueryFnData` will be used as the default value. | [`BaseRecord`][baserecord] | `TQueryFnData`             |
 
 ### Return values
 
@@ -228,3 +267,6 @@ It will trigger new request to fetch the data when the `showId` value is changed
 | queryResult | Result of the query of a record | [`QueryObserverResult<{ data: TData }>`](https://react-query.tanstack.com/reference/useQuery) |
 | showId      | Record id                       | `string`                                                                                      |
 | setShowId   | `showId` setter                 | `Dispatch<SetStateAction< string` \| `undefined>>`                                            |
+
+[baserecord]: /api-reference/core/interfaces.md#baserecord
+[httperror]: /api-reference/core/interfaces.md#httperror

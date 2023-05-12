@@ -1,5 +1,12 @@
 export const CSSRules = [
     `
+    .banner {
+        display: flex;
+        @media (max-width: 1000px) {
+            display: none;
+        }
+    }`,
+    `
     .banner::before,
     .banner::after {
         content: '';
@@ -48,6 +55,12 @@ export const CSSRules = [
         100% {
             background-position: -200% 0;
         }
+    }
+    `,
+    `
+    .gh-link, .gh-link:hover, .gh-link:active, .gh-link:visited, .gh-link:focus {
+        text-decoration: none;
+        z-index: 9;
     }
     `,
 ];

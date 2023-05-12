@@ -1,12 +1,6 @@
-import {
-    Edit,
-    Select,
-    TextInput,
-    useForm,
-    useSelect,
-    Text,
-} from "@pankod/refine-mantine";
-import { RichTextEditor } from "@mantine/rte";
+import { Edit, useForm, useSelect } from "@refinedev/mantine";
+import { Select, TextInput, Text } from "@mantine/core";
+import MDEditor from "@uiw/react-md-editor";
 
 import { ICategory } from "../../interfaces";
 
@@ -73,7 +67,10 @@ export const PostEdit: React.FC = () => {
                 <Text mt={8} weight={500} size="sm" color="#212529">
                     Content
                 </Text>
-                <RichTextEditor {...getInputProps("content")} />
+                <MDEditor
+                    data-color-mode="light"
+                    {...getInputProps("content")}
+                />
                 {errors.content && (
                     <Text mt={2} size="xs" color="red">
                         {errors.content}

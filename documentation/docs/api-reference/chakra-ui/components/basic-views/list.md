@@ -14,9 +14,9 @@ setRefineProps({
 
 const Wrapper = ({ children }) => {
     return (
-        <RefineChakra.ChakraProvider theme={RefineChakra.refineTheme}>
+        <ChakraUI.ChakraProvider theme={RefineChakra.refineTheme}>
             {children}
-        </RefineChakra.ChakraProvider>
+        </ChakraUI.ChakraProvider>
     );
 };
 
@@ -40,14 +40,12 @@ We will show what `<List>` does using properties with examples.
 
 ```tsx live url=http://localhost:3000/posts previewHeight=420px hideCode
 setInitialRoutes(["/posts"]);
-import { Refine } from "@pankod/refine-core";
-import routerProvider from "@pankod/refine-react-router-v6";
-import dataProvider from "@pankod/refine-simple-rest";
+import { Refine } from "@refinedev/core";
+import dataProvider from "@refinedev/simple-rest";
 
 // visible-block-start
+import { List, DateField } from "@refinedev/chakra-ui";
 import {
-    List,
-    DateField,
     TableContainer,
     Table,
     Thead,
@@ -55,8 +53,9 @@ import {
     Th,
     Tbody,
     Td,
-} from "@pankod/refine-chakra-ui";
-import { useTable, ColumnDef, flexRender } from "@pankod/refine-react-table";
+} from "@chakra-ui/react";
+import { useTable } from "@refinedev/react-table";
+import { ColumnDef, flexRender } from "@tanstack/react-table";
 
 const PostList: React.FC = () => {
     const columns = React.useMemo<ColumnDef<IPost>[]>(
@@ -147,8 +146,7 @@ const PostList: React.FC = () => {
 
 const App = () => {
     return (
-        <Refine
-            routerProvider={routerProvider}
+        <RefineHeadlessDemo
             dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
             notificationProvider={RefineChakra.notificationProvider()}
             resources={[
@@ -179,12 +177,12 @@ It allows adding a title for the `<List>` component. if you don't pass title pro
 
 ```tsx live url=http://localhost:3000/posts previewHeight=280px
 setInitialRoutes(["/posts"]);
-import { Refine } from "@pankod/refine-core";
-import routerProvider from "@pankod/refine-react-router-v6";
-import dataProvider from "@pankod/refine-simple-rest";
+import { Refine } from "@refinedev/core";
+import dataProvider from "@refinedev/simple-rest";
 
 // visible-block-start
-import { List, Heading } from "@pankod/refine-chakra-ui";
+import { List } from "@refinedev/chakra-ui";
+import { Heading } from "@chakra-ui/react";
 
 const PostList: React.FC = () => {
     return (
@@ -198,8 +196,7 @@ const PostList: React.FC = () => {
 
 const App = () => {
     return (
-        <Refine
-            routerProvider={routerProvider}
+        <RefineHeadlessDemo
             dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
             resources={[
                 {
@@ -219,18 +216,17 @@ render(
 
 ### `resource`
 
-`<List>` component reads the `resource` information from the route by default. This default behavior will not work on custom pages. If you want to use the `<List>` component in a custom page, you can use the `resource` prop.
-
-[Refer to the custom pages documentation for detailed usage. &#8594](/advanced-tutorials/custom-pages.md)
+`<List>` component reads the `resource` information from the route by default. If you want to use a custom resource for the `<List>` component, you can use the `resource` prop.
 
 ```tsx live url=http://localhost:3000/custom previewHeight=280px
 setInitialRoutes(["/custom"]);
 
+import { Refine } from "@refinedev/core";
+import { Layout } from "@refinedev/chakra-ui";
+import routerProvider from "@refinedev/react-router-v6/legacy";
+import dataProvider from "@refinedev/simple-rest";
 // visible-block-start
-import { Refine } from "@pankod/refine-core";
-import { List, Layout } from "@pankod/refine-chakra-ui";
-import routerProvider from "@pankod/refine-react-router-v6";
-import dataProvider from "@pankod/refine-simple-rest";
+import { List } from "@refinedev/chakra-ui";
 
 const CustomPage: React.FC = () => {
     return (
@@ -245,7 +241,7 @@ const CustomPage: React.FC = () => {
 const App = () => {
     return (
         <Refine
-            routerProvider={{
+            legacyRouterProvider={{
                 ...routerProvider,
                 // highlight-start
                 routes: [
@@ -277,13 +273,12 @@ Create button redirects to the create page of the resource according to the valu
 
 ```tsx live url=http://localhost:3000/posts previewHeight=280px
 setInitialRoutes(["/posts"]);
-import { Refine } from "@pankod/refine-core";
-import routerProvider from "@pankod/refine-react-router-v6";
-import dataProvider from "@pankod/refine-simple-rest";
+import { Refine } from "@refinedev/core";
+import dataProvider from "@refinedev/simple-rest";
 
 // visible-block-start
-import { List } from "@pankod/refine-chakra-ui";
-import { usePermissions } from "@pankod/refine-core";
+import { List } from "@refinedev/chakra-ui";
+import { usePermissions } from "@refinedev/core";
 
 const PostList: React.FC = () => {
     const { data: permissionsData } = usePermissions();
@@ -315,17 +310,46 @@ const App = () => {
     };
 
     const authProvider = {
-        login: () => Promise.resolve(),
-        logout: () => Promise.resolve(),
-        checkAuth: () => Promise.resolve(),
-        checkError: () => Promise.resolve(),
-        getPermissions: () => Promise.resolve("admin"),
-        getUserIdentity: () => Promise.resolve(),
+        login: async () => {
+            return {
+                success: true,
+                redirectTo: "/",
+            };
+        },
+        register: async () => {
+            return {
+                success: true,
+            };
+        },
+        forgotPassword: async () => {
+            return {
+                success: true,
+            };
+        },
+        updatePassword: async () => {
+            return {
+                success: true,
+            };
+        },
+        logout: async () => {
+            return {
+                success: true,
+                redirectTo: "/",
+            };
+        },
+        check: async () => ({
+            authenticated: true,
+        }),
+        onError: async (error) => {
+            console.error(error);
+            return { error };
+        },
+        getPermissions: async () => ["admin"],
+        getIdentity: async () => null,
     };
 
     return (
-        <Refine
-            routerProvider={routerProvider}
+        <RefineHeadlessDemo
             dataProvider={customDataProvider}
             authProvider={authProvider}
             resources={[
@@ -346,7 +370,7 @@ render(
 
 ### `breadcrumb`
 
-To customize or disable the breadcrumb, you can use the `breadcrumb` property. By default it uses the `Breadcrumb` component from `@pankod/refine-chakra-ui` package.
+To customize or disable the breadcrumb, you can use the `breadcrumb` property. By default it uses the `Breadcrumb` component from `@refinedev/chakra-ui` package.
 
 [Refer to the `Breadcrumb` documentation for detailed usage. &#8594](/api-reference/chakra-ui/components/breadcrumb.md)
 
@@ -356,12 +380,12 @@ This feature can be managed globally via the `<Refine>` component's [options](/d
 
 ```tsx live url=http://localhost:3000/posts previewHeight=280px
 setInitialRoutes(["/posts"]);
-import { Refine } from "@pankod/refine-core";
-import routerProvider from "@pankod/refine-react-router-v6";
-import dataProvider from "@pankod/refine-simple-rest";
+import { Refine } from "@refinedev/core";
+import dataProvider from "@refinedev/simple-rest";
 
 // visible-block-start
-import { List, Box } from "@pankod/refine-chakra-ui";
+import { List } from "@refinedev/chakra-ui";
+import { Box } from "@chakra-ui/react";
 
 const CustomBreadcrumb: React.FC = () => {
     return (
@@ -386,8 +410,7 @@ const PostList: React.FC = () => {
 
 const App = () => {
     return (
-        <Refine
-            routerProvider={routerProvider}
+        <RefineHeadlessDemo
             dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
             resources={[
                 {
@@ -407,18 +430,17 @@ render(
 
 ### `wrapperProps`
 
-If you want to customize the wrapper of the `<List/>` component, you can use the `wrapperProps` property. For `@pankod/refine-chakra-ui` wrapper element is `<Box>`s and `wrapperProps` can get every attribute that `<Box>` can get.
+If you want to customize the wrapper of the `<List/>` component, you can use the `wrapperProps` property. For `@refinedev/chakra-ui` wrapper element is `<Box>`s and `wrapperProps` can get every attribute that `<Box>` can get.
 
 [Refer to the `Box` documentation from Chakra UI for detailed usage. &#8594](https://chakra-ui.com/docs/components/box/usage)
 
 ```tsx live url=http://localhost:3000/posts previewHeight=280px
 setInitialRoutes(["/posts"]);
-import { Refine } from "@pankod/refine-core";
-import routerProvider from "@pankod/refine-react-router-v6";
-import dataProvider from "@pankod/refine-simple-rest";
+import { Refine } from "@refinedev/core";
+import dataProvider from "@refinedev/simple-rest";
 
 // visible-block-start
-import { List } from "@pankod/refine-chakra-ui";
+import { List } from "@refinedev/chakra-ui";
 
 const PostList: React.FC = () => {
     return (
@@ -440,8 +462,7 @@ const PostList: React.FC = () => {
 
 const App = () => {
     return (
-        <Refine
-            routerProvider={routerProvider}
+        <RefineHeadlessDemo
             dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
             resources={[
                 {
@@ -467,12 +488,11 @@ If you want to customize the header of the `<List/>` component, you can use the 
 
 ```tsx live url=http://localhost:3000/posts previewHeight=280px
 setInitialRoutes(["/posts"]);
-import { Refine } from "@pankod/refine-core";
-import routerProvider from "@pankod/refine-react-router-v6";
-import dataProvider from "@pankod/refine-simple-rest";
+import { Refine } from "@refinedev/core";
+import dataProvider from "@refinedev/simple-rest";
 
 // visible-block-start
-import { List } from "@pankod/refine-chakra-ui";
+import { List } from "@refinedev/chakra-ui";
 
 const PostList: React.FC = () => {
     return (
@@ -494,8 +514,7 @@ const PostList: React.FC = () => {
 
 const App = () => {
     return (
-        <Refine
-            routerProvider={routerProvider}
+        <RefineHeadlessDemo
             dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
             resources={[
                 {
@@ -521,12 +540,11 @@ If you want to customize the content of the `<List/>` component, you can use the
 
 ```tsx live url=http://localhost:3000/posts previewHeight=280px
 setInitialRoutes(["/posts"]);
-import { Refine } from "@pankod/refine-core";
-import routerProvider from "@pankod/refine-react-router-v6";
-import dataProvider from "@pankod/refine-simple-rest";
+import { Refine } from "@refinedev/core";
+import dataProvider from "@refinedev/simple-rest";
 
 // visible-block-start
-import { List } from "@pankod/refine-chakra-ui";
+import { List } from "@refinedev/chakra-ui";
 
 const PostList: React.FC = () => {
     return (
@@ -548,8 +566,7 @@ const PostList: React.FC = () => {
 
 const App = () => {
     return (
-        <Refine
-            routerProvider={routerProvider}
+        <RefineHeadlessDemo
             dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
             resources={[
                 {
@@ -569,16 +586,24 @@ render(
 
 ### `headerButtons`
 
-You can customize the buttons at the header by using the `headerButtons` property. It accepts `React.ReactNode` or a render function `({ defaultButtons }) => React.ReactNode` which you can use to keep the existing buttons and add your own.
+By default, the `<List/>` component has a [`<CreateButton>`][create-button] at the header.
+
+You can customize the buttons at the header by using the `headerButtons` property. It accepts `React.ReactNode` or a render function `({ defaultButtons, createButtonProps}) => React.ReactNode` which you can use to keep the existing buttons and add your own.
+
+:::caution
+
+If "create" resource is not defined or [`canCreate`](#cancreate-and-createbuttonprops) is `false`, the [`<CreateButton>`][create-button] will not render and `createButtonProps` will be `undefined`.
+
+:::
 
 ```tsx live url=http://localhost:3000/posts previewHeight=280px
 setInitialRoutes(["/posts"]);
-import { Refine } from "@pankod/refine-core";
-import routerProvider from "@pankod/refine-react-router-v6";
-import dataProvider from "@pankod/refine-simple-rest";
+import { Refine } from "@refinedev/core";
+import dataProvider from "@refinedev/simple-rest";
 
 // visible-block-start
-import { List, Button } from "@pankod/refine-chakra-ui";
+import { List } from "@refinedev/chakra-ui";
+import { Button } from "@chakra-ui/react";
 
 const PostList: React.FC = () => {
     return (
@@ -602,8 +627,63 @@ const PostList: React.FC = () => {
 
 const App = () => {
     return (
-        <Refine
-            routerProvider={routerProvider}
+        <RefineHeadlessDemo
+            dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
+            resources={[
+                {
+                    name: "posts",
+                    list: PostList,
+                },
+            ]}
+        />
+    );
+};
+render(
+    <Wrapper>
+        <App />
+    </Wrapper>,
+);
+```
+
+Or, instead of using the `defaultButtons`, you can create your own buttons. If you want, you can use `createButtonProps` to utilize the default values of the [`<CreateButton>`][create-button] component.
+
+```tsx live url=http://localhost:3000/posts previewHeight=280px
+setInitialRoutes(["/posts"]);
+import { Refine } from "@refinedev/core";
+import dataProvider from "@refinedev/simple-rest";
+
+// visible-block-start
+import { List } from "@refinedev/chakra-ui";
+import { Button, CreateButton } from "@chakra-ui/react";
+
+const PostList: React.FC = () => {
+    return (
+        <List
+            // highlight-start
+            headerButtons={({ createButtonProps }) => (
+                <>
+                    {createButtonProps && (
+                        <CreateButton
+                            {...createButtonProps}
+                            meta={{ foo: "bar" }}
+                        />
+                    )}
+                    <Button colorScheme="red" variant="solid">
+                        Custom Button
+                    </Button>
+                </>
+            )}
+            // highlight-end
+        >
+            <p>Rest of your page here</p>
+        </List>
+    );
+};
+// visible-block-end
+
+const App = () => {
+    return (
+        <RefineHeadlessDemo
             dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
             resources={[
                 {
@@ -629,12 +709,12 @@ You can customize the wrapper element of the buttons at the header by using the 
 
 ```tsx live url=http://localhost:3000/posts previewHeight=280px
 setInitialRoutes(["/posts"]);
-import { Refine } from "@pankod/refine-core";
-import routerProvider from "@pankod/refine-react-router-v6";
-import dataProvider from "@pankod/refine-simple-rest";
+import { Refine } from "@refinedev/core";
+import dataProvider from "@refinedev/simple-rest";
 
 // visible-block-start
-import { List, Button } from "@pankod/refine-chakra-ui";
+import { List } from "@refinedev/chakra-ui";
+import { Button } from "@chakra-ui/react";
 
 const PostList: React.FC = () => {
     return (
@@ -661,8 +741,7 @@ const PostList: React.FC = () => {
 
 const App = () => {
     return (
-        <Refine
-            routerProvider={routerProvider}
+        <RefineHeadlessDemo
             dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
             resources={[
                 {
@@ -684,4 +763,6 @@ render(
 
 ### Props
 
-<PropsTable module="@pankod/refine-chakra-ui/List" title-default="`<Title order={3}>{resource.name}</Title>`" />
+<PropsTable module="@refinedev/chakra-ui/List" title-default="`<Title order={3}>{resource.name}</Title>`" />
+
+[create-button]: /docs/api-reference/chakra-ui/components/buttons/create-button/

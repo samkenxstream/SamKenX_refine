@@ -1,5 +1,170 @@
 # @pankod/refine-supabase
 
+## 5.5.2
+
+### Patch Changes
+
+-   [#4285](https://github.com/refinedev/refine/pull/4285) [`b5cd3328504`](https://github.com/refinedev/refine/commit/b5cd332850428383e8b43f997cbb0340ac7f0dc6) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - fixed: A bug that prevented data providers from being swizzled.
+
+## 5.5.1
+
+### Patch Changes
+
+-   [#4285](https://github.com/refinedev/refine/pull/4285) [`b5cd3328504`](https://github.com/refinedev/refine/commit/b5cd332850428383e8b43f997cbb0340ac7f0dc6) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - fixed: A bug that prevented data providers from being swizzled.
+
+## 5.5.0
+
+### Minor Changes
+
+-   [#4213](https://github.com/refinedev/refine/pull/4213) [`db3b63c1e71`](https://github.com/refinedev/refine/commit/db3b63c1e713bb1f88099a7ccec6a51d175ce930) Thanks [@02JanDal](https://github.com/02JanDal)! - feat: added select field capability to data provider mutation methods
+
+    Now you can pass `select` field to `create`, `update` `createMany` and `updateMany` methods of data provider to get fields you need from the response.
+
+    For example:
+
+    ```tsx
+    useCreate({
+        resource: "posts",
+        variables: {
+            title: "Hello World",
+            content: "Lorem ipsum dolor sit amet",
+        },
+        meta: {
+            select: "title, content",
+        },
+    });
+    ```
+
+## 5.4.0
+
+### Minor Changes
+
+-   [#4213](https://github.com/refinedev/refine/pull/4213) [`db3b63c1e71`](https://github.com/refinedev/refine/commit/db3b63c1e713bb1f88099a7ccec6a51d175ce930) Thanks [@02JanDal](https://github.com/02JanDal)! - feat: added select field capability to data provider mutation methods
+
+    Now you can pass `select` field to `create`, `update` `createMany` and `updateMany` methods of data provider to get fields you need from the response.
+
+    For example:
+
+    ```tsx
+    useCreate({
+        resource: "posts",
+        variables: {
+            title: "Hello World",
+            content: "Lorem ipsum dolor sit amet",
+        },
+        meta: {
+            select: "title, content",
+        },
+    });
+    ```
+
+## 5.3.0
+
+### Minor Changes
+
+-   [#4183](https://github.com/refinedev/refine/pull/4183) [`0c1d4944397`](https://github.com/refinedev/refine/commit/0c1d4944397569be649f71af22b367a75429ab0d) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - fix: update custom id column name on meta params
+
+    BREAKING CHANGE: `meta.idColumnName` is used instead of `meta.id` when the primary key column name of your data table is different from `id`.
+
+    ```diff
+    useMany({
+        resource: "posts",
+        ids: [1, 2],
+        meta: {
+    -        id: "post_id",
+    +        idColumnName: "post_id",
+        },
+    });
+    ```
+
+-   [#4182](https://github.com/refinedev/refine/pull/4182) [`a58e9a0f1b0`](https://github.com/refinedev/refine/commit/a58e9a0f1b0b7da0b3c67068a87570f937199d4b) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: added refine.config.js to support swizzling. Now with swizzle support, you can easily customize supabase data provider for your needs.
+
+    feat: tests added for utility functions.
+
+    chore: utility functions have been moved to their own files.
+
+## 5.2.0
+
+### Minor Changes
+
+-   [#4183](https://github.com/refinedev/refine/pull/4183) [`0c1d4944397`](https://github.com/refinedev/refine/commit/0c1d4944397569be649f71af22b367a75429ab0d) Thanks [@yildirayunlu](https://github.com/yildirayunlu)! - fix: update custom id column name on meta params
+
+    BREAKING CHANGE: `meta.idColumnName` is used instead of `meta.id` when the primary key column name of your data table is different from `id`.
+
+    ```diff
+    useMany({
+        resource: "posts",
+        ids: [1, 2],
+        meta: {
+    -        id: "post_id",
+    +        idColumnName: "post_id",
+        },
+    });
+    ```
+
+-   [#4182](https://github.com/refinedev/refine/pull/4182) [`a58e9a0f1b0`](https://github.com/refinedev/refine/commit/a58e9a0f1b0b7da0b3c67068a87570f937199d4b) Thanks [@alicanerdurmaz](https://github.com/alicanerdurmaz)! - feat: added refine.config.js to support swizzling. Now with swizzle support, you can easily customize supabase data provider for your needs.
+
+    feat: tests added for utility functions.
+
+    chore: utility functions have been moved to their own files.
+
+## 5.1.0
+
+### Minor Changes
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+
+    -   `metaData` prop is now deprecated for all data provider methods. Use `meta` prop instead.
+
+        > For backward compatibility, we still support `metaData` prop with refine v4.
+
+        ```diff
+        create: async ({
+        -    metaData
+        +    meta
+        }) => {
+            ...
+        },
+        ```
+
+    -   `sort`, `hasPagination`, and `metaData` parameters of `getList` method are now deprecated. Use `sorters`, `pagination`, and `meta` parameters instead.
+
+        > For backward compatibility, we still support `sort`, `hasPagination` and `metaData` props with refine v4.
+
+        ```diff
+        getList: async ({
+        -    sort
+        +    sorters
+        -    hasPagination
+        +    pagination: { mode: "off" | "server | "client" }
+        -    metaData
+        +    meta
+        }) => {
+            ...
+        },
+        ```
+
+-   Thanks [@aliemir](https://github.com/aliemir), [@alicanerdurmaz](https://github.com/alicanerdurmaz), [@batuhanW](https://github.com/batuhanW), [@salihozdemir](https://github.com/salihozdemir), [@yildirayunlu](https://github.com/yildirayunlu), [@recepkutuk](https://github.com/recepkutuk)!
+    **Moving to the `@refinedev` scope 🎉🎉**
+
+    Moved to the `@refinedev` scope and updated our packages to use the new scope. From now on, all packages will be published under the `@refinedev` scope with their new names.
+
+    Now, we're also removing the `refine` prefix from all packages. So, the `@pankod/refine-core` package is now `@refinedev/core`, `@pankod/refine-antd` is now `@refinedev/antd`, and so on.
+
+### Patch Changes
+
+## 4.3.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
+## 4.2.0
+
+### Minor Changes
+
+-   [#3822](https://github.com/refinedev/refine/pull/3822) [`0baa99ba787`](https://github.com/refinedev/refine/commit/0baa99ba7874394d9d28d0a7b29c082c604258fb) Thanks [@BatuhanW](https://github.com/BatuhanW)! - - refine v4 release announcement added to "postinstall". - refine v4 is released 🎉 The new version is 100% backward compatible. You can upgrade to v4 with a single command! See the migration guide here: https://refine.dev/docs/migration-guide/3x-to-4x
+
 ## 4.1.2
 
 ### Patch Changes

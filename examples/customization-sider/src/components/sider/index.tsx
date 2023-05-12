@@ -1,31 +1,34 @@
 import React, { useState } from "react";
 import {
-    useTitle,
     ITreeMenu,
     CanAccess,
-    useRouterContext,
-    useRefineContext,
     useIsExistAuthentication,
     useTranslate,
     useLogout,
-} from "@pankod/refine-core";
-import { AntdLayout, Menu, useMenu, Grid, Sider } from "@pankod/refine-antd";
+    useMenu,
+    useWarnAboutChange,
+} from "@refinedev/core";
+import { Link } from "react-router-dom";
+import { Sider, ThemedTitle } from "@refinedev/antd";
+import { Layout as AntdLayout, Menu, Grid, theme, Button } from "antd";
 import {
-    DashboardOutlined,
     LogoutOutlined,
     UnorderedListOutlined,
+    RightOutlined,
+    LeftOutlined,
 } from "@ant-design/icons";
 import { antLayoutSider, antLayoutSiderMobile } from "./styles";
 
+const { useToken } = theme;
+
 export const CustomSider: typeof Sider = ({ render }) => {
+    const { token } = useToken();
     const [collapsed, setCollapsed] = useState<boolean>(false);
     const isExistAuthentication = useIsExistAuthentication();
-    const { Link } = useRouterContext();
+    const { warnWhen, setWarnWhen } = useWarnAboutChange();
     const { mutate: mutateLogout } = useLogout();
-    const Title = useTitle();
     const translate = useTranslate();
     const { menuItems, selectedKey, defaultOpenKeys } = useMenu();
-    const { hasDashboard } = useRefineContext();
     const { SubMenu } = Menu;
 
     const breakpoint = Grid.useBreakpoint();
@@ -35,7 +38,17 @@ export const CustomSider: typeof Sider = ({ render }) => {
 
     const renderTreeView = (tree: ITreeMenu[], selectedKey: string) => {
         return tree.map((item: ITreeMenu) => {
-            const { icon, label, route, name, children, parentName } = item;
+            const { name, children, meta, key, list } = item;
+
+            const icon = meta?.icon;
+            const label = meta?.label ?? name;
+            const parent = meta?.parent;
+            const route =
+                typeof list === "string"
+                    ? list
+                    : typeof list !== "function"
+                    ? list?.path
+                    : key;
 
             if (children.length > 0) {
                 return (
@@ -49,9 +62,7 @@ export const CustomSider: typeof Sider = ({ render }) => {
                 );
             }
             const isSelected = route === selectedKey;
-            const isRoute = !(
-                parentName !== undefined && children.length === 0
-            );
+            const isRoute = !(parent !== undefined && children.length === 0);
             return (
                 <CanAccess
                     key={route}
@@ -62,11 +73,11 @@ export const CustomSider: typeof Sider = ({ render }) => {
                     <Menu.Item
                         key={route}
                         style={{
-                            fontWeight: isSelected ? "bold" : "normal",
+                            textTransform: "capitalize",
                         }}
                         icon={icon ?? (isRoute && <UnorderedListOutlined />)}
                     >
-                        <Link to={route}>{label}</Link>
+                        {route ? <Link to={route || "/"}>{label}</Link> : label}
                         {!collapsed && isSelected && (
                             <div className="ant-menu-tree-arrow" />
                         )}
@@ -76,37 +87,40 @@ export const CustomSider: typeof Sider = ({ render }) => {
         });
     };
 
+    const handleLogout = () => {
+        if (warnWhen) {
+            const confirm = window.confirm(
+                translate(
+                    "warnWhenUnsavedChanges",
+                    "Are you sure you want to leave? You have unsaved changes.",
+                ),
+            );
+
+            if (confirm) {
+                setWarnWhen(false);
+                mutateLogout();
+            }
+        } else {
+            mutateLogout();
+        }
+    };
+
     const logout = isExistAuthentication && (
         <Menu.Item
             key="logout"
-            onClick={() => mutateLogout()}
+            onClick={handleLogout}
             icon={<LogoutOutlined />}
         >
             {translate("buttons.logout", "Logout")}
         </Menu.Item>
     );
 
-    const dashboard = hasDashboard ? (
-        <Menu.Item
-            key="dashboard"
-            style={{
-                fontWeight: selectedKey === "/" ? "bold" : "normal",
-            }}
-            icon={<DashboardOutlined />}
-        >
-            <Link to="/">{translate("dashboard.title", "Dashboard")}</Link>
-            {!collapsed && selectedKey === "/" && (
-                <div className="ant-menu-tree-arrow" />
-            )}
-        </Menu.Item>
-    ) : null;
-
     const items = renderTreeView(menuItems, selectedKey);
 
     const renderSider = () => {
         if (render) {
             return render({
-                dashboard,
+                dashboard: null,
                 items,
                 logout,
                 collapsed,
@@ -114,12 +128,13 @@ export const CustomSider: typeof Sider = ({ render }) => {
         }
         return (
             <>
-                {dashboard}
                 {items}
                 {logout}
             </>
         );
     };
+
+    const siderStyle = isMobile ? antLayoutSiderMobile : antLayoutSider;
 
     return (
         <AntdLayout.Sider
@@ -128,13 +143,61 @@ export const CustomSider: typeof Sider = ({ render }) => {
             collapsed={collapsed}
             breakpoint="lg"
             onCollapse={(collapsed: boolean): void => setCollapsed(collapsed)}
-            style={isMobile ? antLayoutSiderMobile : antLayoutSider}
+            style={{
+                ...siderStyle,
+                backgroundColor: token.colorBgContainer,
+                borderRight: `1px solid ${token.colorBgElevated}`,
+            }}
+            trigger={
+                !isMobile && (
+                    <Button
+                        type="text"
+                        style={{
+                            borderRadius: 0,
+                            height: "100%",
+                            width: "100%",
+                            backgroundColor: token.colorBgElevated,
+                        }}
+                    >
+                        {collapsed ? (
+                            <RightOutlined
+                                style={{
+                                    color: token.colorPrimary,
+                                }}
+                            />
+                        ) : (
+                            <LeftOutlined
+                                style={{
+                                    color: token.colorPrimary,
+                                }}
+                            />
+                        )}
+                    </Button>
+                )
+            }
         >
-            {Title && <Title collapsed={collapsed} />}
+            <div
+                style={{
+                    width: collapsed ? "80px" : "200px",
+                    padding: collapsed ? "0" : "0 16px",
+                    display: "flex",
+                    justifyContent: collapsed ? "center" : "flex-start",
+                    alignItems: "center",
+                    height: "64px",
+                    backgroundColor: token.colorBgElevated,
+                    fontSize: "14px",
+                }}
+            >
+                <ThemedTitle collapsed={collapsed} />
+            </div>
             <Menu
                 defaultOpenKeys={defaultOpenKeys}
                 selectedKeys={[selectedKey]}
                 mode="inline"
+                style={{
+                    marginTop: "8px",
+                    border: "none",
+                }}
                 onClick={() => {
                     if (!breakpoint.lg) {
                         setCollapsed(true);

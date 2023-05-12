@@ -1,32 +1,32 @@
 import React, { useCallback } from "react";
-import { GetManyResponse, useDeleteMany, useMany } from "@pankod/refine-core";
-import {
-    useTable,
-    ColumnDef,
-    flexRender,
-    Row,
-} from "@pankod/refine-react-table";
+import { GetManyResponse, useDeleteMany, useMany } from "@refinedev/core";
+import { useTable } from "@refinedev/react-table";
+import { ColumnDef, flexRender, Row } from "@tanstack/react-table";
 import {
     useForm,
+    SaveButton,
+    useSelect,
+    DeleteButton,
+    List,
+    DateField,
+    EditButton,
+} from "@refinedev/mantine";
+
+import {
     Button,
     Table,
-    SaveButton,
     Group,
-    useSelect,
     Select,
     TextInput,
     ActionIcon,
     Checkbox,
-    DeleteButton,
-    List,
     ScrollArea,
     Pagination,
     Space,
     Box,
-    DateField,
-    EditButton,
-} from "@pankod/refine-mantine";
-import { RichTextEditor } from "@mantine/rte";
+} from "@mantine/core";
+
+import MDEditor from "@uiw/react-md-editor";
 import { IconChevronDown, IconChevronRight } from "@tabler/icons";
 
 import { ColumnFilter, ColumnSorter } from "../../components/table";
@@ -277,7 +277,10 @@ export const PostList: React.FC = () => {
                     </tr>
                     <tr>
                         <td colSpan={getAllColumns().length}>
-                            <RichTextEditor {...getInputProps("content")} />
+                            <MDEditor
+                                data-color-mode="light"
+                                {...getInputProps("content")}
+                            />
                         </td>
                     </tr>
                 </React.Fragment>
@@ -351,8 +354,10 @@ export const PostList: React.FC = () => {
                                                             .length
                                                     }
                                                 >
-                                                    <RichTextEditor
-                                                        readOnly
+                                                    <MDEditor
+                                                        data-color-mode="light"
+                                                        contentEditable={false}
+                                                        preview="preview"
                                                         value={
                                                             row.original.content
                                                         }

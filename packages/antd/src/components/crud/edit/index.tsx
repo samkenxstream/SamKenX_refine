@@ -2,15 +2,17 @@ import React from "react";
 
 import { Card, Space, Spin } from "antd";
 import {
-    useResourceWithRoute,
     useMutationMode,
     useNavigation,
     useTranslate,
-    useRouterContext,
     userFriendlyResourceName,
-    ResourceRouterParams,
     useRefineContext,
-} from "@pankod/refine-core";
+    useRouterType,
+    useBack,
+    useResource,
+    useGo,
+    useToPath,
+} from "@refinedev/core";
 
 import {
     DeleteButton,
@@ -19,6 +21,10 @@ import {
     SaveButton,
     Breadcrumb,
     PageHeader,
+    ListButtonProps,
+    RefreshButtonProps,
+    DeleteButtonProps,
+    SaveButtonProps,
 } from "@components";
 import { EditProps } from "../types";
 
@@ -30,11 +36,11 @@ import { EditProps } from "../types";
  */
 export const Edit: React.FC<EditProps> = ({
     title,
-    saveButtonProps,
+    saveButtonProps: saveButtonPropsFromProps,
     mutationMode: mutationModeProp,
     recordItemId,
     children,
-    deleteButtonProps,
+    deleteButtonProps: deleteButtonPropsFromProps,
     canDelete,
     resource: resourceFromProps,
     isLoading = false,
@@ -50,67 +56,98 @@ export const Edit: React.FC<EditProps> = ({
     goBack: goBackFromProps,
 }) => {
     const translate = useTranslate();
-    const { goBack, list } = useNavigation();
-    const resourceWithRoute = useResourceWithRoute();
-
+    const { options: { breadcrumb: globalBreadcrumb } = {} } =
+        useRefineContext();
     const { mutationMode: mutationModeContext } = useMutationMode();
-
     const mutationMode = mutationModeProp ?? mutationModeContext;
 
-    const { useParams } = useRouterContext();
+    const routerType = useRouterType();
+    const back = useBack();
+    const go = useGo();
+    const { goBack, list: legacyGoList } = useNavigation();
 
     const {
-        resource: routeResourceName,
-        action: routeFromAction,
-        id: idFromRoute,
-    } = useParams<ResourceRouterParams>();
+        resource,
+        action,
+        id: idFromParams,
+    } = useResource(resourceFromProps);
 
-    const resource = resourceWithRoute(resourceFromProps ?? routeResourceName);
-    const isDeleteButtonVisible =
-        canDelete ?? (resource.canDelete || deleteButtonProps);
+    const goListPath = useToPath({
+        resource,
+        action: "list",
+    });
 
-    const { options } = useRefineContext();
+    const id = recordItemId ?? idFromParams;
+
     const breadcrumb =
         typeof breadcrumbFromProps === "undefined"
-            ? options?.breadcrumb
+            ? globalBreadcrumb
             : breadcrumbFromProps;
 
-    const id = recordItemId ?? idFromRoute;
+    const hasList = resource?.list && !recordItemId;
+    const isDeleteButtonVisible =
+        canDelete ??
+        ((resource?.meta?.canDelete ?? resource?.canDelete) ||
+            deleteButtonPropsFromProps);
+
+    const listButtonProps: ListButtonProps | undefined = hasList
+        ? {
+              ...(isLoading ? { disabled: true } : {}),
+              resource:
+                  routerType === "legacy"
+                      ? resource?.route
+                      : resource?.identifier ?? resource?.name,
+          }
+        : undefined;
+
+    const refreshButtonProps: RefreshButtonProps = {
+        ...(isLoading ? { disabled: true } : {}),
+        resource:
+            routerType === "legacy"
+                ? resource?.route
+                : resource?.identifier ?? resource?.name,
+        recordItemId: id,
+        dataProviderName,
+    };
+
+    const deleteButtonProps: DeleteButtonProps | undefined =
+        isDeleteButtonVisible
+            ? {
+                  ...(isLoading ? { disabled: true } : {}),
+                  resource:
+                      routerType === "legacy"
+                          ? resource?.route
+                          : resource?.identifier ?? resource?.name,
+                  mutationMode,
+                  onSuccess: () => {
+                      if (routerType === "legacy") {
+                          legacyGoList(resource?.route ?? resource?.name ?? "");
+                      } else {
+                          go({ to: goListPath });
+                      }
+                  },
+                  recordItemId: id,
+                  dataProviderName,
+                  ...deleteButtonPropsFromProps,
+              }
+            : undefined;
+
+    const saveButtonProps: SaveButtonProps = {
+        ...(isLoading ? { disabled: true } : {}),
+        ...saveButtonPropsFromProps,
+    };
 
     const defaultHeaderButtons = (
         <>
-            {!recordItemId && (
-                <ListButton
-                    {...(isLoading ? { disabled: true } : {})}
-                    resourceNameOrRouteName={resource.route}
-                />
-            )}
-            <RefreshButton
-                {...(isLoading ? { disabled: true } : {})}
-                resourceNameOrRouteName={resource.route}
-                recordItemId={id}
-                dataProviderName={dataProviderName}
-            />
+            {hasList && <ListButton {...listButtonProps} />}
+            <RefreshButton {...refreshButtonProps} />
         </>
     );
 
     const defaultFooterButtons = (
         <>
-            {isDeleteButtonVisible && (
-                <DeleteButton
-                    {...(isLoading ? { disabled: true } : {})}
-                    mutationMode={mutationMode}
-                    onSuccess={() => {
-                        list(resource.route ?? resource.name);
-                    }}
-                    dataProviderName={dataProviderName}
-                    {...deleteButtonProps}
-                />
-            )}
-            <SaveButton
-                {...(isLoading ? { disabled: true } : {})}
-                {...saveButtonProps}
-            />
+            {isDeleteButtonVisible && <DeleteButton {...deleteButtonProps} />}
+            <SaveButton {...saveButtonProps} />
         </>
     );
 
@@ -119,13 +156,22 @@ export const Edit: React.FC<EditProps> = ({
             <PageHeader
                 ghost={false}
                 backIcon={goBackFromProps}
-                onBack={routeFromAction ? goBack : undefined}
+                onBack={
+                    action !== "list" && typeof action !== "undefined"
+                        ? routerType === "legacy"
+                            ? goBack
+                            : back
+                        : undefined
+                }
                 title={
                     title ??
                     translate(
-                        `${resource.name}.titles.edit`,
+                        `${resource?.name}.titles.edit`,
                         `Edit ${userFriendlyResourceName(
-                            resource.label ?? resource.name,
+                            resource?.meta?.label ??
+                                resource?.options?.label ??
+                                resource?.label ??
+                                resource?.name,
                             "singular",
                         )}`,
                     )
@@ -136,6 +182,8 @@ export const Edit: React.FC<EditProps> = ({
                             ? typeof headerButtons === "function"
                                 ? headerButtons({
                                       defaultButtons: defaultHeaderButtons,
+                                      listButtonProps,
+                                      refreshButtonProps,
                                   })
                                 : headerButtons
                             : defaultHeaderButtons}
@@ -168,6 +216,8 @@ export const Edit: React.FC<EditProps> = ({
                                         ? footerButtons({
                                               defaultButtons:
                                                   defaultFooterButtons,
+                                              deleteButtonProps,
+                                              saveButtonProps,
                                           })
                                         : footerButtons
                                     : defaultFooterButtons}

@@ -1,73 +1,20 @@
-import axios, { AxiosInstance } from "axios";
+import { AxiosInstance } from "axios";
 import { stringify, StringifyOptions } from "query-string";
-import {
-    DataProvider as DataProviderType,
-    HttpError,
-    CrudOperators,
-    CrudFilter,
-} from "@pankod/refine-core";
-
-const mapOperator = (operator: CrudOperators): string => {
-    switch (operator) {
-        case "eq":
-            return "";
-        default:
-            throw Error(
-                `Operator ${operator} is not supported for the Medusa data provider`,
-            );
-    }
-};
-
-const generateFilter = (filters?: CrudFilter[]) => {
-    const queryFilters: { [key: string]: string } = {};
-    if (filters) {
-        filters.map((filter: CrudFilter) => {
-            if (
-                filter.operator !== "or" &&
-                filter.operator !== "and" &&
-                "field" in filter
-            ) {
-                const { field, operator, value } = filter;
-
-                const mappedOperator = mapOperator(operator);
-                queryFilters[`${field}${mappedOperator}`] = value;
-            }
-        });
-    }
-
-    return queryFilters;
-};
-
-const axiosInstance = axios.create();
-
-axiosInstance.interceptors.response.use(
-    (response) => {
-        return response;
-    },
-    (error) => {
-        const customError: HttpError = {
-            ...error,
-            message: error.response?.data?.message,
-            statusCode: error.response?.status,
-        };
-
-        return Promise.reject(customError);
-    },
-);
+import { DataProvider as DataProviderType } from "@refinedev/core";
+import { axiosInstance, generateFilter } from "../utils";
 
 const DataProvider = (
     apiUrl: string,
     httpClient: AxiosInstance = axiosInstance,
 ): Required<DataProviderType> => {
     return {
-        getList: async ({
-            resource,
-            hasPagination = true,
-            pagination = { current: 1, pageSize: 10 },
-            filters,
-        }) => {
+        getList: async ({ resource, pagination, filters }) => {
             const url = `${apiUrl}/${resource}`;
-            const { current = 1, pageSize = 3 } = pagination ?? {};
+            const {
+                current = 1,
+                pageSize = 10,
+                mode = "server",
+            } = pagination ?? {};
 
             const queryFilters = generateFilter(filters);
 
@@ -79,7 +26,7 @@ const DataProvider = (
                 limit?: number;
                 offset?: number;
             } = {
-                ...(hasPagination
+                ...(mode === "server"
                     ? {
                           offset: (current - 1) * pageSize,
                           limit: pageSize,
@@ -185,7 +132,7 @@ const DataProvider = (
                 ids.map(async (id) => {
                     const { data } = await httpClient.delete(
                         `${apiUrl}/${resource}/${id}`,
-                        variables,
+                        variables || {},
                     );
                     return data;
                 }),

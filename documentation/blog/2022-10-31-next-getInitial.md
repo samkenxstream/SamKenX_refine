@@ -3,7 +3,7 @@ title: What is Next.js getInitialProps and getServerSideProps?
 description: We will deep dive into Next.js getInitialProps and getServerSideProps.
 slug: next-js-getinitialprops-and-getserversideprops
 authors: michael
-tags: [nextjs, getInitialProps, getServerSideProps]
+tags: [nextjs]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-10-31-next-getInitial/social.png
 hide_table_of_contents: false
 ---
@@ -185,7 +185,10 @@ You can learn more about configuration options for the HTTP header field `Cache-
 
 ---
 
-<PromotionBanner title="Does your CRUD app need server state management?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/generic_banner.png" />
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
 

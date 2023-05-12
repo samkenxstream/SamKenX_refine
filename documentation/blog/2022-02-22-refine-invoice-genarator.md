@@ -6,23 +6,23 @@ authors: melih
 tags:
     [
         refine,
-        invoice-generator,
+        tutorial,
         react,
-        admin-panel,
-        business-tool,
-        internal-tool,
         strapi,
     ]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/placeholder.png
 hide_table_of_contents: false
 ---
 
+:::caution
 
+This post was created using version 3.x.x of **refine**. Although we plan to update it with the latest version of **refine** as soon as possible, you can still benefit from the post in the meantime.
 
+You should know that **refine** version 4.x.x is backward compatible with version 3.x.x, so there is no need to worry. If you want to see the differences between the two versions, check out the [migration guide](https://refine.dev/docs/migration-guide/).
 
+Just be aware that the source code example in this post have been updated to version 4.x.x.
 
-
-
+:::
 
 Invoice management can be a daunting task for any business. With so many different software programs and options, it's hard to know where you need start or what will work best with your company culture! You can solve this problem with **refine**. With Refine, you can develop your own customizable invoice generator with ease.
 
@@ -41,7 +41,8 @@ In this part, we will create a panel where our own company information is includ
 Let's start by creating our refine project. You can use the [superplate](https://github.com/pankod/superplate) to create a refine project.
 
 ```bash
-npx superplate-cli -p refine-react refine-invoice-genarator
+
+npm create refine-app@latest refine-invoice-genarator -- -p refine-react -b v3
 ```
 
 ```bash
@@ -58,7 +59,7 @@ npx superplate-cli -p refine-react refine-invoice-genarator
 superplate will quickly create our refine project according to the features we choose. Let's continue by install the [refine Strapi-v4 Data Provider](https://refine.dev/docs/guides-and-concepts/data-provider/strapi-v4/) that we will use later.
 
 ```bash
-npm i @pankod/refine-strapi-v4
+npm i @refinedev/strapi-v4
 ```
 
 Our refine project and installations are now ready! Let's start using it.
@@ -72,8 +73,8 @@ Our refine project and installations are now ready! Let's start using it.
 <p>
 
 ```tsx title="src/authProvider.ts"
-import { AuthProvider } from "@pankod/refine-core";
-import { AuthHelper } from "@pankod/refine-strapi-v4";
+import { AuthBindings } from "@refinedev/core";
+import { AuthHelper } from "@refinedev/strapi-v4";
 
 import { TOKEN_KEY, API_URL } from "./constants";
 
@@ -82,9 +83,9 @@ import axios from "axios";
 export const axiosInstance = axios.create();
 const strapiAuthHelper = AuthHelper(API_URL + "/api");
 
-export const authProvider: AuthProvider = {
+export const authProvider: AuthBindings = {
     login: async ({ username, password }) => {
-        const { data, status } = await strapiAuthHelper.login(
+        const { data, status, statusText } = await strapiAuthHelper.login(
             username,
             password,
         );
@@ -96,44 +97,70 @@ export const authProvider: AuthProvider = {
                 "Authorization"
             ] = `Bearer ${data.jwt}`;
 
-            return Promise.resolve();
+            return {
+                success: true,
+                redirectTo: "/",
+            };
         }
-        return Promise.reject();
+
+        return {
+            success: false,
+            error: {
+                message: "Login failed",
+                name: statusText,
+            },
+        };
     },
-    logout: () => {
+    logout: async () => {
         localStorage.removeItem(TOKEN_KEY);
-        return Promise.resolve();
+        return {
+            success: true,
+            redirectTo: "/",
+        };
     },
-    checkError: () => Promise.resolve(),
-    checkAuth: () => {
+    onError: async (error) => {
+        console.error(error);
+        return { error };
+    },
+    check: async () => {
         const token = localStorage.getItem(TOKEN_KEY);
         if (token) {
             axiosInstance.defaults.headers.common[
                 "Authorization"
             ] = `Bearer ${token}`;
-            return Promise.resolve();
+            return {
+                authenticated: true,
+            };
         }
 
-        return Promise.reject();
+        return {
+            authenticated: false,
+            logout: true,
+            error: {
+                message: "Check failed",
+                name: "Token not found",
+            },
+            redirectTo: "/",
+        };
     },
-    getPermissions: () => Promise.resolve(),
-    getUserIdentity: async () => {
+    getPermissions: async () => ({}),
+    getIdentity: async () => {
         const token = localStorage.getItem(TOKEN_KEY);
         if (!token) {
-            return Promise.reject();
+            return null;
         }
 
         const { data, status } = await strapiAuthHelper.me(token);
         if (status === 200) {
             const { id, username, email } = data;
-            return Promise.resolve({
+            return {
                 id,
                 username,
                 email,
-            });
+            };
         }
 
-        return Promise.reject();
+        return null;
     },
 };
 ```
@@ -144,15 +171,15 @@ export const authProvider: AuthProvider = {
 ### Configure Refine for Strapi-v4​
 
 ```tsx title="App.tsx"
-import { Refine } from "@pankod/refine-core";
-import { notificationProvider, Layout, LoginPage } from "@pankod/refine-antd";
-import routerProvider from "@pankod/refine-react-router-v6";
+import { Refine } from "@refinedev/core";
+import { notificationProvider, Layout, LoginPage } from "@refinedev/antd";
+import routerProvider from "@refinedev/react-router-v6";
 //highlight-start
-import { DataProvider } from "@pankod/refine-strapi-v4";
+import { DataProvider } from "@refinedev/strapi-v4";
 import { authProvider, axiosInstance } from "./authProvider";
 //highlight-end
 
-import "@pankod/refine-antd/dist/reset.css";
+import "@refinedev/antd/dist/reset.css";
 
 function App() {
     const API_URL = "Your_Strapi_Url";
@@ -254,7 +281,7 @@ import {
     EmailField,
     EditButton,
     Typography,
-} from "@pankod/refine-antd";
+} from "@refinedev/antd";
 
 import { ICompany } from "interfaces";
 import { API_URL } from "../../constants";
@@ -323,16 +350,16 @@ export const CompanyItem: React.FC<CompanyItemProps> = ({ item }) => {
 Let's place the `CompanyItem` component that we created above in the [refine-antd List](https://refine.dev/docs/ui-frameworks/antd/hooks/list/useSimpleList/) and display company information.
 
 ```tsx title="src/pages/company/CompanyList.tsx"
-import { IResourceComponentsProps } from "@pankod/refine-core";
+import { IResourceComponentsProps } from "@refinedev/core";
 //highlight-next-line
-import { useSimpleList, AntdList, List } from "@pankod/refine-antd";
+import { useSimpleList, AntdList, List } from "@refinedev/antd";
 
 //highlight-next-line
 import { CompanyItem } from "components/company";
 
 export const CompanyList: React.FC<IResourceComponentsProps> = () => {
     const { listProps } = useSimpleList<ICompany>({
-        metaData: { populate: ["logo"] },
+        meta: { populate: ["logo"] },
     });
 
     return (
@@ -376,7 +403,7 @@ function App() {
             resources={[
                 {
                     name: "companies",
-                    options: { label: "Your Company" },
+                    meta: { label: "Your Company" },
                     list: CompanyList,
                 },
             ]}
@@ -412,7 +439,7 @@ import {
     EditButton,
     DeleteButton,
     useModalForm,
-} from "@pankod/refine-antd";
+} from "@refinedev/antd";
 
 import { IContact } from "interfaces";
 import { CreateContact } from "components/contacts";
@@ -420,7 +447,7 @@ import { CreateContact } from "components/contacts";
 export const ContactsList: React.FC = () => {
     //highlight-start
     const { tableProps } = useTable<IContact>({
-        metaData: { populate: ["client"] },
+        meta: { populate: ["client"] },
     });
     //highlight-end
 
@@ -513,7 +540,7 @@ Let's design the cards that will appear in our Client List.
 <p>
 
 ```tsx title="src/components/client/ClientItem.tsx"
-import { useDelete } from "@pankod/refine-core";
+import { useDelete } from "@refinedev/core";
 import {
     Card,
     TagField,
@@ -521,7 +548,7 @@ import {
     Dropdown,
     Menu,
     Icons,
-} from "@pankod/refine-antd";
+} from "@refinedev/antd";
 
 import { IClient } from "interfaces";
 
@@ -638,7 +665,7 @@ import {
     useSelect,
     useModalForm,
     Button,
-} from "@pankod/refine-antd";
+} from "@refinedev/antd";
 
 import { IContact } from "interfaces";
 import { CreateContact } from "components/contacts";
@@ -741,7 +768,7 @@ import {
     Grid,
     Select,
     useSelect,
-} from "@pankod/refine-antd";
+} from "@refinedev/antd";
 
 type EditClientProps = {
     drawerProps: DrawerProps;
@@ -804,7 +831,7 @@ export const EditClient: React.FC<EditClientProps> = ({
 Above, we created Card, Create and Edit components. Let's define and use these components we have created in our `ClientList`.
 
 ```tsx title="src/pages/client/ClientList.tsx"
-import { IResourceComponentsProps, HttpError } from "@pankod/refine-core";
+import { IResourceComponentsProps, HttpError } from "@refinedev/core";
 
 import {
     useSimpleList,
@@ -812,7 +839,7 @@ import {
     List,
     useDrawerForm,
     CreateButton,
-} from "@pankod/refine-antd";
+} from "@refinedev/antd";
 
 import { IClient } from "interfaces";
 //highlight-next-line
@@ -820,7 +847,7 @@ import { ClientItem, CreateClient, EditClient } from "components/client";
 
 export const ClientList: React.FC<IResourceComponentsProps> = () => {
     const { listProps } = useSimpleList<IClient>({
-        metaData: { populate: ["contacts"] },
+        meta: { populate: ["contacts"] },
     });
 
     const {

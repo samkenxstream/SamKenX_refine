@@ -5,14 +5,7 @@ slug: best-internal-tool-react-frameworks
 authors: melih
 tags:
     [
-        refine,
-        react,
-        admin-panel,
-        business-tool,
-        internal-tool,
-        B2B,
-        B2C,
-        open-source,
+        comparison
     ]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/placeholder.png
 hide_table_of_contents: false
@@ -106,7 +99,7 @@ You can quickly create the project containing **refine** and all the features yo
 If you want, you can manually install the refine packages.
 
 ```bash
-npm i @pankod/refine-core @pankod/refine-antd
+npm i @refinedev/core @refinedev/antd
 ```
 
 ### Refine Examples

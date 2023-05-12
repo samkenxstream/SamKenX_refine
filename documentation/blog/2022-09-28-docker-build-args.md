@@ -3,7 +3,7 @@ title: How to use Docker Build Args and Environment Variables
 description: A guide for using Docker Build Args to Configure Image Builds
 slug: docker-build-args-and-env-vars
 authors: muhammad_khabbab
-tags: [docker, environment variables]
+tags: [docker, dev-tools]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-09-28-docker-build-args/social.png
 hide_table_of_contents: false
 ---
@@ -91,17 +91,9 @@ build:
 
 ---
 
-<PromotionBanner title="Not confident with your frontend skills?" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/diagram.png" description={<div>
-            Meet the headless, React-based solution to build sleek CRUD applications. With refine, you can build complex projects without having advanced frontend skills.
-            <br />
-            <br />
-            Try{" "}
-            <a href="https://github.com/refinedev/refine" target="_blank">
-                refine
-            </a>{" "}
-            to rapidly build your next <b>CRUD</b> project, whether {"it's"} an
-            admin panel, dashboard, internal tool or storefront.
-        </div>} />
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
 
 ---
 ## How to pass env variables

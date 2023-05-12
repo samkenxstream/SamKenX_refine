@@ -3,10 +3,9 @@ title: Javascript Currying - Variadic Currying
 description: Deep dive into variadic currying in JavaScript with examples
 slug: javascript-variadic-currying
 authors: abdullah_numan
-tags: [javascript, currying ]
+tags: [javascript]
 image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-08-28-js-currying-functions/social.png
 featured_image: https://refine.ams3.cdn.digitaloceanspaces.com/blog/2022-08-28-js-currying-functions/featured.png
-is_featured: true
 hide_table_of_contents: false
 ---
 
@@ -101,12 +100,12 @@ So basically, what we've done is allow the accumulator to take multiple argument
 
 But now our `curry()` function is much more powerful. We can pass any number of arguments to an accumulator, as long as that is returned. And it is common to implement this with native JavaScript `Function.prototype` methods.
 
-<br/>
-<div>
-<a href="https://github.com/refinedev/refine">
-  <img  src="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/github-support-banner.png" alt="github support banner" />
-</a>
-</div>
+---
+
+<PromotionBanner isDark title="Open-source enterprise application platform for serious web developers"  description="refineNew" image="https://refine.ams3.cdn.digitaloceanspaces.com/website/static/img/quick-start.gif" />
+
+
+---
 
 ### Using `Function.prototype` Methods
 We can re-write the `curry()` function with `Function.prototype.apply`, and with `Function.prototype.bind`:

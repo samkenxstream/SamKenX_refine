@@ -1,15 +1,26 @@
 import { useEffect, useState } from "react";
-import { FieldValues } from "react-hook-form";
-import { BaseRecord, HttpError } from "@pankod/refine-core";
+import { FieldValues, Path } from "react-hook-form";
+import { BaseRecord, HttpError } from "@refinedev/core";
 
 import { useForm, UseFormProps, UseFormReturnType } from "../useForm";
 
 export type UseStepsFormReturnType<
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables extends FieldValues = FieldValues,
     TContext extends object = {},
-> = UseFormReturnType<TData, TError, TVariables, TContext> & {
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
+> = UseFormReturnType<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TContext,
+    TData,
+    TResponse,
+    TResponseError
+> & {
     steps: {
         currentStep: number;
         gotoStep: (step: number) => void;
@@ -17,11 +28,22 @@ export type UseStepsFormReturnType<
 };
 
 export type UseStepsFormProps<
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables extends FieldValues = FieldValues,
     TContext extends object = {},
-> = UseFormProps<TData, TError, TVariables, TContext> & {
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
+> = UseFormProps<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TContext,
+    TData,
+    TResponse,
+    TResponseError
+> & {
     /**
      * @description Configuration object for the steps.
      * `defaultStep`: Allows you to set the initial step.
@@ -40,53 +62,71 @@ export type UseStepsFormProps<
 };
 
 export const useStepsForm = <
-    TData extends BaseRecord = BaseRecord,
+    TQueryFnData extends BaseRecord = BaseRecord,
     TError extends HttpError = HttpError,
     TVariables extends FieldValues = FieldValues,
     TContext extends object = {},
+    TData extends BaseRecord = TQueryFnData,
+    TResponse extends BaseRecord = TData,
+    TResponseError extends HttpError = TError,
 >({
     stepsProps,
     ...rest
 }: UseStepsFormProps<
-    TData,
+    TQueryFnData,
     TError,
     TVariables,
-    TContext
-> = {}): UseStepsFormReturnType<TData, TError, TVariables, TContext> => {
+    TContext,
+    TData,
+    TResponse,
+    TResponseError
+> = {}): UseStepsFormReturnType<
+    TQueryFnData,
+    TError,
+    TVariables,
+    TContext,
+    TData,
+    TResponse,
+    TResponseError
+> => {
     const { defaultStep = 0, isBackValidate = false } = stepsProps ?? {};
     const [current, setCurrent] = useState(defaultStep);
 
-    const useHookFormResult = useForm({
+    const useHookFormResult = useForm<
+        TQueryFnData,
+        TError,
+        TVariables,
+        TContext,
+        TData,
+        TResponse,
+        TResponseError
+    >({
         ...rest,
     });
+
     const {
         trigger,
         getValues,
-        reset,
+        setValue,
         formState: { dirtyFields },
         refineCore: { queryResult },
     } = useHookFormResult;
 
     useEffect(() => {
-        if (queryResult?.data) {
-            const fields: any = {};
-            const registeredFields = Object.keys(getValues());
-            Object.entries(queryResult?.data?.data).forEach(([key, value]) => {
-                if (registeredFields.includes(key)) {
-                    if (dirtyFields[key]) {
-                        fields[key] = getValues(key as any);
-                    } else {
-                        fields[key] = value;
-                    }
-                }
-            });
+        const data = queryResult?.data?.data;
+        if (!data) return;
 
-            reset(fields as any, {
-                keepDirty: true,
-                keepValues: true,
-            });
-        }
-    }, [queryResult?.data, current]);
+        const registeredFields = Object.keys(getValues());
+        Object.entries(data).forEach(([key, value]) => {
+            const name = key as Path<TVariables>;
+
+            if (registeredFields.includes(name)) {
+                if (!dirtyFields[name]) {
+                    setValue(name, value);
+                }
+            }
+        });
+    }, [queryResult?.data, current, setValue, getValues]);
 
     const go = (step: number) => {
         let targetStep = step;

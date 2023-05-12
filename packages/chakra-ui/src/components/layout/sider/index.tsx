@@ -3,13 +3,17 @@ import {
     CanAccess,
     ITreeMenu,
     useIsExistAuthentication,
+    useLink,
     useLogout,
     useMenu,
+    useActiveAuthProvider,
     useRefineContext,
     useRouterContext,
+    useRouterType,
     useTitle,
     useTranslate,
-} from "@pankod/refine-core";
+    useWarnAboutChange,
+} from "@refinedev/core";
 import {
     Accordion,
     AccordionButton,
@@ -38,19 +42,30 @@ import {
 import { Title as DefaultTitle } from "@components";
 import { RefineLayoutSiderProps } from "../types";
 
-export const Sider: React.FC<RefineLayoutSiderProps> = ({ render }) => {
+export const Sider: React.FC<RefineLayoutSiderProps> = ({
+    Title: TitleFromProps,
+    render,
+    meta,
+}) => {
     const [collapsed, setCollapsed] = useState(false);
     const [opened, setOpened] = useState(false);
 
-    const { Link } = useRouterContext();
-    const { menuItems, selectedKey, defaultOpenKeys } = useMenu();
-    const Title = useTitle();
+    const routerType = useRouterType();
+    const NewLink = useLink();
+    const { Link: LegacyLink } = useRouterContext();
+    const Link = routerType === "legacy" ? LegacyLink : NewLink;
+    const { menuItems, selectedKey, defaultOpenKeys } = useMenu({ meta });
+    const TitleFromContext = useTitle();
     const isExistAuthentication = useIsExistAuthentication();
     const t = useTranslate();
     const { hasDashboard } = useRefineContext();
-    const { mutate: mutateLogout } = useLogout();
+    const authProvider = useActiveAuthProvider();
+    const { warnWhen, setWarnWhen } = useWarnAboutChange();
+    const { mutate: mutateLogout } = useLogout({
+        v3LegacyAuthProviderCompatible: Boolean(authProvider?.isLegacy),
+    });
 
-    const RenderToTitle = Title ?? DefaultTitle;
+    const RenderToTitle = TitleFromProps ?? TitleFromContext ?? DefaultTitle;
 
     const siderWidth = () => {
         if (collapsed) return "80px";
@@ -67,7 +82,7 @@ export const Sider: React.FC<RefineLayoutSiderProps> = ({ render }) => {
         return tree.map((item) => {
             const { label, route, name, icon, children } = item;
 
-            const isSelected = route === selectedKey;
+            const isSelected = item.key === selectedKey;
             const isParent = children.length > 0;
 
             const linkProps = !isParent
@@ -79,7 +94,7 @@ export const Sider: React.FC<RefineLayoutSiderProps> = ({ render }) => {
 
             return (
                 <CanAccess
-                    key={route}
+                    key={item.key}
                     resource={name.toLowerCase()}
                     action="list"
                     params={{
@@ -88,7 +103,7 @@ export const Sider: React.FC<RefineLayoutSiderProps> = ({ render }) => {
                 >
                     <Accordion
                         defaultIndex={
-                            defaultOpenKeys.includes(route || "") ? 0 : -1
+                            defaultOpenKeys.includes(item.key || "") ? 0 : -1
                         }
                         width="full"
                         allowToggle
@@ -191,6 +206,24 @@ export const Sider: React.FC<RefineLayoutSiderProps> = ({ render }) => {
         </CanAccess>
     ) : null;
 
+    const handleLogout = () => {
+        if (warnWhen) {
+            const confirm = window.confirm(
+                t(
+                    "warnWhenUnsavedChanges",
+                    "Are you sure you want to leave? You have unsaved changes.",
+                ),
+            );
+
+            if (confirm) {
+                setWarnWhen(false);
+                mutateLogout();
+            }
+        } else {
+            mutateLogout();
+        }
+    };
+
     const logout = isExistAuthentication && (
         <Tooltip label={t("buttons.logout", "Logout")} {...commonTooltipProps}>
             <Button
@@ -206,7 +239,7 @@ export const Sider: React.FC<RefineLayoutSiderProps> = ({ render }) => {
                 _active={{ color: "none" }}
                 _hover={{ textDecoration: "none" }}
                 color="white"
-                onClick={() => mutateLogout()}
+                onClick={handleLogout}
             >
                 {(!collapsed || opened) && t("buttons.logout", "Logout")}
             </Button>
